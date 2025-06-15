@@ -43,6 +43,10 @@
             android:name=".login.PasswordChange"
             android:exported="true">
         </activity>
+        <activity
+            android:name=".passanger.PassangerMainScreen"
+            android:exported="true">
+        </activity>
     </application>
 
 </manifest>

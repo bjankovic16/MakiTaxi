@@ -28,13 +28,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:text="USERNAME"
+            android:text="EMAIL OR USERNAME"
             android:textColor="@color/white"
             android:textSize="14sp"
             tools:ignore="HardcodedText" />
 
         <EditText
-            android:id="@+id/editTextUsername"
+            android:id="@+id/loginUsername"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
@@ -63,7 +63,7 @@
             android:background="@drawable/edit_text_background">
 
             <EditText
-                android:id="@+id/editTextPassword"
+                android:id="@+id/loginPassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
@@ -101,6 +101,29 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp">
+
+            <Button
+                android:id="@+id/singInWihGoogle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/button_background_outline"
+                android:padding="12dp"
+                android:drawableStart="@drawable/common_google_signin_btn_icon_light"
+                android:drawablePadding="8dp"
+                android:text="Sign in with Google"
+                android:textColor="@color/background"
+                android:gravity="center"
+                tools:ignore="HardcodedText" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:layout_marginBottom="48dp"
             android:gravity="center"
             android:orientation="horizontal">

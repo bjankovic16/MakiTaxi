@@ -2,30 +2,107 @@ package com.makitaxi.login;
 
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.makitaxi.R;
-import com.makitaxi.utils.NavigationClickListener;
 
 public class PasswordChange extends AppCompatActivity {
+    private EditText editTextInput;
+    private Button buttonResetPassword;
+    private FirebaseAuth mAuth;
+    private FirebaseDatabase firebaseDatabase;
+    private DatabaseReference firebaseReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.password_change);
-        //addButtonListeners();
+
+        mAuth = FirebaseAuth.getInstance();
+        firebaseDatabase = FirebaseDatabase.getInstance("https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app/");
+        firebaseReference = firebaseDatabase.getReference("users");
+
+        bindViews();
+        setupListeners();
     }
 
-    private void addButtonListeners() {
-        Button button = findViewById(R.id.singUpFromLoginButton);
-        if (button != null) {
-            button.setOnClickListener(
-                    NavigationClickListener.navigateTo(this, Register.class)
-            );
+    private void bindViews() {
+        editTextInput = findViewById(R.id.editTextEmailOrUsernamePasswordChange);
+        buttonResetPassword = findViewById(R.id.buttonChangePassword);
+    }
+
+    private void setupListeners() {
+        buttonResetPassword.setOnClickListener(v -> initiatePasswordReset());
+    }
+
+    private void initiatePasswordReset() {
+        String input = editTextInput.getText().toString().trim();
+
+        if (input.isEmpty()) {
+            Toast.makeText(this, "Please enter your email or username", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (android.util.Patterns.EMAIL_ADDRESS.matcher(input).matches()) {
+            sendPasswordResetEmail(input);
+        } else {
+            findEmailByUsername(input);
         }
     }
 
+    private void findEmailByUsername(String username) {
+        showLoading(true);
+
+        firebaseReference.orderByChild("username").equalTo(username).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                showLoading(false);
+
+                if (dataSnapshot.exists()) {
+                    for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                        String email = userSnapshot.child("email").getValue(String.class);
+                        if (email != null) {
+                            sendPasswordResetEmail(email);
+                            return;
+                        }
+                    }
+                }
+                Toast.makeText(PasswordChange.this, "No account found with this username", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                showLoading(false);
+                Toast.makeText(PasswordChange.this, "Error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void sendPasswordResetEmail(String email) {
+        showLoading(true);
+
+        mAuth.sendPasswordResetEmail(email).addOnCompleteListener(task -> {
+            showLoading(false);
+
+            if (task.isSuccessful()) {
+                Toast.makeText(PasswordChange.this, "Password reset instructions have been sent to your email", Toast.LENGTH_LONG).show();
+                finish();
+            } else {
+                Toast.makeText(PasswordChange.this, "Failed to send reset email: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showLoading(boolean isLoading) {
+        buttonResetPassword.setEnabled(!isLoading);
+    }
 }
