@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">MakiTaxi</string>
+    <string name="default_web_client_id">1098000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com</string>
 </resources>

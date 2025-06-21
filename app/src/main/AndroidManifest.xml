@@ -44,7 +44,7 @@
             android:exported="true">
         </activity>
         <activity
-            android:name=".passanger.PassangerMainScreen"
+            android:name=".passenger.PassengerMainScreen"
             android:exported="true">
         </activity>
     </application>

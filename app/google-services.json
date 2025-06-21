@@ -1,47 +1,27 @@
 {
   "project_info": {
     "project_number": "751088664198",
+    "firebase_url": "https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "makitaxi-e4108",
     "storage_bucket": "makitaxi-e4108.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:751088664198:android:339d316b9b21c9ab671b07",
+        "mobilesdk_app_id": "1:751088664198:android:d80ef32da1c8a359671b07",
         "android_client_info": {
           "package_name": "com.makitaxi"
         }
       },
       "oauth_client": [
         {
-          "client_id": "751088664198-9bm3ml21odmoibhd1dtbiq772fcttmdh.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDqg8QoL9zxv7os3AX9dcwkEyiDhjPtiFA"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "751088664198-9bm3ml21odmoibhd1dtbiq772fcttmdh.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:751088664198:android:41ccb1d0cc892b3a671b07",
-        "android_client_info": {
-          "package_name": "com.maxitaxi"
-        }
-      },
-      "oauth_client": [
+          "client_id": "751088664198-5qcveqk6e40198s5nchagecqo4e6ioa5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.makitaxi",
+            "certificate_hash": "724953bcad54a628c4e0b6c8228274ac2875ae6a"
+          }
+        },
         {
           "client_id": "751088664198-9bm3ml21odmoibhd1dtbiq772fcttmdh.apps.googleusercontent.com",
           "client_type": 3

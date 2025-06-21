@@ -1,4 +1,4 @@
-package com.makitaxi.passanger;
+package com.makitaxi.driver;
 
 import android.os.Bundle;
 import android.widget.Button;
@@ -9,13 +9,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.makitaxi.R;
 import com.makitaxi.utils.NavigationClickListener;
 
-public class PassangerMainScreen extends AppCompatActivity {
+public class DriverMainScreen extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.passanger_main_screen);
+        setContentView(R.layout.driver_main_screen);
         //addButtonListener();
     }
 
@@ -23,7 +23,7 @@ public class PassangerMainScreen extends AppCompatActivity {
         Button button = findViewById(R.id.takeSurveyButton);
         if (button != null) {
             button.setOnClickListener(
-                    NavigationClickListener.navigateTo(this, PassangerMainScreen.class)
+                    NavigationClickListener.navigateTo(this, DriverMainScreen.class)
             );
         }
     }

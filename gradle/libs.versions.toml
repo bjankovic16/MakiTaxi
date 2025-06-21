@@ -9,9 +9,11 @@ activity = "1.8.0"
 constraintlayout = "2.1.4"
 navigationRuntimeAndroid = "2.9.0"
 googleGmsGoogleServices = "4.4.2"
-firebaseAuth = "23.2.1"
-firebaseFirestore = "25.1.4"
-firebaseDatabase = "21.0.0"
+firebaseAuth = "22.3.1"
+firebaseFirestore = "24.10.2"
+firebaseDatabase = "20.3.0"
+playServicesAuth = "20.7.0"
+playServicesIdentity = "18.1.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -25,6 +27,8 @@ navigation-runtime-android = { group = "androidx.navigation", name = "navigation
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
+play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
+play-services-identity = { group = "com.google.android.gms", name = "play-services-identity", version.ref = "playServicesIdentity" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -17,7 +17,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.FirebaseDatabase;
 import com.makitaxi.R;
-import com.makitaxi.passanger.PassangerMainScreen;
+import com.makitaxi.passenger.PassengerMainScreen;
 import com.makitaxi.utils.NavigationClickListener;
 
 public class Login extends AppCompatActivity {
@@ -28,10 +28,12 @@ public class Login extends AppCompatActivity {
     private ImageButton buttonShowPassword;
     private Button signInButton;
     private Button signUpButton;
+    private Button signInWithGoogleButton;
     private TextView changePasswordText;
 
     private FirebaseAuth auth;
     private FirebaseDatabase firebaseDatabase;
+    private GoogleAuth googleAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +43,18 @@ public class Login extends AppCompatActivity {
 
         auth = FirebaseAuth.getInstance();
         firebaseDatabase = FirebaseDatabase.getInstance("https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app/");
+        googleAuth = GoogleAuth.getInstance(this);
+        googleAuth.initializeSignInLauncher(this, new GoogleAuth.OnSignInResultListener() {
+            @Override
+            public void onSuccess() {
+                navigateToMainScreen();
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(Login.this, error, Toast.LENGTH_SHORT).show();
+            }
+        });
 
         bindViews();
         addButtonListeners();
@@ -52,6 +66,7 @@ public class Login extends AppCompatActivity {
         buttonShowPassword = findViewById(R.id.buttonShowPassword);
         signInButton = findViewById(R.id.buttonSignIn);
         signUpButton = findViewById(R.id.singUpFromLoginButton);
+        signInWithGoogleButton = findViewById(R.id.singInWihGoogle);
         changePasswordText = findViewById(R.id.textViewChangePassword);
     }
 
@@ -62,6 +77,22 @@ public class Login extends AppCompatActivity {
 
         if (changePasswordText != null) {
             changePasswordText.setOnClickListener(NavigationClickListener.navigateTo(this, PasswordChange.class));
+        }
+
+        if (signInWithGoogleButton != null) {
+            signInWithGoogleButton.setOnClickListener(v -> 
+                googleAuth.signIn(this, new GoogleAuth.OnSignInResultListener() {
+                    @Override
+                    public void onSuccess() {
+                        navigateToMainScreen();
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Toast.makeText(Login.this, error, Toast.LENGTH_SHORT).show();
+                    }
+                })
+            );
         }
 
         buttonShowPassword.setOnClickListener(v -> togglePasswordVisibility());
@@ -137,7 +168,7 @@ public class Login extends AppCompatActivity {
     }
 
     private void navigateToMainScreen() {
-        Intent intent = new Intent(Login.this, PassangerMainScreen.class);
+        Intent intent = new Intent(Login.this, PassengerMainScreen.class);
         startActivity(intent);
         finish();
     }

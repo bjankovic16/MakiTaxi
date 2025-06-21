@@ -3,7 +3,6 @@ package com.makitaxi.model;
 public class User {
     private String fullName;
     private String email;
-
     private String username;
     private String phone;
     private String password;
@@ -20,6 +19,7 @@ public class User {
         this.username = username;
     }
 
+    // Getters and Setters
     public String getFullName() {
         return fullName;
     }
