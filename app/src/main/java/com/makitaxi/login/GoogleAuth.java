@@ -50,12 +50,10 @@ public class GoogleAuth {
                     SignInCredential credential = oneTapClient.getSignInCredentialFromIntent(result.getData());
                     String idToken = credential.getGoogleIdToken();
                     String email = credential.getId();
-                    String password = credential.getPassword();
                     String name = credential.getDisplayName();
 
-
                     if (idToken != null) {
-                        firebaseAuthWithGoogle(idToken, email, password, name, listener);
+                        firebaseAuthWithGoogle(idToken, email, name, listener);
                     } else {
                         listener.onError("Failed to get required information from Google Sign In");
                     }
@@ -103,7 +101,7 @@ public class GoogleAuth {
         });
     }
 
-    private void firebaseAuthWithGoogle(String idToken, String email, String password, String name, OnSignInResultListener listener) {
+    private void firebaseAuthWithGoogle(String idToken, String email, String name, OnSignInResultListener listener) {
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         auth.signInWithCredential(credential).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
