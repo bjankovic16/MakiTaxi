@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.makitaxi.login.Login;
 import com.makitaxi.R;
 import com.makitaxi.utils.NavigationClickListener;
+import com.makitaxi.utils.PreferencesManager;
 
 @SuppressLint("CustomSplashScreen")
 public class SplashScreen1 extends AppCompatActivity {
@@ -19,6 +20,7 @@ public class SplashScreen1 extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+        PreferencesManager.setSplashScreensShown(this, true);
         setContentView(R.layout.splash_screen1);
         addButtonListeners();
     }

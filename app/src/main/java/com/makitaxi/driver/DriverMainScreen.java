@@ -1,12 +1,15 @@
 package com.makitaxi.driver;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.makitaxi.R;
+import com.makitaxi.login.Login;
 import com.makitaxi.utils.NavigationClickListener;
 
 public class DriverMainScreen extends AppCompatActivity {
@@ -17,6 +20,17 @@ public class DriverMainScreen extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.driver_main_screen);
         //addButtonListener();
+
+        Button btnLogout = findViewById(R.id.btnLogout);
+        if (btnLogout != null) {
+            btnLogout.setOnClickListener(v -> {
+                FirebaseAuth.getInstance().signOut();
+                Intent intent = new Intent(DriverMainScreen.this, Login.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            });
+        }
     }
 
     private void addButtonListener() {
