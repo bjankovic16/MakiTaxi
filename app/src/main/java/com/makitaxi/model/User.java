@@ -6,13 +6,31 @@ public class User {
     private String username;
     private String phone;
     private String password;
+    private String role;
+    private boolean verified;
+    private String profilePicture;
+
+    // Driver-specific fields
+    private String licenseNumber;
+    private String carModel;
+    private String carColor;
+    private String carPlateNumber;
+    private boolean available;
+    private double rating;
+    private int totalRides;
 
     // Required empty constructor for Firebase
     public User() {
+        this.role = "PASSENGER"; // Default role
+        this.verified = false; // Default verification status
+        this.available = false;
+        this.rating = 0.0;
+        this.totalRides = 0;
     }
 
     // Optional: constructor with fields
     public User(String fullName, String email, String phone, String username) {
+        this();
         this.fullName = fullName;
         this.email = email;
         this.phone = phone;
@@ -20,6 +38,15 @@ public class User {
     }
 
     // Getters and Setters
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
     public String getFullName() {
         return fullName;
     }
@@ -58,5 +85,77 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public void setVerified(boolean verified) {
+        this.verified = verified;
+    }
+
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
+    }
+
+    public String getLicenseNumber() {
+        return licenseNumber;
+    }
+
+    public void setLicenseNumber(String licenseNumber) {
+        this.licenseNumber = licenseNumber;
+    }
+
+    public String getCarModel() {
+        return carModel;
+    }
+
+    public void setCarModel(String carModel) {
+        this.carModel = carModel;
+    }
+
+    public String getCarColor() {
+        return carColor;
+    }
+
+    public void setCarColor(String carColor) {
+        this.carColor = carColor;
+    }
+
+    public String getCarPlateNumber() {
+        return carPlateNumber;
+    }
+
+    public void setCarPlateNumber(String carPlateNumber) {
+        this.carPlateNumber = carPlateNumber;
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public void setAvailable(boolean available) {
+        this.available = available;
+    }
+
+    public double getRating() {
+        return rating;
+    }
+
+    public void setRating(double rating) {
+        this.rating = rating;
+    }
+
+    public int getTotalRides() {
+        return totalRides;
+    }
+
+    public void setTotalRides(int totalRides) {
+        this.totalRides = totalRides;
     }
 }

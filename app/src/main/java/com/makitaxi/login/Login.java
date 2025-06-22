@@ -17,6 +17,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.FirebaseDatabase;
 import com.makitaxi.R;
+import com.makitaxi.driver.DriverMainScreen;
 import com.makitaxi.passenger.PassengerMainScreen;
 import com.makitaxi.utils.NavigationClickListener;
 
@@ -35,6 +36,10 @@ public class Login extends AppCompatActivity {
     private FirebaseDatabase firebaseDatabase;
     private GoogleAuth googleAuth;
 
+    private static final String driver = "DRIVER";
+    private static final String passenger = "PASSENGER";
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,8 +51,8 @@ public class Login extends AppCompatActivity {
         googleAuth = GoogleAuth.getInstance(this);
         googleAuth.initializeSignInLauncher(this, new GoogleAuth.OnSignInResultListener() {
             @Override
-            public void onSuccess() {
-                navigateToMainScreen();
+            public void onSuccess(String role, boolean verified) {
+                navigateToPassengerOrDriver(role, verified);
             }
 
             @Override
@@ -83,8 +88,8 @@ public class Login extends AppCompatActivity {
             signInWithGoogleButton.setOnClickListener(v -> 
                 googleAuth.signIn(this, new GoogleAuth.OnSignInResultListener() {
                     @Override
-                    public void onSuccess() {
-                        navigateToMainScreen();
+                    public void onSuccess(String role, boolean verified) {
+                        navigateToPassengerOrDriver(role, verified);
                     }
 
                     @Override
@@ -140,24 +145,25 @@ public class Login extends AppCompatActivity {
         });
     }
 
-    private void signInWithEmail(String email, String password) {
+    private void signIn(String email, String password, String role, boolean verified) {
         auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                navigateToMainScreen();
+                navigateToPassengerOrDriver(role, verified);
             } else {
                 Toast.makeText(Login.this, "Login failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }
 
-    private void signInWithUsername(String username, String password) {
-        firebaseDatabase.getReference("users").orderByChild("username").equalTo(username).get().addOnCompleteListener(task -> {
+    private void signInWithEmail(String email, String password) {
+        firebaseDatabase.getReference("users").orderByChild("email").equalTo(email).get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult().exists()) {
                 DataSnapshot snapshot = task.getResult().getChildren().iterator().next();
-                String email = snapshot.child("email").getValue(String.class);
+                String role = snapshot.child("role").getValue(String.class);
+                boolean verified = Boolean.TRUE.equals(snapshot.child("verified").getValue(Boolean.class));
 
                 if (email != null) {
-                    signInWithEmail(email, password);
+                    signIn(email, password, role, verified);
                 } else {
                     Toast.makeText(Login.this, "Error: User email not found", Toast.LENGTH_LONG).show();
                 }
@@ -167,8 +173,38 @@ public class Login extends AppCompatActivity {
         });
     }
 
-    private void navigateToMainScreen() {
-        Intent intent = new Intent(Login.this, PassengerMainScreen.class);
+    private void signInWithUsername(String username, String password) {
+        firebaseDatabase.getReference("users").orderByChild("username").equalTo(username).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult().exists()) {
+                DataSnapshot snapshot = task.getResult().getChildren().iterator().next();
+                String email = snapshot.child("email").getValue(String.class);
+                String role = snapshot.child("role").getValue(String.class);
+                boolean verified = Boolean.TRUE.equals(snapshot.child("verified").getValue(Boolean.class));
+
+                if (email != null) {
+                    signIn(email, password, role, verified);
+                } else {
+                    Toast.makeText(Login.this, "Error: User email not found", Toast.LENGTH_LONG).show();
+                }
+            } else {
+                Toast.makeText(Login.this, "Username not found", Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void navigateToPassengerOrDriver(String role, boolean verified) {
+        if (role.equals(driver) && verified) {
+            navigateTo(DriverMainScreen.class);
+        } else if(role.equals(passenger)){
+            navigateTo(PassengerMainScreen.class);
+        } else {
+            Toast.makeText(Login.this, "Driver isn't verified yet", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void navigateTo(Class<?> destination) {
+        Intent intent = new Intent(Login.this, destination);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
     }

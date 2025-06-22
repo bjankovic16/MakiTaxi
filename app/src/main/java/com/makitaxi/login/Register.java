@@ -144,26 +144,29 @@ public class Register extends AppCompatActivity {
                 FirebaseUser firebaseUser = auth.getCurrentUser();
                 if (firebaseUser != null) {
                     String uid = firebaseUser.getUid();
-                    Log.d(TAG, "User created successfully with UID: " + uid);
-
+                    
                     User user = new User(name, email, phone, username);
-                    Log.d(TAG, "Attempting to save user data to database..." + username);
+
+                    if (email.toLowerCase().endsWith("@drivermaki.com")) {
+                        user.setRole("DRIVER");
+                        user.setVerified(false);
+                    } else {
+                        user.setRole("PASSENGER");
+                        user.setVerified(true);
+                    }
 
                     firebaseReference.child(uid).setValue(user).addOnSuccessListener(aVoid -> {
-                        Log.d(TAG, "User data saved successfully");
                         Toast.makeText(this, "User registered successfully", Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(this, Login.class));
+                        // Navigate to Login, which will handle routing
+                        Intent intent = new Intent(Register.this, Login.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
                         finish();
                     }).addOnFailureListener(e -> {
-                        Log.e(TAG, "Error saving user data: " + e.getMessage(), e);
-                        Toast.makeText(this, "Error saving user: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "Error saving user data: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     });
-                } else {
-                    Log.e(TAG, "FirebaseUser is null after successful registration");
-                    Toast.makeText(this, "Registration failed: User not created", Toast.LENGTH_LONG).show();
                 }
             } else {
-                Log.e(TAG, "Registration failed: " + task.getException().getMessage(), task.getException());
                 Toast.makeText(this, "Registration failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
             }
         });

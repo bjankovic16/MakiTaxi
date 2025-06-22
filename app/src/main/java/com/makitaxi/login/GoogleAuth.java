@@ -17,6 +17,7 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.FirebaseDatabase;
 import com.makitaxi.R;
 import com.makitaxi.model.User;
@@ -49,11 +50,12 @@ public class GoogleAuth {
                     SignInCredential credential = oneTapClient.getSignInCredentialFromIntent(result.getData());
                     String idToken = credential.getGoogleIdToken();
                     String email = credential.getId();
+                    String password = credential.getPassword();
                     String name = credential.getDisplayName();
 
 
                     if (idToken != null) {
-                        firebaseAuthWithGoogle(idToken, email, name, listener);
+                        firebaseAuthWithGoogle(idToken, email, password, name, listener);
                     } else {
                         listener.onError("Failed to get required information from Google Sign In");
                     }
@@ -101,7 +103,7 @@ public class GoogleAuth {
         });
     }
 
-    private void firebaseAuthWithGoogle(String idToken,String email, String name, OnSignInResultListener listener) {
+    private void firebaseAuthWithGoogle(String idToken, String email, String password, String name, OnSignInResultListener listener) {
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         auth.signInWithCredential(credential).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
@@ -117,10 +119,18 @@ public class GoogleAuth {
     private void checkAndCreateUser(String userId, String email, String name, OnSignInResultListener listener) {
         database.getReference("users").child(userId).get().addOnCompleteListener(dbTask -> {
             if (dbTask.isSuccessful()) {
-                if (!dbTask.getResult().exists()) {
-                    createNewGoogleUser(userId, email, name, listener);
+                DataSnapshot snapshot = dbTask.getResult();
+                if (!snapshot.exists()) {
+                    createNewGoogleUser(userId, email, name, null, listener);
                 } else {
-                    listener.onSuccess();
+                    User user = snapshot.getValue(User.class);
+                    if(user != null) {
+                        listener.onSuccess(user.getRole(), user.isVerified());
+                    } else {
+                        String errorMessage = "Failed to parse user data from database.";
+                        Log.e(TAG, errorMessage);
+                        listener.onError(errorMessage);
+                    }
                 }
             } else {
                 Log.e(TAG, "Failed to check user existence", dbTask.getException());
@@ -129,14 +139,27 @@ public class GoogleAuth {
         });
     }
 
-    private void createNewGoogleUser(String userId, String email, String name, OnSignInResultListener listener) {
+    private void createNewGoogleUser(String userId, String email, String name, String photoUrl, OnSignInResultListener listener) {
         User user = new User(name, email, null, null);
 
-        user.setPassword(null);
+        // Assign role and verification status based on email
+        if (email != null && email.toLowerCase().endsWith("@drivermaki.com")) {
+            user.setRole("DRIVER");
+            user.setVerified(false); // Drivers require manual verification
+        } else {
+            user.setRole("PASSENGER");
+            user.setVerified(true); // Passengers are auto-verified
+        }
+
+        // Set profile picture if available
+        if (photoUrl != null) {
+            user.setProfilePicture(photoUrl);
+        }
+
 
         database.getReference("users").child(userId).setValue(user).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                listener.onSuccess();
+                listener.onSuccess(user.getRole(), user.isVerified());
             } else {
                 Log.e(TAG, "Failed to create user profile", task.getException());
                 listener.onError("Failed to create user profile: " + task.getException().getMessage());
@@ -145,7 +168,7 @@ public class GoogleAuth {
     }
 
     public interface OnSignInResultListener {
-        void onSuccess();
+        void onSuccess(String role, boolean verified);
 
         void onError(String error);
     }
