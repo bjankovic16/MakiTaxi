@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -20,6 +21,13 @@ public class DriverMainScreen extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.driver_main_screen);
         //addButtonListener();
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                moveTaskToBack(true);
+            }
+        });
 
         Button btnLogout = findViewById(R.id.btnLogout);
         if (btnLogout != null) {
