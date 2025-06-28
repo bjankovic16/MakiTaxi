@@ -7,51 +7,24 @@
     android:layout_height="match_parent"
     tools:context=".passenger.PassengerMainScreen">
 
-    <!-- Top Header with App Title and Logout -->
-    <LinearLayout
-        android:id="@+id/header_layout"
+    <TextView
+        android:id="@+id/toggleControls"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:background="@color/design_default_color_primary"
+        android:text="🚕 Reserve a ride ▼"
+        android:textSize="16sp"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:background="@color/background"
+        android:padding="16dp"
+        android:gravity="center"
         android:elevation="4dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?android:attr/selectableItemBackground"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <TextView
-            android:id="@+id/app_title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="MakiTaxi - Passenger"
-            android:textColor="@android:color/white"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:gravity="center_vertical" />
-
-        <Button
-            android:id="@+id/btnLogout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Logout"
-            android:textSize="12sp"
-            android:backgroundTint="@android:color/white"
-            android:textColor="@color/design_default_color_primary" />
-
-    </LinearLayout>
-
-    <!-- OpenStreetMap View - Main map display -->
-    <org.osmdroid.views.MapView
-        android:id="@+id/mapView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/header_layout"
-        app:layout_constraintBottom_toTopOf="@id/location_controls_layout"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="8dp" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Location Controls Panel -->
     <LinearLayout
@@ -60,21 +33,12 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        android:background="@android:color/white"
+        android:background="@color/background"
         android:elevation="8dp"
-        app:layout_constraintBottom_toTopOf="@id/action_buttons_layout"
+        android:visibility="visible"
+        app:layout_constraintTop_toBottomOf="@id/toggleControls"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
-
-        <!-- Start Location Section -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="📍 Start Location"
-            android:textStyle="bold"
-            android:textSize="16sp"
-            android:textColor="@color/design_default_color_primary"
-            android:layout_marginBottom="8dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -87,20 +51,23 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Enter start location or use current"
+                android:hint="Pickup location"
+                android:background="@drawable/edit_text_background"
                 android:textSize="14sp"
                 android:padding="12dp"
-                android:background="@drawable/edit_text_background"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginEnd="8dp"
+                android:textColor="@color/white"
+                android:textColorHint="#80FFFFFF" />
 
             <Button
                 android:id="@+id/btnUseCurrentLocation"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:background="@drawable/button_background_outline"
+                android:textColor="@color/background"
                 android:text="📍 Current"
                 android:textSize="12sp"
-                android:layout_marginEnd="4dp"
-                android:backgroundTint="@color/design_default_color_secondary" />
+                android:layout_marginEnd="4dp" />
 
             <Button
                 android:id="@+id/btnSelectStartOnMap"
@@ -108,19 +75,9 @@
                 android:layout_height="wrap_content"
                 android:text="🗺️ Map"
                 android:textSize="12sp"
-                android:backgroundTint="@color/design_default_color_secondary" />
+                android:backgroundTint="@color/white" />
 
         </LinearLayout>
-
-        <!-- End Location Section -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🎯 Destination"
-            android:textStyle="bold"
-            android:textSize="16sp"
-            android:textColor="@color/design_default_color_primary"
-            android:layout_marginBottom="8dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -132,7 +89,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Type destination (e.g., Belgrade, Restaurant...)"
+                android:hint="Drop-off location"
                 android:textSize="14sp"
                 android:padding="12dp"
                 android:background="@drawable/edit_text_background"
@@ -143,12 +100,22 @@
                 android:textColorHint="#80FFFFFF" />
 
             <Button
+                android:id="@+id/btnUseCurrentEndLocation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/button_background_outline"
+                android:textColor="@color/background"
+                android:text="📍 Current"
+                android:textSize="12sp"
+                android:layout_marginEnd="4dp" />
+
+            <Button
                 android:id="@+id/btnSelectOnMap"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="🗺️ Map"
                 android:textSize="12sp"
-                android:backgroundTint="@color/design_default_color_secondary" />
+                android:backgroundTint="@color/white" />
 
         </LinearLayout>
 
@@ -161,9 +128,10 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="16dp"
-        android:background="@android:color/white"
+        android:background="@color/background"
         android:elevation="4dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:visibility="visible"
+        app:layout_constraintTop_toBottomOf="@id/location_controls_layout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -175,7 +143,7 @@
             android:layout_marginEnd="8dp"
             android:text="🛣️ Show Route"
             android:textSize="14sp"
-            android:backgroundTint="@color/design_default_color_primary" />
+            android:backgroundTint="@color/white" />
 
         <Button
             android:id="@+id/btnClearRoute"
@@ -185,9 +153,19 @@
             android:layout_marginStart="8dp"
             android:text="🗑️ Clear"
             android:textSize="14sp"
-            android:backgroundTint="@android:color/darker_gray" />
+            android:backgroundTint="@android:color/white" />
 
     </LinearLayout>
+
+    <!-- Map View -->
+    <org.osmdroid.views.MapView
+        android:id="@+id/mapView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/action_buttons_layout"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Route Information Panel (initially hidden) -->
     <LinearLayout
@@ -199,10 +177,10 @@
         android:background="#E3F2FD"
         android:elevation="6dp"
         android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/header_layout"
+        android:layout_margin="16dp"
+        app:layout_constraintTop_toBottomOf="@id/toggleControls"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_margin="16dp">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
             android:id="@+id/textViewRouteInfo"
@@ -222,5 +200,56 @@
             android:textColor="@android:color/black" />
 
     </LinearLayout>
+
+    <!-- Account Button (Bottom Left) -->
+    <Button
+        android:id="@+id/btnAccount"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:text="👤"
+        android:background="@color/background"
+        android:textSize="20sp"
+        android:layout_margin="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- GPS Button (Bottom Right, Top) -->
+    <Button
+        android:id="@+id/btnGPS"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:text="📍"
+        android:textSize="18sp"
+        android:background="@color/background"
+        android:layout_margin="16dp"
+        app:layout_constraintBottom_toTopOf="@id/btnZoomIn"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Zoom In Button (Bottom Right, Middle) -->
+    <Button
+        android:id="@+id/btnZoomIn"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:text="+"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:background="@color/background"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="4dp"
+        app:layout_constraintBottom_toTopOf="@id/btnZoomOut"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Zoom Out Button (Bottom Right, Bottom) -->
+    <Button
+        android:id="@+id/btnZoomOut"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:text="−"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:background="@color/background"
+        android:layout_margin="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

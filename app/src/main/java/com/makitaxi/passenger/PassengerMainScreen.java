@@ -4,10 +4,15 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -18,7 +23,6 @@ import androidx.core.content.ContextCompat;
 import com.makitaxi.R;
 import com.makitaxi.utils.PreferencesManager;
 
-import org.osmdroid.config.Configuration;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 
@@ -52,10 +56,19 @@ public class PassengerMainScreen extends AppCompatActivity implements
     private AutoCompleteTextView editTextEndLocation;
     private Button buttonSelectOnMap;
     private Button buttonShowRoute;
-    private Button btnLogout;
     private Button btnUseCurrentLocation;
+    private Button btnUseCurrentEndLocation;
     private Button btnSelectStartOnMap;
     private Button btnClearRoute;
+    private TextView txtToggleControls;
+    private LinearLayout locationControlsLayout;
+    private LinearLayout actionButtonsLayout;
+    
+    // Bottom navigation buttons
+    private Button btnAccount;
+    private Button btnGPS;
+    private Button btnZoomIn;
+    private Button btnZoomOut;
 
     // State
     private GeoPoint currentLocation;
@@ -71,83 +84,60 @@ public class PassengerMainScreen extends AppCompatActivity implements
         DESTINATION   // Selecting destination location
     }
     private SelectionMode selectionMode = SelectionMode.NONE;
+    private boolean controlsVisible = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        Log.d(TAG, "onCreate: Starting PassengerMainScreen");
-        
-        // Initialize OSMDroid configuration
-        initializeOSMDroid();
-        
-        // Set content view
         setContentView(R.layout.passanger_main_screen);
-        
-        // Initialize UI components
+        handleSystemBars();
         initializeViews();
-        
-        // Initialize controllers
         initializeControllers();
-        
-        // Setup UI interactions
         setupUIInteractions();
-        
-        // Check and request permissions
         checkLocationPermissions();
-        
-        Log.d(TAG, "onCreate: PassengerMainScreen initialization completed");
     }
 
-    /**
-     * Initialize OSMDroid configuration
-     */
-    private void initializeOSMDroid() {
-        Log.d(TAG, "Initializing OSMDroid configuration");
-        Configuration.getInstance().load(this, PreferencesManager.getSharedPreferences(this));
+    private void handleSystemBars() {
+        View rootView = findViewById(android.R.id.content);
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
+            androidx.core.graphics.Insets systemBars = insets.getInsets(
+                    androidx.core.view.WindowInsetsCompat.Type.systemBars()
+            );
+            v.setPadding(
+                    systemBars.left,
+                    systemBars.top,
+                    systemBars.right,
+                    systemBars.bottom
+            );
+            return insets;
+        });
     }
-
     /**
      * Initialize UI components
      */
     private void initializeViews() {
-        Log.d(TAG, "Initializing UI views");
-        
         mapView = findViewById(R.id.mapView);
         editTextStartLocation = findViewById(R.id.editTextStartLocation);
         editTextEndLocation = findViewById(R.id.editTextEndLocation);
         buttonSelectOnMap = findViewById(R.id.btnSelectOnMap);
         buttonShowRoute = findViewById(R.id.btnShowRoute);
-        btnLogout = findViewById(R.id.btnLogout);
         btnUseCurrentLocation = findViewById(R.id.btnUseCurrentLocation);
+        btnUseCurrentEndLocation = findViewById(R.id.btnUseCurrentEndLocation);
         btnSelectStartOnMap = findViewById(R.id.btnSelectStartOnMap);
         btnClearRoute = findViewById(R.id.btnClearRoute);
-        
-        if (mapView == null) {
-            Log.e(TAG, "MapView not found in layout!");
-            return;
-        }
-        
-        if (editTextStartLocation == null) {
-            Log.e(TAG, "EditTextStartLocation not found in layout!");
-            return;
-        }
-        
-        if (editTextEndLocation == null) {
-            Log.e(TAG, "EditTextEndLocation not found in layout!");
-            return;
-        }
-        
-        Log.d(TAG, "UI views initialized successfully");
+        txtToggleControls = findViewById(R.id.toggleControls);
+        locationControlsLayout = findViewById(R.id.location_controls_layout);
+        actionButtonsLayout = findViewById(R.id.action_buttons_layout);
+        btnAccount = findViewById(R.id.btnAccount);
+        btnGPS = findViewById(R.id.btnGPS);
+        btnZoomIn = findViewById(R.id.btnZoomIn);
+        btnZoomOut = findViewById(R.id.btnZoomOut);
     }
 
     /**
      * Initialize all controllers
      */
     private void initializeControllers() {
-        Log.d(TAG, "Initializing controllers");
-        
-        // Initialize LocationManager
         locationManager = new LocationManager(this);
         locationManager.setLocationUpdateListener(this);
         
@@ -171,6 +161,34 @@ public class PassengerMainScreen extends AppCompatActivity implements
         // Setup button click listeners
         setupButtonListeners();
         
+        // Setup start location text input handling
+        setupStartLocationTextWatcher();
+        
+        // Setup destination text input handling
+        setupDestinationTextWatcher();
+        
+        // Toggle controls TextView
+        if (txtToggleControls != null) {
+            txtToggleControls.setOnClickListener(v -> toggleControls());
+        }
+        
+        // Bottom navigation button listeners
+        if (btnAccount != null) {
+            btnAccount.setOnClickListener(v -> handleAccount());
+        }
+        
+        if (btnGPS != null) {
+            btnGPS.setOnClickListener(v -> handleGPS());
+        }
+        
+        if (btnZoomIn != null) {
+            btnZoomIn.setOnClickListener(v -> handleZoomIn());
+        }
+        
+        if (btnZoomOut != null) {
+            btnZoomOut.setOnClickListener(v -> handleZoomOut());
+        }
+        
         Log.d(TAG, "UI interactions setup completed");
     }
 
@@ -183,6 +201,11 @@ public class PassengerMainScreen extends AppCompatActivity implements
         // Use current location button
         if (btnUseCurrentLocation != null) {
             btnUseCurrentLocation.setOnClickListener(v -> handleUseCurrentLocation());
+        }
+        
+        // Use current location for end location button
+        if (btnUseCurrentEndLocation != null) {
+            btnUseCurrentEndLocation.setOnClickListener(v -> handleUseCurrentEndLocation());
         }
         
         // Select start location on map button
@@ -199,7 +222,7 @@ public class PassengerMainScreen extends AppCompatActivity implements
             buttonSelectOnMap.setOnClickListener(v -> {
                 Log.d(TAG, "Select destination on map button clicked");
                 selectionMode = SelectionMode.DESTINATION;
-                Toast.makeText(this, "🎯 Tap on the map to select destination", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, " Tap on the map to select destination", Toast.LENGTH_SHORT).show();
             });
         }
         
@@ -213,20 +236,145 @@ public class PassengerMainScreen extends AppCompatActivity implements
             btnClearRoute.setOnClickListener(v -> handleClearRoute());
         }
         
-        // Logout button
-        if (btnLogout != null) {
-            btnLogout.setOnClickListener(v -> handleLogout());
-        }
-        
         Log.d(TAG, "Button listeners setup completed");
     }
 
     /**
-     * Check and request location permissions
+     * Set up text watcher for start location input
      */
+    private void setupStartLocationTextWatcher() {
+        if (editTextStartLocation != null) {
+            editTextStartLocation.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    String text = s.toString().trim();
+                    if (text.isEmpty()) {
+                        // Clear start location if text is empty
+                        startLocation = null;
+                        startAddress = null;
+                        Log.d(TAG, "Start location cleared - text empty");
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * Set up text watcher for destination input to handle manual typing
+     */
+    private void setupDestinationTextWatcher() {
+        if (autocompleteController != null) {
+            // Get the AutoCompleteTextView from the controller
+            AutoCompleteTextView destTextView = autocompleteController.getAutoCompleteTextView();
+            if (destTextView != null) {
+                destTextView.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        String text = s.toString().trim();
+                        if (text.isEmpty()) {
+                            // Clear destination location if text is empty
+                            destinationLocation = null;
+                            destinationAddress = null;
+                            Log.d(TAG, "Destination location cleared - text empty");
+                        }
+                    }
+                });
+            }
+        }
+    }
+    private void geocodeStartAddress(String address) {
+        Log.d(TAG, "Geocoding start address: " + address);
+        
+        if (locationManager != null) {
+            locationManager.geocodeAddress(address, new LocationManager.GeocodeCallback() {
+                @Override
+                public void onLocationFound(double latitude, double longitude, String foundAddress) {
+                    startLocation = new GeoPoint(latitude, longitude);
+                    startAddress = foundAddress;
+                    
+                    runOnUiThread(() -> {
+                        if (editTextStartLocation != null) {
+                            editTextStartLocation.setText(foundAddress);
+                        }
+                        Toast.makeText(PassengerMainScreen.this, "✅ Start location found: " + foundAddress, Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, "Start location geocoded successfully: " + startLocation);
+                    });
+                }
+                
+                @Override
+                public void onLocationNotFound() {
+                    runOnUiThread(() -> {
+                        Toast.makeText(PassengerMainScreen.this, "❌ Could not find start location: " + address, Toast.LENGTH_SHORT).show();
+                        Log.w(TAG, "Start location geocoding failed for: " + address);
+                    });
+                }
+                
+                @Override
+                public void onError(String error) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(PassengerMainScreen.this, "❌ Error finding start location: " + error, Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Start location geocoding error: " + error);
+                    });
+                }
+            });
+        }
+    }
+
+    /**
+     * Geocode destination address to coordinates
+     */
+    private void geocodeDestinationAddress(String address) {
+        Log.d(TAG, "Geocoding destination address: " + address);
+        
+        if (locationManager != null) {
+            locationManager.geocodeAddress(address, new LocationManager.GeocodeCallback() {
+                @Override
+                public void onLocationFound(double latitude, double longitude, String foundAddress) {
+                    destinationLocation = new GeoPoint(latitude, longitude);
+                    destinationAddress = foundAddress;
+                    
+                    runOnUiThread(() -> {
+                        if (autocompleteController != null) {
+                            autocompleteController.setText(foundAddress);
+                        }
+                        Toast.makeText(PassengerMainScreen.this, "✅ Destination found: " + foundAddress, Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, "Destination location geocoded successfully: " + destinationLocation);
+                    });
+                }
+                
+                @Override
+                public void onLocationNotFound() {
+                    runOnUiThread(() -> {
+                        Toast.makeText(PassengerMainScreen.this, "❌ Could not find destination: " + address, Toast.LENGTH_SHORT).show();
+                        Log.w(TAG, "Destination location geocoding failed for: " + address);
+                    });
+                }
+                
+                @Override
+                public void onError(String error) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(PassengerMainScreen.this, "❌ Error finding destination: " + error, Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Destination location geocoding error: " + error);
+                    });
+                }
+            });
+        }
+    }
+
     private void checkLocationPermissions() {
         Log.d(TAG, "Checking location permissions");
-        
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) 
                 != PackageManager.PERMISSION_GRANTED) {
             
@@ -252,19 +400,40 @@ public class PassengerMainScreen extends AppCompatActivity implements
      * Handle show route button click
      */
     private void handleShowRoute() {
-        // Use start location if set, otherwise use current location
-        GeoPoint routeStartLocation = (startLocation != null) ? startLocation : currentLocation;
+        Log.d(TAG, "Show route button clicked");
         
+        // Check start location
+        GeoPoint routeStartLocation = (startLocation != null) ? startLocation : currentLocation;
+        String startText = editTextStartLocation != null ? editTextStartLocation.getText().toString().trim() : "";
+        String destText = autocompleteController != null ? autocompleteController.getText() : "";
+        
+        Log.d(TAG, "Route validation - Start location: " + routeStartLocation + ", Destination: " + destinationLocation);
+        Log.d(TAG, "Text inputs - Start: '" + startText + "', Destination: '" + destText + "'");
+        
+        // Validate start location
         if (routeStartLocation == null) {
-            Toast.makeText(this, "❌ Start location not available. Use current location or select on map.", Toast.LENGTH_SHORT).show();
-            Log.w(TAG, "Cannot show route: start location is null");
-            return;
+            if (!startText.isEmpty()) {
+                Toast.makeText(this, "⏳ Finding start location: " + startText + "\nPlease wait...", Toast.LENGTH_SHORT).show();
+                geocodeStartAddress(startText);
+                return;
+            } else {
+                Toast.makeText(this, "❌ Please enter a start location or use current location", Toast.LENGTH_SHORT).show();
+                Log.w(TAG, "Cannot show route: no start location");
+                return;
+            }
         }
         
+        // Validate destination location
         if (destinationLocation == null) {
-            Toast.makeText(this, "❌ Please select a destination first", Toast.LENGTH_SHORT).show();
-            Log.w(TAG, "Cannot show route: destination location is null");
-            return;
+            if (!destText.isEmpty()) {
+                Toast.makeText(this, "⏳ Finding destination: " + destText + "\nPlease wait...", Toast.LENGTH_SHORT).show();
+                geocodeDestinationAddress(destText);
+                return;
+            } else {
+                Toast.makeText(this, "❌ Please enter a destination", Toast.LENGTH_SHORT).show();
+                Log.w(TAG, "Cannot show route: no destination");
+                return;
+            }
         }
         
         Log.d(TAG, "Showing route from " + routeStartLocation + " to " + destinationLocation);
@@ -284,17 +453,17 @@ public class PassengerMainScreen extends AppCompatActivity implements
             @Override
             public void onRouteFound(List<GeoPoint> routePoints, double distanceKm, double durationMinutes) {
                 // Show route information with real distance and duration
-                String startText = (startLocation != null && startAddress != null) ? startAddress : 
-                                  (routeStartLocation.equals(currentLocation)) ? "Current Location" : "Selected Start";
-                String destText = (destinationAddress != null && !destinationAddress.isEmpty()) ? destinationAddress : "Selected Destination";
+                String finalStartText = (startLocation != null && startAddress != null) ? startAddress : 
+                                       (routeStartLocation.equals(currentLocation)) ? "Current Location" : startText;
+                String finalDestText = (destinationAddress != null && !destinationAddress.isEmpty()) ? destinationAddress : destText;
                 
                 String distanceText = String.format("%.1f km", distanceKm);
                 String durationText = String.format("%.0f min", durationMinutes);
                 
                 Toast.makeText(PassengerMainScreen.this, 
                         "🛣️ Route calculated!\n" +
-                        "📍 From: " + startText + "\n" +
-                        "🎯 To: " + destText + "\n" +
+                        "📍 From: " + finalStartText + "\n" +
+                        "🎯 To: " + finalDestText + "\n" +
                         "📏 Distance: " + distanceText + "\n" +
                         "⏱️ Duration: " + durationText, 
                         Toast.LENGTH_LONG).show();
@@ -310,14 +479,14 @@ public class PassengerMainScreen extends AppCompatActivity implements
                 double straightLineDistance = calculateDistance(routeStartLocation, destinationLocation);
                 String distanceText = String.format("%.1f km", straightLineDistance);
                 
-                String startText = (startLocation != null && startAddress != null) ? startAddress : 
-                                  (routeStartLocation.equals(currentLocation)) ? "Current Location" : "Selected Start";
-                String destText = (destinationAddress != null && !destinationAddress.isEmpty()) ? destinationAddress : "Selected Destination";
+                String finalStartText = (startLocation != null && startAddress != null) ? startAddress : 
+                                       (routeStartLocation.equals(currentLocation)) ? "Current Location" : startText;
+                String finalDestText = (destinationAddress != null && !destinationAddress.isEmpty()) ? destinationAddress : destText;
                 
                 Toast.makeText(PassengerMainScreen.this, 
                         "⚠️ Route service unavailable\n" +
-                        "📍 From: " + startText + "\n" +
-                        "🎯 To: " + destText + "\n" +
+                        "📍 From: " + finalStartText + "\n" +
+                        "🎯 To: " + finalDestText + "\n" +
                         "📏 Straight-line distance: " + distanceText, 
                         Toast.LENGTH_LONG).show();
                 
@@ -330,54 +499,6 @@ public class PassengerMainScreen extends AppCompatActivity implements
     }
 
     /**
-     * Handle logout button click
-     */
-    private void handleLogout() {
-        Log.d(TAG, "Handling logout");
-        
-        // Clear all data
-        currentLocation = null;
-        startLocation = null;
-        destinationLocation = null;
-        startAddress = null;
-        destinationAddress = null;
-        
-        // Clear input fields
-        if (editTextStartLocation != null) {
-            editTextStartLocation.setText("");
-        }
-        
-        // Clear map
-        if (mapController != null) {
-            mapController.clearAll();
-        }
-        
-        // Clear autocomplete
-        if (autocompleteController != null) {
-            autocompleteController.clearInput();
-        }
-        
-        // Stop location services
-        if (locationManager != null) {
-            locationManager.stopLocationUpdates();
-        }
-        
-        // Clear user session
-        PreferencesManager.clearUserSession(this);
-        
-        // Sign out from Firebase
-        com.google.firebase.auth.FirebaseAuth.getInstance().signOut();
-        
-        Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show();
-        
-        // Return to login screen
-        Intent intent = new Intent(this, com.makitaxi.login.Login.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
-    }
-    
-    /**
      * Handle use current location button click
      */
     private void handleUseCurrentLocation() {
@@ -386,7 +507,6 @@ public class PassengerMainScreen extends AppCompatActivity implements
         if (currentLocation == null) {
             Toast.makeText(this, "Current location not available. Please wait...", Toast.LENGTH_SHORT).show();
             
-            // Try to get location again
             if (locationManager != null) {
                 locationManager.getLastKnownLocation();
             }
@@ -424,6 +544,57 @@ public class PassengerMainScreen extends AppCompatActivity implements
             @Override
             public void onReverseGeocodeError(String error) {
                 Log.w(TAG, "Current location reverse geocoding failed: " + error);
+                // Keep "Current Location" as the address
+            }
+        });
+    }
+    
+    /**
+     * Handle use current location for end location button click
+     */
+    private void handleUseCurrentEndLocation() {
+        Log.d(TAG, "Handling use current location for end location");
+        
+        if (currentLocation == null) {
+            Toast.makeText(this, "Current location not available. Please wait...", Toast.LENGTH_SHORT).show();
+            
+            if (locationManager != null) {
+                locationManager.getLastKnownLocation();
+            }
+            return;
+        }
+        
+        // Set current location as destination location
+        destinationLocation = currentLocation;
+        destinationAddress = "Current Location";
+        
+        // Update destination location input field
+        if (autocompleteController != null) {
+            autocompleteController.setText(destinationAddress);
+        }
+        
+        // Use current location as destination point
+        mapController.addDestinationMarker(currentLocation);
+        mapController.centerMapOn(currentLocation);
+        
+        Toast.makeText(this, "📍 Current location set as drop-off point", Toast.LENGTH_SHORT).show();
+        
+        // Try to get actual address for current location
+        locationManager.reverseGeocode(currentLocation, new LocationManager.ReverseGeocodeListener() {
+            @Override
+            public void onReverseGeocodeSuccess(String address) {
+                Log.d(TAG, "Current location reverse geocoding successful for end location: " + address);
+                destinationAddress = address;
+                
+                // Update destination location input field with real address
+                if (autocompleteController != null) {
+                    autocompleteController.setText(destinationAddress);
+                }
+            }
+            
+            @Override
+            public void onReverseGeocodeError(String error) {
+                Log.w(TAG, "Current location reverse geocoding failed for end location: " + error);
                 // Keep "Current Location" as the address
             }
         });
@@ -728,5 +899,55 @@ public class PassengerMainScreen extends AppCompatActivity implements
     public void onDestinationSelected(GeoPoint point) {
         // This method is now handled by handleDestinationSelection  
         handleDestinationSelection(point);
+    }
+
+    private void toggleControls() {
+        controlsVisible = !controlsVisible;
+        if (locationControlsLayout != null && actionButtonsLayout != null && txtToggleControls != null) {
+            if (controlsVisible) {
+                locationControlsLayout.setVisibility(View.VISIBLE);
+                actionButtonsLayout.setVisibility(View.VISIBLE);
+                txtToggleControls.setText("\uD83D\uDE95 Reserve a ride ▼");
+                Log.d(TAG, "Route controls shown");
+            } else {
+                locationControlsLayout.setVisibility(View.GONE);
+                actionButtonsLayout.setVisibility(View.GONE);
+                txtToggleControls.setText("\uD83D\uDE95 Reserve a ride ▲");
+                Log.d(TAG, "Route controls hidden");
+            }
+        }
+    }
+
+    private void handleAccount() {
+        Log.d(TAG, "Account button clicked");
+        Toast.makeText(this, "👤 Account settings coming soon", Toast.LENGTH_SHORT).show();
+        // TODO: Implement account/profile screen navigation
+    }
+
+    private void handleGPS() {
+        Log.d(TAG, "GPS button clicked");
+        if (currentLocation != null) {
+            mapController.centerMapOn(currentLocation);
+            Toast.makeText(this, "📍 Centered on your location", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "📍 Getting your location...", Toast.LENGTH_SHORT).show();
+            if (locationManager != null) {
+                locationManager.getLastKnownLocation();
+            }
+        }
+    }
+
+    private void handleZoomIn() {
+        Log.d(TAG, "Zoom in button clicked");
+        if (mapController != null) {
+            mapController.zoomIn();
+        }
+    }
+
+    private void handleZoomOut() {
+        Log.d(TAG, "Zoom out button clicked");
+        if (mapController != null) {
+            mapController.zoomOut();
+        }
     }
 }

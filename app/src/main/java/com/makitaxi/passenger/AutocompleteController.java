@@ -13,17 +13,8 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.osmdroid.util.GeoPoint;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -618,17 +609,29 @@ public class AutocompleteController {
     }
     
     /**
-     * Set input text
+     * Get the AutoCompleteTextView widget
+     * @return The AutoCompleteTextView instance
      */
-    public void setText(String text) {
-        autoCompleteTextView.setText(text);
+    public AutoCompleteTextView getAutoCompleteTextView() {
+        return autoCompleteTextView;
     }
     
     /**
-     * Get current input text
+     * Get current text from the autocomplete field
+     * @return Current text content
      */
     public String getText() {
-        return autoCompleteTextView.getText().toString().trim();
+        return autoCompleteTextView != null ? autoCompleteTextView.getText().toString() : "";
+    }
+    
+    /**
+     * Set text in the autocomplete field
+     * @param text Text to set
+     */
+    public void setText(String text) {
+        if (autoCompleteTextView != null) {
+            autoCompleteTextView.setText(text);
+        }
     }
     
     /**

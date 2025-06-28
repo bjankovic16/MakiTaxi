@@ -15,14 +15,11 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import org.osmdroid.util.GeoPoint;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -38,17 +35,14 @@ import java.util.concurrent.Executors;
 public class LocationManager implements LocationListener {
     
     private static final String TAG = "LocationManager";
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private static final long MIN_TIME_BETWEEN_UPDATES = 5000; // 5 seconds
     private static final float MIN_DISTANCE_CHANGE_FOR_UPDATES = 10.0f; // 10 meters
     
-    private Context context;
-    private android.location.LocationManager systemLocationManager;
-    private Geocoder geocoder;
-    private ExecutorService executorService;
+    private final Context context;
+    private final ExecutorService executorService;
     private LocationUpdateListener locationUpdateListener;
-    private android.location.LocationManager androidLocationManager;
-    private Handler handler;
+    private final android.location.LocationManager androidLocationManager;
+    private final Handler handler;
     
     /**
      * Interface for location update callbacks
@@ -59,61 +53,39 @@ public class LocationManager implements LocationListener {
         void onLocationPermissionDenied();
     }
     
+    /**
+     * Interface for reverse geocoding callbacks
+     */
+    public interface ReverseGeocodeListener {
+        void onReverseGeocodeSuccess(String address);
+        void onReverseGeocodeError(String error);
+    }
+
+    /**
+     * Interface for geocoding callbacks
+     */
+    public interface GeocodeCallback {
+        void onLocationFound(double latitude, double longitude, String address);
+        void onLocationNotFound();
+        void onError(String error);
+    }
+    
     public LocationManager(Context context) {
         this.context = context;
         this.executorService = Executors.newSingleThreadExecutor();
         this.handler = new Handler(Looper.getMainLooper());
-        
-        // Initialize Android LocationManager
-        androidLocationManager = (android.location.LocationManager) 
+
+        androidLocationManager = (android.location.LocationManager)
                 context.getSystemService(Context.LOCATION_SERVICE);
-        
-        this.geocoder = new Geocoder(context, Locale.getDefault());
-        
-        Log.d(TAG, "LocationManager initialized");
     }
     
     public void setLocationUpdateListener(LocationUpdateListener listener) {
         this.locationUpdateListener = listener;
     }
-    
-    /**
-     * Check if location permissions are granted
-     */
+
     private boolean hasLocationPermission() {
         return ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) 
                 == PackageManager.PERMISSION_GRANTED;
-    }
-    
-    /**
-     * Request location permissions
-     */
-    public void requestLocationPermissions() {
-        Log.d(TAG, "Requesting location permissions");
-        
-        ActivityCompat.requestPermissions((Activity) context,
-                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                LOCATION_PERMISSION_REQUEST_CODE);
-    }
-    
-    /**
-     * Handle permission request results
-     */
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, 
-                                         @NonNull int[] grantResults) {
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startLocationUpdates();
-                if (locationUpdateListener != null) {
-                    // Don't call onLocationPermissionDenied when permission is granted
-                    Log.d(TAG, "Location permission granted");
-                }
-            } else {
-                if (locationUpdateListener != null) {
-                    locationUpdateListener.onLocationPermissionDenied();
-                }
-            }
-        }
     }
     
     /**
@@ -168,69 +140,13 @@ public class LocationManager implements LocationListener {
      * Stop location updates
      */
     public void stopLocationUpdates() {
-        Log.d(TAG, "Stopping location updates");
-        
         try {
             androidLocationManager.removeUpdates(this);
         } catch (SecurityException e) {
             Log.e(TAG, "Security exception when removing location updates", e);
         }
     }
-    
-    /**
-     * Get current location
-     */
-    public GeoPoint getCurrentLocation() {
-        if (hasLocationPermission()) {
-            try {
-                Location lastKnownLocation = androidLocationManager.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER);
-                if (lastKnownLocation == null) {
-                    lastKnownLocation = androidLocationManager.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER);
-                }
-                
-                if (lastKnownLocation != null) {
-                    return new GeoPoint(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-                }
-            } catch (SecurityException e) {
-                Log.e(TAG, "Security exception getting current location", e);
-            }
-        }
-        return null;
-    }
-    
-    /**
-     * Geocode address to coordinates
-     */
-    public void geocodeAddress(String address, GeocodeCallback callback) {
-        executorService.execute(() -> {
-            try {
-                Log.d(TAG, "Geocoding address: " + address);
-                
-                // Check if Geocoder is available
-                if (!Geocoder.isPresent()) {
-                    Log.e(TAG, "Geocoder not available on this device");
-                    callback.onGeocodeResult(null, "Geocoder not available");
-                    return;
-                }
-                
-                // Use Android's Geocoder to convert address to coordinates
-                List<Address> addresses = geocoder.getFromLocationName(address, 1);
-                if (addresses != null && !addresses.isEmpty()) {
-                    Address location = addresses.get(0);
-                    GeoPoint point = new GeoPoint(location.getLatitude(), location.getLongitude());
-                    Log.d(TAG, "Geocoded to: " + point.getLatitude() + ", " + point.getLongitude());
-                    callback.onGeocodeResult(point, null);
-                } else {
-                    Log.w(TAG, "No results found for address: " + address);
-                    callback.onGeocodeResult(null, "No results found for: " + address);
-                }
-            } catch (IOException e) {
-                Log.e(TAG, "Geocoding failed for: " + address, e);
-                callback.onGeocodeResult(null, "Geocoding failed: " + e.getMessage());
-            }
-        });
-    }
-    
+
     /**
      * Convert coordinates to address using reverse geocoding
      */
@@ -244,7 +160,6 @@ public class LocationManager implements LocationListener {
         
         Log.d(TAG, "Starting reverse geocoding for: " + location);
         
-        // Use Android's Geocoder for reverse geocoding
         if (Geocoder.isPresent()) {
             new Thread(() -> {
                 try {
@@ -291,10 +206,7 @@ public class LocationManager implements LocationListener {
             }
         }
     }
-    
-    /**
-     * Format address from Geocoder result
-     */
+
     private String formatAddress(Address address) {
         StringBuilder addressText = new StringBuilder();
         
@@ -333,19 +245,9 @@ public class LocationManager implements LocationListener {
         return addressText.toString();
     }
     
-    /**
-     * Interface for reverse geocoding callbacks
-     */
-    public interface ReverseGeocodeListener {
-        void onReverseGeocodeSuccess(String address);
-        void onReverseGeocodeError(String error);
-    }
-    
     // LocationListener implementation
     @Override
     public void onLocationChanged(@NonNull Location location) {
-        Log.d(TAG, "Location updated: " + location.getLatitude() + ", " + location.getLongitude());
-        
         GeoPoint geoPoint = new GeoPoint(location.getLatitude(), location.getLongitude());
         if (locationUpdateListener != null) {
             locationUpdateListener.onLocationUpdate(geoPoint);
@@ -363,13 +265,6 @@ public class LocationManager implements LocationListener {
     @Override
     public void onProviderDisabled(@NonNull String provider) {
         Toast.makeText(context, provider + " disabled", Toast.LENGTH_SHORT).show();
-    }
-    
-    /**
-     * Callback interface for geocoding results
-     */
-    public interface GeocodeCallback {
-        void onGeocodeResult(GeoPoint result, String error);
     }
     
     /**
@@ -417,12 +312,69 @@ public class LocationManager implements LocationListener {
      * Cleanup resources
      */
     public void cleanup() {
-        Log.d(TAG, "Cleaning up LocationManager");
-        
         stopLocationUpdates();
         
         if (executorService != null && !executorService.isShutdown()) {
             executorService.shutdown();
+        }
+    }
+
+    /**
+     * Geocode an address string to get coordinates
+     */
+    public void geocodeAddress(String address, GeocodeCallback callback) {
+        if (address == null || address.trim().isEmpty()) {
+            if (callback != null) {
+                callback.onError("Address is empty");
+            }
+            return;
+        }
+        
+        Log.d(TAG, "Starting geocoding for address: " + address);
+        
+        // Use Android's Geocoder for address geocoding
+        if (Geocoder.isPresent()) {
+            executorService.execute(() -> {
+                try {
+                    Geocoder geocoder = new Geocoder(context, java.util.Locale.getDefault());
+                    List<Address> addresses = geocoder.getFromLocationName(address, 1);
+                    
+                    if (addresses != null && !addresses.isEmpty()) {
+                        Address foundAddress = addresses.get(0);
+                        double latitude = foundAddress.getLatitude();
+                        double longitude = foundAddress.getLongitude();
+                        String formattedAddress = formatAddress(foundAddress);
+                        
+                        // Return result on main thread
+                        handler.post(() -> {
+                            if (callback != null) {
+                                callback.onLocationFound(latitude, longitude, formattedAddress);
+                            }
+                        });
+                        
+                        Log.d(TAG, "Geocoding successful for '" + address + "': " + latitude + ", " + longitude);
+                    } else {
+                        handler.post(() -> {
+                            if (callback != null) {
+                                callback.onLocationNotFound();
+                            }
+                        });
+                        Log.w(TAG, "No location found for address: " + address);
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Geocoding failed for address: " + address, e);
+                    handler.post(() -> {
+                        if (callback != null) {
+                            callback.onError("Geocoding failed: " + e.getMessage());
+                        }
+                    });
+                }
+            });
+        } else {
+            Log.w(TAG, "Geocoder not available on this device");
+            if (callback != null) {
+                callback.onError("Geocoder not available");
+            }
         }
     }
 } 

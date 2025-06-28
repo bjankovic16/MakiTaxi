@@ -606,4 +606,24 @@ public class MapController implements MapEventsReceiver {
         // Clear all overlays
         clearAll();
     }
+
+    /**
+     * Zoom in on the map
+     */
+    public void zoomIn() {
+        if (mapView != null) {
+            mapView.getController().zoomIn();
+            Log.d(TAG, "Map zoomed in");
+        }
+    }
+
+    /**
+     * Zoom out on the map
+     */
+    public void zoomOut() {
+        if (mapView != null) {
+            mapView.getController().zoomOut();
+            Log.d(TAG, "Map zoomed out");
+        }
+    }
 } 
