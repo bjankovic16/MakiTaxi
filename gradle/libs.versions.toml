@@ -1,5 +1,6 @@
 [versions]
 agp = "8.10.0"
+json = "20231013"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
@@ -12,10 +13,13 @@ googleGmsGoogleServices = "4.4.2"
 firebaseAuth = "22.3.1"
 firebaseFirestore = "24.10.2"
 firebaseDatabase = "20.3.0"
+okhttp = "4.12.0"
+osmdroidAndroid = "6.1.20"
 playServicesAuth = "20.7.0"
 playServicesIdentity = "18.1.0"
 
 [libraries]
+json = { module = "org.json:json", version.ref = "json" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -27,6 +31,8 @@ navigation-runtime-android = { group = "androidx.navigation", name = "navigation
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+osmdroid-android = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroidAndroid" }
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
 play-services-identity = { group = "com.google.android.gms", name = "play-services-identity", version.ref = "playServicesIdentity" }
 

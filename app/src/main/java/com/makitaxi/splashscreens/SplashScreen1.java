@@ -1,7 +1,9 @@
 package com.makitaxi.splashscreens;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -22,7 +24,24 @@ public class SplashScreen1 extends AppCompatActivity {
         EdgeToEdge.enable(this);
         PreferencesManager.setSplashScreensShown(this, true);
         setContentView(R.layout.splash_screen1);
+        handleSystemBars();
         addButtonListeners();
+    }
+
+    private void handleSystemBars() {
+        View rootView = findViewById(android.R.id.content);
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
+            androidx.core.graphics.Insets systemBars = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.systemBars()
+            );
+            v.setPadding(
+                systemBars.left,
+                systemBars.top,
+                systemBars.right,
+                systemBars.bottom
+            );
+            return insets;
+        });
     }
 
     private void addButtonListeners() {

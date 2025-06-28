@@ -46,6 +46,9 @@ public class Login extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.login);
 
+        // Handle system bars (status bar and navigation bar)
+        handleSystemBars();
+
         auth = FirebaseAuth.getInstance();
         firebaseDatabase = FirebaseDatabase.getInstance("https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app/");
         googleAuth = GoogleAuth.getInstance(this);
@@ -207,5 +210,21 @@ public class Login extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
+    }
+
+    private void handleSystemBars() {
+        View rootView = findViewById(android.R.id.content);
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
+            androidx.core.graphics.Insets systemBars = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.systemBars()
+            );
+            v.setPadding(
+                systemBars.left,
+                systemBars.top,
+                systemBars.right,
+                systemBars.bottom
+            );
+            return insets;
+        });
     }
 }

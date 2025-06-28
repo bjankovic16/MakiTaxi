@@ -43,6 +43,16 @@ dependencies {
     implementation(libs.firebase.database)
     implementation(libs.play.services.auth)
     implementation(libs.play.services.identity)
+    
+    // OSMDroid for OpenStreetMap functionality
+    implementation(libs.osmdroid.android)
+    
+    // HTTP client for routing API calls
+    implementation(libs.okhttp)
+    
+    // JSON parsing for route data
+    implementation(libs.json)
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

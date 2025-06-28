@@ -1,10 +1,13 @@
 package com.makitaxi.login;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -25,7 +28,9 @@ public class PasswordChange extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
         setContentView(R.layout.password_change);
+        handleSystemBars();
 
         mAuth = FirebaseAuth.getInstance();
         firebaseDatabase = FirebaseDatabase.getInstance("https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app/");
@@ -104,5 +109,21 @@ public class PasswordChange extends AppCompatActivity {
 
     private void showLoading(boolean isLoading) {
         buttonResetPassword.setEnabled(!isLoading);
+    }
+
+    private void handleSystemBars() {
+        View rootView = findViewById(android.R.id.content);
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
+            androidx.core.graphics.Insets systemBars = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.systemBars()
+            );
+            v.setPadding(
+                systemBars.left,
+                systemBars.top,
+                systemBars.right,
+                systemBars.bottom
+            );
+            return insets;
+        });
     }
 }

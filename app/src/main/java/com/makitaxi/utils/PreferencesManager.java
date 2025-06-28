@@ -25,6 +25,17 @@ public final class PreferencesManager {
     }
 
     /**
+     * Gets the SharedPreferences instance for OSMDroid configuration.
+     * This method is used by OSMDroid to store map tiles cache and configuration.
+     *
+     * @param context The application context.
+     * @return The SharedPreferences instance for OSMDroid.
+     */
+    public static SharedPreferences getSharedPreferences(Context context) {
+        return context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE);
+    }
+
+    /**
      * Checks if the splash screens have been shown before.
      *
      * @param context The application context.

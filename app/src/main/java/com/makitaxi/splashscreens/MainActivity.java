@@ -2,6 +2,7 @@ package com.makitaxi.splashscreens;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
@@ -17,6 +18,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        handleSystemBars();
+        addButtonListener();
 
         if (PreferencesManager.haveSplashScreensBeenShown(this)) {
             navigateToLogin();
@@ -25,6 +29,25 @@ public class MainActivity extends AppCompatActivity {
             setContentView(R.layout.home_screen);
             addButtonListener();
         }
+    }
+
+    private void handleSystemBars() {
+        View rootView = findViewById(android.R.id.content);
+        
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
+            androidx.core.graphics.Insets systemBars = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.systemBars()
+            );
+
+            v.setPadding(
+                systemBars.left,
+                systemBars.top,
+                systemBars.right,
+                systemBars.bottom
+            );
+            
+            return insets;
+        });
     }
 
     private void addButtonListener() {

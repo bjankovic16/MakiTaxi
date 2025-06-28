@@ -2,6 +2,7 @@ package com.makitaxi.driver;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
@@ -22,9 +23,14 @@ public class DriverMainScreen extends AppCompatActivity {
         setContentView(R.layout.driver_main_screen);
         //addButtonListener();
 
+        // Handle system bars (status bar and navigation bar)
+        handleSystemBars();
+
+        // Handle back button press with modern approach
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
+                // Move app to background instead of going back to login
                 moveTaskToBack(true);
             }
         });
@@ -48,6 +54,34 @@ public class DriverMainScreen extends AppCompatActivity {
                     NavigationClickListener.navigateTo(this, DriverMainScreen.class)
             );
         }
+    }
+
+    /**
+     * Handle System Bars (Status Bar and Navigation Bar)
+     * This ensures content is not covered by system UI elements
+     */
+    private void handleSystemBars() {
+        // Get the root view
+        View rootView = findViewById(android.R.id.content);
+        
+        // Set up window insets listener to handle system bars
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
+            // Get system bars insets (status bar, navigation bar)
+            androidx.core.graphics.Insets systemBars = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.systemBars()
+            );
+            
+            // Apply padding to avoid content being covered by system bars
+            // Top padding for status bar, bottom padding for navigation bar
+            v.setPadding(
+                systemBars.left,    // Left padding (usually 0)
+                systemBars.top,     // Top padding (status bar)
+                systemBars.right,   // Right padding (usually 0)
+                systemBars.bottom   // Bottom padding (navigation bar)
+            );
+            
+            return insets;
+        });
     }
 
 }
