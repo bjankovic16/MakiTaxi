@@ -21,6 +21,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.FirebaseDatabase;
 import com.makitaxi.R;
 import com.makitaxi.model.User;
+import com.makitaxi.utils.PreferencesManager;
 
 public class GoogleAuth {
     private static final String TAG = "GoogleAuth";
@@ -29,8 +30,10 @@ public class GoogleAuth {
     private final FirebaseDatabase database;
     private final SignInClient oneTapClient;
     private ActivityResultLauncher<IntentSenderRequest> signInLauncher;
+    private Context context; // Store context for session saving
 
     private GoogleAuth(Context context) {
+        this.context = context;
         auth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance("https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app/");
         oneTapClient = Identity.getSignInClient(context);
@@ -123,6 +126,9 @@ public class GoogleAuth {
                 } else {
                     User user = snapshot.getValue(User.class);
                     if(user != null) {
+                        Log.d(TAG, "Existing user found, saving session");
+                        PreferencesManager.saveLoginSession(context, email);
+                        
                         listener.onSuccess(user.getRole(), user.isVerified());
                     } else {
                         String errorMessage = "Failed to parse user data from database.";
@@ -154,9 +160,9 @@ public class GoogleAuth {
             user.setProfilePicture(photoUrl);
         }
 
-
         database.getReference("users").child(userId).setValue(user).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
+                PreferencesManager.saveLoginSession(context, email);
                 listener.onSuccess(user.getRole(), user.isVerified());
             } else {
                 Log.e(TAG, "Failed to create user profile", task.getException());

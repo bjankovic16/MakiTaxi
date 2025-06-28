@@ -66,6 +66,7 @@
                 android:id="@+id/loginPassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@null"
                 android:hint="••••••••"
                 android:inputType="textPassword"
                 android:padding="12dp"

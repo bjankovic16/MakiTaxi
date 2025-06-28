@@ -3,6 +3,7 @@ package com.makitaxi.login;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,6 +21,7 @@ import com.makitaxi.R;
 import com.makitaxi.driver.DriverMainScreen;
 import com.makitaxi.passenger.PassengerMainScreen;
 import com.makitaxi.utils.NavigationClickListener;
+import com.makitaxi.utils.PreferencesManager;
 
 public class Login extends AppCompatActivity {
     private static final String TAG = "Login";
@@ -151,6 +153,10 @@ public class Login extends AppCompatActivity {
     private void signIn(String email, String password, String role, boolean verified) {
         auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
+                Log.d(TAG, "Login successful for user: " + email);
+                
+                PreferencesManager.saveLoginSession(Login.this, email);
+                
                 navigateToPassengerOrDriver(role, verified);
             } else {
                 Toast.makeText(Login.this, "Login failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
