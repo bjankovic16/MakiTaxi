@@ -1,8 +1,10 @@
 package com.makitaxi.passenger;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -34,6 +36,11 @@ public class PassengerScreen extends AppCompatActivity {
     private LinearLayout pickupLocationContainer;
     private LinearLayout destinationLocationContainer;
 
+    private boolean hasFocusPickup = false;
+    private boolean hasFocusDestination = false;
+
+    private Map map;
+
     private boolean controlsVisible = true;
 
     @Override
@@ -42,7 +49,12 @@ public class PassengerScreen extends AppCompatActivity {
         setContentView(R.layout.passenger_screen);
         handleSystemBars();
         initializeViews();
+        initializeControllers();
         setupUIInteractions();
+    }
+
+    private void initializeControllers() {
+        map = new Map(this, mapView);
     }
 
     private void handleSystemBars() {
@@ -99,12 +111,14 @@ public class PassengerScreen extends AppCompatActivity {
                 btnChoseFromMap.setVisibility(View.VISIBLE);
                 btnChoseCurrentLocation.setVisibility(View.VISIBLE);
             }
+            hasFocusPickup = hasFocus;
         });
         txtDestination.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) {
                 btnChoseFromMap.setVisibility(View.VISIBLE);
                 btnChoseCurrentLocation.setVisibility(View.VISIBLE);
             }
+            hasFocusDestination = hasFocus;
         });
     }
 
@@ -125,6 +139,12 @@ public class PassengerScreen extends AppCompatActivity {
             destinationLocationContainer.setVisibility(View.GONE);
             btnChoseFromMap.setVisibility(View.GONE);
             btnChoseCurrentLocation.setVisibility(View.GONE);
+            View currentFocus = this.getCurrentFocus();
+            if (currentFocus != null) {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(currentFocus.getWindowToken(), 0);
+                currentFocus.clearFocus();
+            }
             toggleControls.setText("🚕 ▲");
         }
     }

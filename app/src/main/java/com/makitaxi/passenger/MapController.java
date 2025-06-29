@@ -93,22 +93,11 @@ public class MapController implements MapEventsReceiver {
         this.executorService = Executors.newSingleThreadExecutor();
         this.mainHandler = new Handler(Looper.getMainLooper());
         
-        initializeOSMDroid();
         setupMapView();
     }
     
     public void setMapInteractionListener(MapInteractionListener listener) {
         this.mapInteractionListener = listener;
-    }
-    
-    /**
-     * Initialize OSMDroid configuration
-     */
-    private void initializeOSMDroid() {
-        Log.d(TAG, "Initializing OSMDroid configuration");
-        
-        // Load OSMDroid configuration from SharedPreferences
-        Configuration.getInstance().load(context, PreferencesManager.getSharedPreferences(context));
     }
     
     /**
@@ -124,7 +113,7 @@ public class MapController implements MapEventsReceiver {
         mapView.setMultiTouchControls(true);
         
         // Show built-in zoom controls (+/- buttons)
-        mapView.setBuiltInZoomControls(true);
+        mapView.setBuiltInZoomControls(false);
         
         // Get map controller for programmatic control
         osmMapController = mapView.getController();
