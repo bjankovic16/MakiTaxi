@@ -94,6 +94,18 @@ public class PassengerScreen extends AppCompatActivity {
 
     private void setupUIInteractions() {
         toggleControls.setOnClickListener(v -> toggleControls());
+        txtPickupLocation.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                btnChoseFromMap.setVisibility(View.VISIBLE);
+                btnChoseCurrentLocation.setVisibility(View.VISIBLE);
+            }
+        });
+        txtDestination.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                btnChoseFromMap.setVisibility(View.VISIBLE);
+                btnChoseCurrentLocation.setVisibility(View.VISIBLE);
+            }
+        });
     }
 
     private void toggleControls() {
@@ -103,8 +115,8 @@ public class PassengerScreen extends AppCompatActivity {
             btnClearRoute.setVisibility(View.VISIBLE);
             pickupLocationContainer.setVisibility(View.VISIBLE);
             destinationLocationContainer.setVisibility(View.VISIBLE);
-            btnChoseFromMap.setVisibility(View.VISIBLE);
-            btnChoseCurrentLocation.setVisibility(View.VISIBLE);
+            btnChoseFromMap.setVisibility(View.GONE);
+            btnChoseCurrentLocation.setVisibility(View.GONE);
             toggleControls.setText("🚕 ▼");
         } else {
             btnShowRoute.setVisibility(View.GONE);

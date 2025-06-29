@@ -143,6 +143,7 @@
         <Button
             android:id="@+id/btnChoseFromMap"
             android:layout_width="48dp"
+            android:visibility="gone"
             android:layout_height="48dp"
             android:layout_marginBottom="8dp"
             android:background="@drawable/primary_button_background"
@@ -156,6 +157,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="@drawable/primary_button_background"
+            android:visibility="gone"
             android:elevation="4dp"
             android:text="🗺️"
             android:textColor="@color/white" />
