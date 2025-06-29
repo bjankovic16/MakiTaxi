@@ -106,6 +106,7 @@ public class PassengerScreen extends AppCompatActivity {
 
     private void setupUIInteractions() {
         toggleControls.setOnClickListener(v -> toggleControls());
+        
         txtPickupLocation.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) {
                 btnChoseFromMap.setVisibility(View.VISIBLE);
@@ -113,6 +114,7 @@ public class PassengerScreen extends AppCompatActivity {
             }
             hasFocusPickup = hasFocus;
         });
+        
         txtDestination.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) {
                 btnChoseFromMap.setVisibility(View.VISIBLE);
@@ -120,6 +122,26 @@ public class PassengerScreen extends AppCompatActivity {
             }
             hasFocusDestination = hasFocus;
         });
+    }
+
+    private void hideKeyboard() {
+        try {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                View currentFocus = getCurrentFocus();
+                if (currentFocus != null) {
+                    imm.hideSoftInputFromWindow(currentFocus.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                    currentFocus.clearFocus();
+                }
+                
+                View rootView = findViewById(android.R.id.content);
+                if (rootView != null) {
+                    imm.hideSoftInputFromWindow(rootView.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                }
+            }
+        } catch (Exception e) {
+            Log.e("PassengerScreen", "Error hiding keyboard: " + e.getMessage());
+        }
     }
 
     private void toggleControls() {
@@ -139,12 +161,7 @@ public class PassengerScreen extends AppCompatActivity {
             destinationLocationContainer.setVisibility(View.GONE);
             btnChoseFromMap.setVisibility(View.GONE);
             btnChoseCurrentLocation.setVisibility(View.GONE);
-            View currentFocus = this.getCurrentFocus();
-            if (currentFocus != null) {
-                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(currentFocus.getWindowToken(), 0);
-                currentFocus.clearFocus();
-            }
+            hideKeyboard();
             toggleControls.setText("🚕 ▲");
         }
     }
