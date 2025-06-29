@@ -136,28 +136,29 @@ public class PassengerScreen extends AppCompatActivity {
     }
 
     private void choseCurrentLocationAsStartOrDestination() {
-        if(!hasFocusPickup && !hasFocusDestination) {
-            return;
-        }
-        final String[] currentAddress = {""};
+        if (!hasFocusPickup && !hasFocusDestination) return;
+
         locationService.reverseGeocode(map.getCurrentLocation(), new LocationService.ReverseGeocodeListener() {
             @Override
             public void onReverseGeocodeSuccess(String address) {
-                currentAddress[0] = address;
+                if (hasFocusPickup) {
+                    txtPickupLocation.setText(address);
+                }
+                if (hasFocusDestination) {
+                    txtDestination.setText(address);
+                }
             }
 
             @Override
             public void onReverseGeocodeError(String error) {
-                currentAddress[0] = "Cannot get current location";
+                if (hasFocusPickup) {
+                    txtPickupLocation.setText(error);
+                }
+                if (hasFocusDestination) {
+                    txtDestination.setText(error);
+                }
             }
         });
-
-        if (hasFocusPickup) {
-            txtPickupLocation.setText(currentAddress[0]);
-        }
-        if (hasFocusDestination) {
-            txtDestination.setText(currentAddress[0]);
-        }
     }
 
     private void toggleControls() {
