@@ -10,14 +10,16 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.makitaxi.R;
 
+import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 
-public class PassengerScreen extends AppCompatActivity {
+public class PassengerScreen extends AppCompatActivity implements Map.CallbackMapTap {
 
     // UI Components
     private MapView mapView;
@@ -39,10 +41,11 @@ public class PassengerScreen extends AppCompatActivity {
     private boolean hasFocusPickup = false;
     private boolean hasFocusDestination = false;
 
+    private boolean shouldCalculateStartOrDestinationFromMap;
+
     private Map map;
 
     private LocationService locationService;
-
     private boolean controlsVisible = true;
 
     @Override
@@ -58,6 +61,7 @@ public class PassengerScreen extends AppCompatActivity {
     private void initializeControllers() {
         map = new Map(this, mapView);
         locationService = new LocationService(this);
+        map.initCallbackMapTap(this);
     }
 
     private void handleSystemBars() {
@@ -133,6 +137,8 @@ public class PassengerScreen extends AppCompatActivity {
         btnMyLocation.setOnClickListener(v -> map.centerOnCurrentLocation());
 
         btnChoseCurrentLocation.setOnClickListener(v -> choseCurrentLocationAsStartOrDestination());
+
+        btnChoseFromMap.setOnClickListener(v -> choseLocationFromMapAsStartOrDestination());
     }
 
     private void choseCurrentLocationAsStartOrDestination() {
@@ -161,6 +167,11 @@ public class PassengerScreen extends AppCompatActivity {
         });
     }
 
+    private void choseLocationFromMapAsStartOrDestination() {
+        if (!hasFocusPickup && !hasFocusDestination) return;
+        shouldCalculateStartOrDestinationFromMap = true;
+    }
+
     private void toggleControls() {
         controlsVisible = !controlsVisible;
         if (controlsVisible) {
@@ -170,6 +181,7 @@ public class PassengerScreen extends AppCompatActivity {
             destinationLocationContainer.setVisibility(View.VISIBLE);
             btnChoseFromMap.setVisibility(View.GONE);
             btnChoseCurrentLocation.setVisibility(View.GONE);
+            shouldCalculateStartOrDestinationFromMap = false;
             toggleControls.setText("🚕 ▼");
         } else {
             btnShowRoute.setVisibility(View.GONE);
@@ -178,6 +190,7 @@ public class PassengerScreen extends AppCompatActivity {
             destinationLocationContainer.setVisibility(View.GONE);
             btnChoseFromMap.setVisibility(View.GONE);
             btnChoseCurrentLocation.setVisibility(View.GONE);
+            shouldCalculateStartOrDestinationFromMap = false;
             hideKeyboard();
             toggleControls.setText("🚕 ▲");
         }
@@ -203,4 +216,31 @@ public class PassengerScreen extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onTap(GeoPoint p) {
+        if (shouldCalculateStartOrDestinationFromMap) {
+            locationService.reverseGeocode(p, new LocationService.ReverseGeocodeListener() {
+                @Override
+                public void onReverseGeocodeSuccess(String address) {
+                    if (hasFocusPickup) {
+                        txtPickupLocation.setText(address);
+                    }
+                    if (hasFocusDestination) {
+                        txtDestination.setText(address);
+                    }
+                }
+
+                @Override
+                public void onReverseGeocodeError(String error) {
+                    if (hasFocusPickup) {
+                        txtPickupLocation.setText(error);
+                    }
+                    if (hasFocusDestination) {
+                        txtDestination.setText(error);
+                    }
+                }
+            });
+        }
+
+    }
 }

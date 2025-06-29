@@ -6,10 +6,12 @@ import android.os.Looper;
 import android.util.Log;
 
 import org.osmdroid.api.IMapController;
+import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.CustomZoomButtonsController;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.MapEventsOverlay;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
@@ -17,6 +19,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Map {
+
+    public interface CallbackMapTap {
+        public void onTap(GeoPoint p);
+    }
+
+    private CallbackMapTap callbackMapTap;
     private Context context;
     private MapView mapView;
 
@@ -27,6 +35,8 @@ public class Map {
     private IMapController mapController;
 
     private MyLocationNewOverlay myLocationOverlay;
+
+    private MapEventsOverlay mapEventsOverlay;
 
     public Map(Context context, MapView mapView) {
         this.context = context;
@@ -49,9 +59,34 @@ public class Map {
         mapController.setCenter(belgradeCenter);
 
         setupLocationOverlay();
+        setupMapEvents();
+    }
 
-        // Setup map events
-        //setupMapEvents();
+    public void initCallbackMapTap(Map.CallbackMapTap callbackMapTap) {
+        this.callbackMapTap = callbackMapTap;
+    }
+
+    private void setupMapEvents() {
+        MapEventsReceiver mReceive = new MapEventsReceiver() {
+            @Override
+            public boolean singleTapConfirmedHelper(GeoPoint p) {
+                if(callbackMapTap != null) {
+                    callbackMapTap.onTap(p);
+                }
+                return true;
+            }
+
+            @Override
+            public boolean longPressHelper(GeoPoint p) {
+                if(callbackMapTap != null) {
+                    callbackMapTap.onTap(p);
+                }
+                return true;
+            }
+        };
+
+        mapEventsOverlay = new MapEventsOverlay(mReceive);
+        mapView.getOverlays().add(mapEventsOverlay);
     }
 
     private void setupLocationOverlay() {
@@ -76,6 +111,10 @@ public class Map {
 
     public GeoPoint getCurrentLocation() {
         return myLocationOverlay.getMyLocation();
+    }
+
+    public GeoPoint getPressedLocation() {
+        return null;
     }
 
 }
