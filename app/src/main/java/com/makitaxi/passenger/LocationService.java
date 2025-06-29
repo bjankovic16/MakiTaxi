@@ -63,11 +63,13 @@ public class LocationService {
     private String formatAddress(Address address) {
         StringBuilder addressText = new StringBuilder();
 
+        // Include house number even without street name
+        if (address.getSubThoroughfare() != null) {
+            addressText.append(address.getSubThoroughfare()).append(" ");
+        }
+
         if (address.getThoroughfare() != null) {
             addressText.append(address.getThoroughfare());
-            if (address.getSubThoroughfare() != null) {
-                addressText.append(" ").append(address.getSubThoroughfare());
-            }
         }
 
         if (address.getLocality() != null) {
@@ -83,12 +85,12 @@ public class LocationService {
         }
 
         if (addressText.length() == 0) {
-            addressText.append(String.format(Locale.getDefault(), "%.4f, %.4f", address.getLatitude(), address.getLongitude()));
+            addressText.append(String.format(Locale.getDefault(), "%.4f, %.4f",
+                    address.getLatitude(), address.getLongitude()));
         }
 
         return addressText.toString();
     }
-
     // Optional: call when your app no longer needs this service
     public void shutdown() {
         executorService.shutdown();
