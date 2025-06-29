@@ -122,26 +122,12 @@ public class PassengerScreen extends AppCompatActivity {
             }
             hasFocusDestination = hasFocus;
         });
-    }
 
-    private void hideKeyboard() {
-        try {
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            if (imm != null) {
-                View currentFocus = getCurrentFocus();
-                if (currentFocus != null) {
-                    imm.hideSoftInputFromWindow(currentFocus.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
-                    currentFocus.clearFocus();
-                }
-                
-                View rootView = findViewById(android.R.id.content);
-                if (rootView != null) {
-                    imm.hideSoftInputFromWindow(rootView.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
-                }
-            }
-        } catch (Exception e) {
-            Log.e("PassengerScreen", "Error hiding keyboard: " + e.getMessage());
-        }
+        btnZoomIn.setOnClickListener(v -> map.zoomIn());
+
+        btnZoomOut.setOnClickListener(v -> map.zoomOut());
+
+        btnMyLocation.setOnClickListener(v -> map.centerOnCurrentLocation());
     }
 
     private void toggleControls() {
@@ -163,6 +149,26 @@ public class PassengerScreen extends AppCompatActivity {
             btnChoseCurrentLocation.setVisibility(View.GONE);
             hideKeyboard();
             toggleControls.setText("🚕 ▲");
+        }
+    }
+
+    private void hideKeyboard() {
+        try {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                View currentFocus = getCurrentFocus();
+                if (currentFocus != null) {
+                    imm.hideSoftInputFromWindow(currentFocus.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                    currentFocus.clearFocus();
+                }
+
+                View rootView = findViewById(android.R.id.content);
+                if (rootView != null) {
+                    imm.hideSoftInputFromWindow(rootView.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                }
+            }
+        } catch (Exception e) {
+            Log.e("PassengerScreen", "Error hiding keyboard: " + e.getMessage());
         }
     }
 

@@ -48,7 +48,6 @@ public class Map {
         GeoPoint belgradeCenter = new GeoPoint(44.7866, 20.4489);
         mapController.setCenter(belgradeCenter);
 
-
         setupLocationOverlay();
 
         // Setup map events
@@ -63,5 +62,16 @@ public class Map {
         mapView.getOverlays().add(myLocationOverlay);
     }
 
+    public void zoomIn() {
+        mapController.zoomIn();
+    }
+
+    public void zoomOut() {
+        mapController.zoomOut();
+    }
+
+    public void centerOnCurrentLocation() {
+        mapController.animateTo(myLocationOverlay.getMyLocation());
+    }
 
 }
