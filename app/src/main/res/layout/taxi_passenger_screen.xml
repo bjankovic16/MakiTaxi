@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+    <org.osmdroid.views.MapView
+        android:id="@+id/mapView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/headerLayout"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:background="@color/background"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnHamburgerMenu"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Menu"
+            android:src="@drawable/ic_menu"
+            app:tint="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/toggleControls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:elevation="4dp"
+            android:focusable="true"
+            android:gravity="end"
+            android:padding="16dp"
+            android:text="🚕 ▼"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Pickup Location Input -->
+    <LinearLayout
+        android:id="@+id/pickupLocationContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/input_field_background"
+        android:elevation="4dp"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/headerLayout">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="12dp"
+            android:contentDescription="Pickup location"
+            android:src="@drawable/ic_location_green" />
+
+        <TextView
+            android:id="@+id/txtPickupLocation"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:clickable="true"
+            android:focusable="true"
+            android:text="Bulevar kralja Aleksandra 308..."
+            android:textColor="#333333"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+    <!-- Destination Location Input -->
+    <LinearLayout
+        android:id="@+id/destinationLocationContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/input_field_background"
+        android:elevation="4dp"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/pickupLocationContainer">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="12dp"
+            android:contentDescription="Destination location"
+            android:src="@drawable/ic_location_red" />
+
+        <TextView
+            android:id="@+id/txtDestination"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:clickable="true"
+            android:focusable="true"
+            android:text="Where to go?"
+            android:textColor="#999999"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+    <!-- Show Route Button -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/destinationLocationContainer">
+
+        <Button
+            android:id="@+id/btnChoseFromMap"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/primary_button_background"
+            android:elevation="4dp"
+            android:text="📍"
+            android:textColor="#FFFFFF" />
+
+        <!-- Clear Route Button -->
+        <Button
+            android:id="@+id/btnChoseCurrentLocation"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/primary_button_background"
+            android:elevation="4dp"
+            android:text="🗺️"
+            android:textColor="@color/white" />
+    </LinearLayout>
+
+    <!-- Bottom Action Buttons -->
+    <LinearLayout
+        android:id="@+id/bottomButtonsLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <!-- Show Route Button -->
+        <Button
+            android:id="@+id/btnShowRoute"
+            android:layout_width="160dp"
+            android:layout_height="48dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/primary_button_background"
+            android:elevation="4dp"
+            android:text="Show Route"
+            android:textColor="#FFFFFF" />
+
+        <!-- Clear Route Button -->
+        <Button
+            android:id="@+id/btnClearRoute"
+            android:layout_width="160dp"
+            android:layout_height="48dp"
+            android:background="@drawable/secondary_button_background"
+            android:elevation="4dp"
+            android:text="Clear"
+            android:textColor="@color/background" />
+
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/btnFilter"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="16dp"
+        android:layout_marginBottom="12dp"
+        android:contentDescription="Filter"
+        android:elevation="6dp"
+        android:src="@drawable/ic_filter"
+        android:background="@drawable/circle_button_background"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:tint="#FFFFFF" />
+
+    <!-- Zoom In Button (Bottom Right, Middle) -->
+    <Button
+        android:id="@+id/btnZoomIn"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/circle_button_background"
+        android:text="+"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        app:layout_constraintBottom_toTopOf="@id/btnZoomOut"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Zoom Out Button (Bottom Right, Bottom) -->
+    <Button
+        android:id="@+id/btnZoomOut"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/circle_button_background"
+        android:text="−"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        app:layout_constraintBottom_toTopOf="@id/btnMyLocation"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageButton
+        android:id="@+id/btnMyLocation"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/circle_button_background"
+        android:contentDescription="My Location"
+        android:elevation="6dp"
+        android:src="@drawable/ic_my_location"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="#FFFFFF" />
+
+</androidx.constraintlayout.widget.ConstraintLayout> 
