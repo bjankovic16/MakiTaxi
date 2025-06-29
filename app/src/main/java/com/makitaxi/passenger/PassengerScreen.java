@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -34,6 +35,10 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
     private Button btnZoomIn;
     private Button btnZoomOut;
     private ImageButton btnFilter;
+
+    private TextView iconCloseOverlay;
+
+    private FrameLayout frameMapButton;
     private ImageButton btnMyLocation;
     private LinearLayout pickupLocationContainer;
     private LinearLayout destinationLocationContainer;
@@ -99,6 +104,8 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
         // Side buttons
         btnChoseFromMap = findViewById(R.id.btnChoseFromMap);
         btnChoseCurrentLocation = findViewById(R.id.btnChoseCurrentLocation);
+        iconCloseOverlay = findViewById(R.id.iconCloseOverlay);
+        frameMapButton = findViewById(R.id.frameMapButton);
 
         // Bottom action buttons
         btnShowRoute = findViewById(R.id.btnShowRoute);
@@ -118,6 +125,8 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
             if (hasFocus) {
                 btnChoseFromMap.setVisibility(View.VISIBLE);
                 btnChoseCurrentLocation.setVisibility(View.VISIBLE);
+                iconCloseOverlay.setVisibility(View.VISIBLE);
+                frameMapButton.setVisibility(View.VISIBLE);
             }
             hasFocusPickup = hasFocus;
         });
@@ -126,6 +135,8 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
             if (hasFocus) {
                 btnChoseFromMap.setVisibility(View.VISIBLE);
                 btnChoseCurrentLocation.setVisibility(View.VISIBLE);
+                iconCloseOverlay.setVisibility(View.VISIBLE);
+                frameMapButton.setVisibility(View.VISIBLE);
             }
             hasFocusDestination = hasFocus;
         });
@@ -169,7 +180,12 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
 
     private void choseLocationFromMapAsStartOrDestination() {
         if (!hasFocusPickup && !hasFocusDestination) return;
-        shouldCalculateStartOrDestinationFromMap = true;
+        shouldCalculateStartOrDestinationFromMap = !shouldCalculateStartOrDestinationFromMap;
+        if (shouldCalculateStartOrDestinationFromMap) {
+            iconCloseOverlay.setText("");
+        } else {
+            iconCloseOverlay.setText("❌");
+        }
     }
 
     private void toggleControls() {
@@ -181,18 +197,24 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
             destinationLocationContainer.setVisibility(View.VISIBLE);
             btnChoseFromMap.setVisibility(View.GONE);
             btnChoseCurrentLocation.setVisibility(View.GONE);
+            iconCloseOverlay.setVisibility(View.GONE);
+            frameMapButton.setVisibility(View.GONE);
             shouldCalculateStartOrDestinationFromMap = false;
             toggleControls.setText("🚕 ▼");
+            iconCloseOverlay.setText("❌");
         } else {
             btnShowRoute.setVisibility(View.GONE);
             btnClearRoute.setVisibility(View.GONE);
             pickupLocationContainer.setVisibility(View.GONE);
             destinationLocationContainer.setVisibility(View.GONE);
             btnChoseFromMap.setVisibility(View.GONE);
+            iconCloseOverlay.setVisibility(View.GONE);
             btnChoseCurrentLocation.setVisibility(View.GONE);
+            frameMapButton.setVisibility(View.GONE);
             shouldCalculateStartOrDestinationFromMap = false;
             hideKeyboard();
             toggleControls.setText("🚕 ▲");
+            iconCloseOverlay.setText("❌");
         }
     }
 
