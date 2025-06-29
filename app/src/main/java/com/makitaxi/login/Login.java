@@ -20,6 +20,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.makitaxi.R;
 import com.makitaxi.driver.DriverMainScreen;
 import com.makitaxi.passenger.PassengerMainScreen;
+import com.makitaxi.passenger.PassengerScreen;
 import com.makitaxi.utils.NavigationClickListener;
 import com.makitaxi.utils.PreferencesManager;
 
@@ -205,7 +206,7 @@ public class Login extends AppCompatActivity {
         if (role.equals(driver) && verified) {
             navigateTo(DriverMainScreen.class);
         } else if(role.equals(passenger)){
-            navigateTo(PassengerMainScreen.class);
+            navigateTo(PassengerScreen.class);
         } else {
             Toast.makeText(Login.this, "Driver isn't verified yet", Toast.LENGTH_LONG).show();
         }

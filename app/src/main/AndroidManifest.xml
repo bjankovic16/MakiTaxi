@@ -62,6 +62,10 @@
             android:exported="true">
         </activity>
         <activity
+            android:name=".passenger.PassengerScreen"
+            android:exported="true">
+        </activity>
+        <activity
             android:name=".driver.DriverMainScreen"
             android:exported="true">
         </activity>

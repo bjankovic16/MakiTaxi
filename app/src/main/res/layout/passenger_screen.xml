@@ -75,17 +75,18 @@
             android:contentDescription="Pickup location"
             android:src="@drawable/ic_location_green" />
 
-        <TextView
+        <EditText
             android:id="@+id/txtPickupLocation"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/transparent"
-            android:clickable="true"
-            android:focusable="true"
-            android:text="Bulevar kralja Aleksandra 308..."
+            android:hint="Pickup location"
             android:textColor="#333333"
-            android:textSize="16sp" />
+            android:textColorHint="#999999"
+            android:textSize="16sp"
+            android:inputType="text"
+            android:maxLines="1" />
 
     </LinearLayout>
 
@@ -113,17 +114,19 @@
             android:contentDescription="Destination location"
             android:src="@drawable/ic_location_red" />
 
-        <TextView
+        <EditText
             android:id="@+id/txtDestination"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/transparent"
-            android:clickable="true"
-            android:focusable="true"
-            android:text="Where to go?"
-            android:textColor="#999999"
-            android:textSize="16sp" />
+            android:hint="Where to go?"
+            android:text=""
+            android:textColor="#333333"
+            android:textColorHint="#999999"
+            android:textSize="16sp"
+            android:inputType="text"
+            android:maxLines="1" />
 
     </LinearLayout>
 

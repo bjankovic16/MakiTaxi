@@ -17,6 +17,7 @@ import com.makitaxi.R;
 import com.makitaxi.driver.DriverMainScreen;
 import com.makitaxi.login.Login;
 import com.makitaxi.passenger.PassengerMainScreen;
+import com.makitaxi.passenger.PassengerScreen;
 import com.makitaxi.utils.NavigationClickListener;
 import com.makitaxi.utils.PreferencesManager;
 
@@ -144,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
     }
     
     private void navigateToPassengerScreen() {
-        Intent intent = new Intent(this, PassengerMainScreen.class);
+        Intent intent = new Intent(this, PassengerScreen.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
