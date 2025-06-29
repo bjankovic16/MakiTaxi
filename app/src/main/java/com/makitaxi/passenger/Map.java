@@ -74,4 +74,8 @@ public class Map {
         mapController.animateTo(myLocationOverlay.getMyLocation());
     }
 
+    public GeoPoint getCurrentLocation() {
+        return myLocationOverlay.getMyLocation();
+    }
+
 }

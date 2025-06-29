@@ -141,7 +141,7 @@
         app:layout_constraintTop_toBottomOf="@id/destinationLocationContainer">
 
         <Button
-            android:id="@+id/btnChoseFromMap"
+            android:id="@+id/btnChoseCurrentLocation"
             android:layout_width="48dp"
             android:visibility="gone"
             android:layout_height="48dp"
@@ -153,7 +153,7 @@
 
         <!-- Clear Route Button -->
         <Button
-            android:id="@+id/btnChoseCurrentLocation"
+            android:id="@+id/btnChoseFromMap"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="@drawable/primary_button_background"

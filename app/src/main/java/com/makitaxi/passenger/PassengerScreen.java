@@ -41,6 +41,8 @@ public class PassengerScreen extends AppCompatActivity {
 
     private Map map;
 
+    private LocationService locationService;
+
     private boolean controlsVisible = true;
 
     @Override
@@ -55,6 +57,7 @@ public class PassengerScreen extends AppCompatActivity {
 
     private void initializeControllers() {
         map = new Map(this, mapView);
+        locationService = new LocationService(this);
     }
 
     private void handleSystemBars() {
@@ -76,27 +79,27 @@ public class PassengerScreen extends AppCompatActivity {
     private void initializeViews() {
         // Map
         mapView = findViewById(R.id.mapView);
-        
+
         // Header components
         btnHamburgerMenu = findViewById(R.id.btnHamburgerMenu);
         toggleControls = findViewById(R.id.toggleControls);
-        
+
         // Location input containers
         pickupLocationContainer = findViewById(R.id.pickupLocationContainer);
         destinationLocationContainer = findViewById(R.id.destinationLocationContainer);
-        
+
         // Location text views
         txtPickupLocation = findViewById(R.id.txtPickupLocation);
         txtDestination = findViewById(R.id.txtDestination);
-        
+
         // Side buttons
         btnChoseFromMap = findViewById(R.id.btnChoseFromMap);
         btnChoseCurrentLocation = findViewById(R.id.btnChoseCurrentLocation);
-        
+
         // Bottom action buttons
         btnShowRoute = findViewById(R.id.btnShowRoute);
         btnClearRoute = findViewById(R.id.btnClearRoute);
-        
+
         // Map control buttons
         btnFilter = findViewById(R.id.btnFilter);
         btnZoomIn = findViewById(R.id.btnZoomIn);
@@ -106,7 +109,7 @@ public class PassengerScreen extends AppCompatActivity {
 
     private void setupUIInteractions() {
         toggleControls.setOnClickListener(v -> toggleControls());
-        
+
         txtPickupLocation.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) {
                 btnChoseFromMap.setVisibility(View.VISIBLE);
@@ -114,7 +117,7 @@ public class PassengerScreen extends AppCompatActivity {
             }
             hasFocusPickup = hasFocus;
         });
-        
+
         txtDestination.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) {
                 btnChoseFromMap.setVisibility(View.VISIBLE);
@@ -128,6 +131,33 @@ public class PassengerScreen extends AppCompatActivity {
         btnZoomOut.setOnClickListener(v -> map.zoomOut());
 
         btnMyLocation.setOnClickListener(v -> map.centerOnCurrentLocation());
+
+        btnChoseCurrentLocation.setOnClickListener(v -> choseCurrentLocationAsStartOrDestination());
+    }
+
+    private void choseCurrentLocationAsStartOrDestination() {
+        if(!hasFocusPickup && !hasFocusDestination) {
+            return;
+        }
+        final String[] currentAddress = {""};
+        locationService.reverseGeocode(map.getCurrentLocation(), new LocationService.ReverseGeocodeListener() {
+            @Override
+            public void onReverseGeocodeSuccess(String address) {
+                currentAddress[0] = address;
+            }
+
+            @Override
+            public void onReverseGeocodeError(String error) {
+                currentAddress[0] = "Cannot get current location";
+            }
+        });
+
+        if (hasFocusPickup) {
+            txtPickupLocation.setText(currentAddress[0]);
+        }
+        if (hasFocusDestination) {
+            txtDestination.setText(currentAddress[0]);
+        }
     }
 
     private void toggleControls() {
