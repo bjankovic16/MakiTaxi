@@ -212,7 +212,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
                             runOnUiThread(() -> {
                                 ArrayAdapter<String> adapter = new ArrayAdapter<>(
                                         field.getContext(),
-                                        android.R.layout.simple_dropdown_item_1line,
+                                        R.layout.drop_down_item,
                                         suggestions
                                 );
                                 field.setAdapter(adapter);
