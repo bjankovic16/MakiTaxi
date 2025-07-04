@@ -145,7 +145,7 @@ public class LocationService {
                             String full = name + (city.isEmpty() ? "" : ", " + city) + (state.isEmpty() ? "" : ", " + state);
                             // Convert to Serbian Latin before adding
                             Log.d("PhotonCountry", country + ": " + country);
-                            if (country.startsWith("Србија")) {
+                            if (country.startsWith("Србија") && city.startsWith("Београд")) {
                                 String latinFull = cyrillicToSerbianLatin(full);
                                 suggestions.add(latinFull);
                             }

@@ -186,56 +186,67 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
 
     private void setupDebouncedAutocomplete(AutoCompleteTextView field, boolean isPickup) {
         field.addTextChangedListener(new TextWatcher() {
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
                 Runnable previous = debounceMap.get(field);
-                if (previous != null){
+                if (previous != null) {
                     handler.removeCallbacks(previous);
-                    if(isPickup) {
-                        showPickupSpinner(false);
-                    } else {
-                        showDestinationSpinner(false);
-                    }
                 }
 
-                Runnable task = () -> locationService.getPhotonSuggestions(s.toString(), new LocationService.LocationSuggestionsListener() {
-                    @Override
-                    public void onSuggestionsFound(List<String> suggestions) {
+                String input = s.toString();
+
+                Runnable task = () -> {
+                    boolean containsSpecialChars = input.matches(".*[\\p{Punct}\\d].*");
+
+                    if (containsSpecialChars) {
                         runOnUiThread(() -> {
-                            ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                                    PassengerScreen.this,
-                                    android.R.layout.simple_dropdown_item_1line,
-                                    suggestions
-                            );
-                            field.setAdapter(adapter);
-                            if (!suggestions.isEmpty()) {
-                                field.showDropDown();
-                                if(isPickup) {
-                                    showPickupSpinner(false);
-                                } else {
-                                    showDestinationSpinner(false);
-                                }
-                            }
+                            if (isPickup) showPickupSpinner(false);
+                            else showDestinationSpinner(false);
                         });
+                        return;
                     }
 
-                    @Override
-                    public void onSuggestionsFoundError(String error) {
-                        Log.e("PassengerScreen", "Error getting suggestions: " + error);
-                    }
-                });
+                    locationService.getPhotonSuggestions(input, new LocationService.LocationSuggestionsListener() {
+                        @Override
+                        public void onSuggestionsFound(List<String> suggestions) {
+                            runOnUiThread(() -> {
+                                ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                                        field.getContext(),
+                                        android.R.layout.simple_dropdown_item_1line,
+                                        suggestions
+                                );
+                                field.setAdapter(adapter);
+
+                                if (!suggestions.isEmpty()) {
+                                    field.showDropDown();
+                                }
+
+                                if (isPickup) showPickupSpinner(false);
+                                else showDestinationSpinner(false);
+                            });
+                        }
+
+                        @Override
+                        public void onSuggestionsFoundError(String error) {
+                            Log.e("PassengerScreen", "Error getting suggestions: " + error);
+                            runOnUiThread(() -> {
+                                if (isPickup) showPickupSpinner(false);
+                                else showDestinationSpinner(false);
+                            });
+                        }
+                    });
+                };
 
                 debounceMap.put(field, task);
-                if(isPickup) {
-                    showPickupSpinner(true);
-                } else {
-                    showDestinationSpinner(true);
-                }
+
+                if (isPickup) showPickupSpinner(true);
+                else showDestinationSpinner(true);
+
                 handler.postDelayed(task, 800);
             }
 
-            @Override public void afterTextChanged(Editable s) {}
-
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void afterTextChanged(Editable s) {}
         });
     }
 
@@ -247,8 +258,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
             public void onReverseGeocodeSuccess(String address) {
                 if (hasFocusPickup) {
                     txtPickupLocation.setText(address);
-                }
-                if (hasFocusDestination) {
+                } else {
                     txtDestination.setText(address);
                 }
             }
@@ -257,8 +267,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
             public void onReverseGeocodeError(String error) {
                 if (hasFocusPickup) {
                     txtPickupLocation.setText(error);
-                }
-                if (hasFocusDestination) {
+                }else {
                     txtDestination.setText(error);
                 }
             }
