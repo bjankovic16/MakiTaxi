@@ -51,107 +51,108 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- Pickup Location Input -->
     <LinearLayout
-        android:id="@+id/pickupLocationContainer"
+        android:id="@+id/locationInputContainer"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:background="@drawable/input_field_background"
-        android:elevation="4dp"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:clickable="true"
-        android:focusable="true"
+        android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:completionThreshold="3"
-        android:dropDownWidth="match_parent"
-        android:dropDownHeight="wrap_content"
-        android:dropDownVerticalOffset="4dp"
         app:layout_constraintTop_toBottomOf="@id/headerLayout">
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_gravity="center_vertical"
-            android:layout_marginEnd="12dp"
-            android:contentDescription="Pickup location"
-            android:src="@drawable/ic_location_green" />
-
-        <AutoCompleteTextView
-            android:id="@+id/txtPickupLocation"
-            android:layout_width="0dp"
+        <!-- Pickup Location Input -->
+        <LinearLayout
+            android:id="@+id/pickupLocationContainer"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@android:color/transparent"
-            android:hint="Pickup location"
-            android:inputType="text"
-            android:maxLines="1"
-            android:textColor="#333333"
-            android:textColorHint="#999999"
-            android:textSize="16sp" />
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/input_field_background"
+            android:clickable="true"
+            android:elevation="4dp"
+            android:focusable="true"
+            android:orientation="horizontal"
+            android:padding="12dp">
 
-        <ImageView
-            android:id="@+id/pickupLoadingSpinner"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_gravity="center_vertical"
-            android:src="@drawable/ic_loading_spinner"
-            android:visibility="gone"
-            android:contentDescription="Loading pickup suggestions" />
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="12dp"
+                android:contentDescription="Pickup location"
+                android:src="@drawable/ic_location_green" />
+
+            <AutoCompleteTextView
+                android:id="@+id/txtPickupLocation"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:hint="Pickup location"
+                android:inputType="text"
+                android:maxLines="1"
+                android:textColor="#333333"
+                android:textColorHint="#999999"
+                android:textSize="16sp" />
+
+            <ImageView
+                android:id="@+id/pickupLoadingSpinner"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center_vertical"
+                android:contentDescription="Loading pickup suggestions"
+                android:src="@drawable/ic_loading_spinner"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Destination Location Input -->
+        <LinearLayout
+            android:id="@+id/destinationLocationContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/input_field_background"
+            android:clickable="true"
+            android:elevation="4dp"
+            android:focusable="true"
+            android:orientation="horizontal"
+            android:padding="12dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="12dp"
+                android:contentDescription="Destination location"
+                android:src="@drawable/ic_location_red" />
+
+            <AutoCompleteTextView
+                android:id="@+id/txtDestination"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:hint="Where to go?"
+                android:inputType="text"
+                android:maxLines="1"
+                android:textColor="#333333"
+                android:textColorHint="#999999"
+                android:textSize="16sp" />
+
+            <ImageView
+                android:id="@+id/destinationLoadingSpinner"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center_vertical"
+                android:contentDescription="Loading destination suggestions"
+                android:src="@drawable/ic_loading_spinner"
+                android:visibility="gone" />
+        </LinearLayout>
     </LinearLayout>
 
-    <!-- Destination Location Input -->
-    <LinearLayout
-        android:id="@+id/destinationLocationContainer"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
-        android:background="@drawable/input_field_background"
-        android:elevation="4dp"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:clickable="true"
-        android:focusable="true"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/pickupLocationContainer">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_gravity="center_vertical"
-            android:layout_marginEnd="12dp"
-            android:contentDescription="Destination location"
-            android:src="@drawable/ic_location_red" />
-
-        <AutoCompleteTextView
-            android:id="@+id/txtDestination"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@android:color/transparent"
-            android:hint="Where to go?"
-            android:textColor="#333333"
-            android:textColorHint="#999999"
-            android:textSize="16sp"
-            android:inputType="text"
-            android:maxLines="1"/>
-
-        <ImageView
-            android:id="@+id/destinationLoadingSpinner"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_gravity="center_vertical"
-            android:src="@drawable/ic_loading_spinner"
-            android:visibility="gone"
-            android:contentDescription="Loading destination suggestions" />
-    </LinearLayout>
 
     <!-- Show Route Button -->
     <LinearLayout
@@ -161,18 +162,18 @@
         android:layout_marginEnd="16dp"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/destinationLocationContainer">
+        app:layout_constraintTop_toBottomOf="@id/locationInputContainer">
 
         <Button
             android:id="@+id/btnChoseCurrentLocation"
             android:layout_width="48dp"
-            android:visibility="gone"
             android:layout_height="48dp"
             android:layout_marginBottom="8dp"
             android:background="@drawable/primary_button_background"
             android:elevation="4dp"
             android:text="📍"
-            android:textColor="#FFFFFF" />
+            android:textColor="#FFFFFF"
+            android:visibility="gone" />
 
         <FrameLayout
             android:id="@+id/frameMapButton"
@@ -187,8 +188,8 @@
                 android:background="@drawable/primary_button_background"
                 android:elevation="4dp"
                 android:text="🗺️"
-                android:visibility="gone"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/iconCloseOverlay"
@@ -196,12 +197,12 @@
                 android:layout_height="20dp"
                 android:layout_gravity="center"
                 android:elevation="8dp"
-                android:visibility="gone"
+                android:gravity="center"
+                android:padding="2dp"
                 android:text="❌"
                 android:textColor="#FFFFFF"
                 android:textSize="10sp"
-                android:gravity="center"
-                android:padding="2dp" />
+                android:visibility="gone" />
         </FrameLayout>
 
 
@@ -248,10 +249,10 @@
         android:layout_height="48dp"
         android:layout_margin="16dp"
         android:layout_marginBottom="12dp"
+        android:background="@drawable/circle_button_background"
         android:contentDescription="Filter"
         android:elevation="6dp"
         android:src="@drawable/ic_filter"
-        android:background="@drawable/circle_button_background"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:tint="#FFFFFF" />
@@ -265,9 +266,9 @@
         android:layout_marginBottom="8dp"
         android:background="@drawable/circle_button_background"
         android:text="+"
+        android:textColor="#FFFFFF"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="#FFFFFF"
         app:layout_constraintBottom_toTopOf="@id/btnZoomOut"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -280,9 +281,9 @@
         android:layout_marginBottom="8dp"
         android:background="@drawable/circle_button_background"
         android:text="−"
+        android:textColor="#FFFFFF"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="#FFFFFF"
         app:layout_constraintBottom_toTopOf="@id/btnMyLocation"
         app:layout_constraintEnd_toEndOf="parent" />
 
