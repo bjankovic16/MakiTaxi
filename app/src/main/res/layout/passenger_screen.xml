@@ -65,6 +65,10 @@
         android:padding="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        android:completionThreshold="3"
+        android:dropDownWidth="match_parent"
+        android:dropDownHeight="wrap_content"
+        android:dropDownVerticalOffset="4dp"
         app:layout_constraintTop_toBottomOf="@id/headerLayout">
 
         <ImageView
@@ -75,7 +79,7 @@
             android:contentDescription="Pickup location"
             android:src="@drawable/ic_location_green" />
 
-        <EditText
+        <AutoCompleteTextView
             android:id="@+id/txtPickupLocation"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -114,7 +118,7 @@
             android:contentDescription="Destination location"
             android:src="@drawable/ic_location_red" />
 
-        <EditText
+        <AutoCompleteTextView
             android:id="@+id/txtDestination"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -126,6 +130,10 @@
             android:textColorHint="#999999"
             android:textSize="16sp"
             android:inputType="text"
+            android:completionThreshold="3"
+            android:dropDownWidth="match_parent"
+            android:dropDownHeight="wrap_content"
+            android:dropDownVerticalOffset="4dp"
             android:maxLines="1" />
 
     </LinearLayout>

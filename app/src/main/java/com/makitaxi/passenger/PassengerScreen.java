@@ -2,16 +2,21 @@ package com.makitaxi.passenger;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -20,12 +25,16 @@ import com.makitaxi.R;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 
+import java.util.HashMap;
+import java.util.List;
+
+
 public class PassengerScreen extends AppCompatActivity implements Map.CallbackMapTap {
 
     // UI Components
     private MapView mapView;
-    private EditText txtPickupLocation;
-    private EditText txtDestination;
+    private AutoCompleteTextView txtPickupLocation;
+    private AutoCompleteTextView txtDestination;
     private TextView toggleControls;
     private ImageButton btnHamburgerMenu;
     private Button btnChoseFromMap;
@@ -52,6 +61,9 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
 
     private LocationService locationService;
     private boolean controlsVisible = true;
+
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final java.util.Map<AutoCompleteTextView, Runnable> debounceMap = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -150,6 +162,47 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
         btnChoseCurrentLocation.setOnClickListener(v -> choseCurrentLocationAsStartOrDestination());
 
         btnChoseFromMap.setOnClickListener(v -> choseLocationFromMapAsStartOrDestination());
+
+        setupDebouncedAutocomplete(txtPickupLocation);
+        setupDebouncedAutocomplete(txtDestination);
+    }
+
+    private void setupDebouncedAutocomplete(AutoCompleteTextView field) {
+        field.addTextChangedListener(new TextWatcher() {
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                Runnable previous = debounceMap.get(field);
+                if (previous != null) handler.removeCallbacks(previous);
+
+                Runnable task = () -> locationService.getPhotonSuggestions(s.toString(), new LocationService.LocationSuggestionsListener() {
+                    @Override
+                    public void onSuggestionsFound(List<String> suggestions) {
+                        runOnUiThread(() -> {
+                            ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                                    PassengerScreen.this,
+                                    android.R.layout.simple_dropdown_item_1line,
+                                    suggestions
+                            );
+                            field.setAdapter(adapter);
+                            if (!suggestions.isEmpty()) {
+                                field.showDropDown();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onSuggestionsFoundError(String error) {
+                        Log.e("PassengerScreen", "Error getting suggestions: " + error);
+                    }
+                });
+
+                debounceMap.put(field, task);
+                handler.postDelayed(task, 800);
+            }
+
+            @Override public void afterTextChanged(Editable s) {}
+
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        });
     }
 
     private void choseCurrentLocationAsStartOrDestination() {
