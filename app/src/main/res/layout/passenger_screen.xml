@@ -133,16 +133,11 @@
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:hint="Where to go?"
-            android:text=""
             android:textColor="#333333"
             android:textColorHint="#999999"
             android:textSize="16sp"
             android:inputType="text"
-            android:completionThreshold="3"
-            android:dropDownWidth="match_parent"
-            android:dropDownHeight="wrap_content"
-            android:dropDownVerticalOffset="4dp"
-            android:maxLines="1" />
+            android:maxLines="1"/>
 
         <ImageView
             android:id="@+id/destinationLoadingSpinner"

@@ -16,6 +16,7 @@ import org.osmdroid.util.GeoPoint;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -46,6 +47,8 @@ public class LocationService {
     private final Handler handler;
 
     private final OkHttpClient httpClient;
+
+    private volatile Call activePhotonCall;
 
     private static final int PHOTON_TIMEOUT_SECONDS = 15;
     private static final int PHOTON_MAX_RETRIES = 2;
@@ -97,7 +100,11 @@ public class LocationService {
             listener.onSuggestionsFound(Collections.emptyList());
             return;
         }
-        Log.d("PhotonQuery", "Query: " + query + ", attempt: " + attempt);
+
+        // Cancel any in-flight request
+        if (activePhotonCall != null && !activePhotonCall.isCanceled()) {
+            activePhotonCall.cancel();
+        }
 
         String url = Uri.parse("https://photon.komoot.io/api/")
                 .buildUpon()
@@ -112,9 +119,16 @@ public class LocationService {
                 .header("User-Agent", "MakiTaxi/1.0")
                 .build();
 
-        httpClient.newCall(request).enqueue(new Callback() {
+        activePhotonCall = httpClient.newCall(request);
+
+        activePhotonCall.enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
+                if (call.isCanceled()) {
+                    Log.d("PhotonAPI", "Photon request canceled");
+                    return;
+                }
+
                 Log.e("PhotonAPI", "Request failed: " + e.getMessage());
                 if (attempt < PHOTON_MAX_RETRIES && e.getMessage() != null && e.getMessage().toLowerCase().contains("timeout")) {
                     Log.w("PhotonAPI", "Retrying Photon request, attempt " + (attempt + 1));
@@ -126,7 +140,13 @@ public class LocationService {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
+                if (call.isCanceled()) {
+                    Log.d("PhotonAPI", "Photon response ignored because request was canceled");
+                    return;
+                }
+
                 List<String> suggestions = new ArrayList<>();
+                HashSet<String> addedSuggestions = new HashSet<>();
                 try {
                     String bodyString = response.body() != null ? response.body().string() : null;
                     if (bodyString == null) {
@@ -143,25 +163,18 @@ public class LocationService {
                             String city = props.optString("city", "");
                             String state = props.optString("state", "");
                             String full = name + (city.isEmpty() ? "" : ", " + city) + (state.isEmpty() ? "" : ", " + state);
-                            // Convert to Serbian Latin before adding
-                            Log.d("PhotonCountry", country + ": " + country);
                             if (country.startsWith("Србија") && city.startsWith("Београд")) {
-                                String latinFull = cyrillicToSerbianLatin(full);
-                                suggestions.add(latinFull);
+                                String suggestion = cyrillicToSerbianLatin(full);
+                                if(!addedSuggestions.contains(suggestion)) {
+                                    suggestions.add(suggestion);
+                                    addedSuggestions.add(suggestion);
+                                }
                             }
-                            if(suggestions.size() == 5) {
-                                break;
-                            }
+                            if (suggestions.size() == 5) break;
                         }
-                    } else {
-                        Log.w("PhotonAPI", "No features array in response for query: " + query);
                     }
                 } catch (Exception e) {
                     Log.e("PhotonParse", "Error parsing suggestions: " + e.getMessage());
-                }
-
-                if (suggestions.isEmpty()) {
-                    Log.i("PhotonSerbia", "No results for query: " + query);
                 }
 
                 handler.post(() -> listener.onSuggestionsFound(suggestions));
@@ -229,7 +242,6 @@ public class LocationService {
         return addressText.toString();
     }
 
-    // Optional: call when your app no longer needs this service
     public void shutdown() {
         executorService.shutdown();
     }
