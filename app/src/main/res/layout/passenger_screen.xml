@@ -92,6 +92,14 @@
             android:inputType="text"
             android:maxLines="1" />
 
+        <ImageView
+            android:id="@+id/pickupLoadingSpinner"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/ic_loading_spinner"
+            android:visibility="gone"
+            android:contentDescription="Loading pickup suggestions" />
     </LinearLayout>
 
     <!-- Destination Location Input -->
@@ -136,6 +144,14 @@
             android:dropDownVerticalOffset="4dp"
             android:maxLines="1" />
 
+        <ImageView
+            android:id="@+id/destinationLoadingSpinner"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/ic_loading_spinner"
+            android:visibility="gone"
+            android:contentDescription="Loading destination suggestions" />
     </LinearLayout>
 
     <!-- Show Route Button -->

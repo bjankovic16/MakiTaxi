@@ -12,11 +12,14 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -64,6 +67,10 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final java.util.Map<AutoCompleteTextView, Runnable> debounceMap = new HashMap<>();
+
+    private ImageView pickupLoadingSpinner;
+    private ImageView destinationLoadingSpinner;
+    private RotateAnimation spinnerAnimation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,9 +135,19 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
         btnZoomIn = findViewById(R.id.btnZoomIn);
         btnZoomOut = findViewById(R.id.btnZoomOut);
         btnMyLocation = findViewById(R.id.btnMyLocation);
+
+        pickupLoadingSpinner = findViewById(R.id.pickupLoadingSpinner);
+        destinationLoadingSpinner = findViewById(R.id.destinationLoadingSpinner);
     }
 
     private void setupUIInteractions() {
+        spinnerAnimation = new RotateAnimation(0f, 360f,
+                Animation.RELATIVE_TO_SELF, 0.5f,
+                Animation.RELATIVE_TO_SELF, 0.5f);
+        spinnerAnimation.setDuration(900);
+        spinnerAnimation.setRepeatCount(Animation.INFINITE);
+        spinnerAnimation.setInterpolator(new LinearInterpolator());
+
         toggleControls.setOnClickListener(v -> toggleControls());
 
         txtPickupLocation.setOnFocusChangeListener((v, hasFocus) -> {
@@ -163,15 +180,22 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
 
         btnChoseFromMap.setOnClickListener(v -> choseLocationFromMapAsStartOrDestination());
 
-        setupDebouncedAutocomplete(txtPickupLocation);
-        setupDebouncedAutocomplete(txtDestination);
+        setupDebouncedAutocomplete(txtPickupLocation, true);
+        setupDebouncedAutocomplete(txtDestination, false);
     }
 
-    private void setupDebouncedAutocomplete(AutoCompleteTextView field) {
+    private void setupDebouncedAutocomplete(AutoCompleteTextView field, boolean isPickup) {
         field.addTextChangedListener(new TextWatcher() {
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                 Runnable previous = debounceMap.get(field);
-                if (previous != null) handler.removeCallbacks(previous);
+                if (previous != null){
+                    handler.removeCallbacks(previous);
+                    if(isPickup) {
+                        showPickupSpinner(false);
+                    } else {
+                        showDestinationSpinner(false);
+                    }
+                }
 
                 Runnable task = () -> locationService.getPhotonSuggestions(s.toString(), new LocationService.LocationSuggestionsListener() {
                     @Override
@@ -185,6 +209,11 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
                             field.setAdapter(adapter);
                             if (!suggestions.isEmpty()) {
                                 field.showDropDown();
+                                if(isPickup) {
+                                    showPickupSpinner(false);
+                                } else {
+                                    showDestinationSpinner(false);
+                                }
                             }
                         });
                     }
@@ -196,6 +225,11 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
                 });
 
                 debounceMap.put(field, task);
+                if(isPickup) {
+                    showPickupSpinner(true);
+                } else {
+                    showDestinationSpinner(true);
+                }
                 handler.postDelayed(task, 800);
             }
 
@@ -317,5 +351,29 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
             });
         }
 
+    }
+
+    private void showPickupSpinner(boolean show) {
+        if (pickupLoadingSpinner != null) {
+            if (show) {
+                pickupLoadingSpinner.setVisibility(View.VISIBLE);
+                pickupLoadingSpinner.startAnimation(spinnerAnimation);
+            } else {
+                pickupLoadingSpinner.clearAnimation();
+                pickupLoadingSpinner.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    private void showDestinationSpinner(boolean show) {
+        if (destinationLoadingSpinner != null) {
+            if (show) {
+                destinationLoadingSpinner.setVisibility(View.VISIBLE);
+                destinationLoadingSpinner.startAnimation(spinnerAnimation);
+            } else {
+                destinationLoadingSpinner.clearAnimation();
+                destinationLoadingSpinner.setVisibility(View.GONE);
+            }
+        }
     }
 }

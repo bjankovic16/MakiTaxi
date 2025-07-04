@@ -149,6 +149,9 @@ public class LocationService {
                                 String latinFull = cyrillicToSerbianLatin(full);
                                 suggestions.add(latinFull);
                             }
+                            if(suggestions.size() == 5) {
+                                break;
+                            }
                         }
                     } else {
                         Log.w("PhotonAPI", "No features array in response for query: " + query);
