@@ -1,5 +1,7 @@
 package com.makitaxi.passenger;
 
+import static com.google.android.material.internal.ViewUtils.showKeyboard;
+
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
@@ -168,6 +170,14 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
                 frameMapButton.setVisibility(View.VISIBLE);
             }
             hasFocusDestination = hasFocus;
+        });
+
+        pickupLocationContainer.setOnClickListener(v -> {
+            txtPickupLocation.requestFocus();
+        });
+
+        destinationLocationContainer.setOnClickListener(v -> {
+            txtDestination.requestFocus();
         });
 
         btnZoomIn.setOnClickListener(v -> map.zoomIn());
