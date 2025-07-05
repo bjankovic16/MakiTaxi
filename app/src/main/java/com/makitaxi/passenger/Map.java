@@ -64,6 +64,8 @@ public class Map {
 
     private Marker destinationMarker;
 
+    private Marker mapTapMarker;
+
     private ExecutorService executorService;
 
     private Handler mainHandler;
@@ -255,7 +257,7 @@ public class Map {
             mainHandler.postDelayed(() -> {
                 double zoomLevel = mapView.getZoomLevelDouble();
                 IMapController controller = mapView.getController();
-                controller.setZoom(zoomLevel - 1);
+                controller.setZoom(zoomLevel - 3);
                 controller.setCenter(center);
             }, 300);
 
@@ -350,7 +352,6 @@ public class Map {
         return 1.3f; // default
     }
 
-
     private void setupLocationOverlay() {
         myLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(context), mapView);
         myLocationOverlay.enableMyLocation();
@@ -406,6 +407,35 @@ public class Map {
         mapView.invalidate();
     }
 
+    public void clearMarkerTap() {
+        if (mapTapMarker != null) {
+            mapView.getOverlays().remove(mapTapMarker);
+        }
+    }
+
+    public void setMapTapMarker(GeoPoint point) {
+        if (mapTapMarker != null) {
+            mapView.getOverlays().remove(mapTapMarker);
+        }
+        mapTapMarker = new Marker(mapView);
+        mapTapMarker.setPosition(point);
+        mapTapMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+        float scaleFactor = getScaleFactor(mapView.getZoomLevelDouble());
+        Drawable drawable = ContextCompat.getDrawable(context, R.drawable.ic_location_blue);
+        assert drawable != null;
+        int width = (int) (drawable.getIntrinsicWidth() * scaleFactor);
+        int height = (int) (drawable.getIntrinsicHeight() * scaleFactor);
+
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, width, height);
+        drawable.draw(canvas);
+        mapTapMarker.setIcon(new BitmapDrawable(context.getResources(), bitmap));
+
+        mapView.getOverlays().add(mapTapMarker);
+        mapView.invalidate();
+    }
+
     public void clearMarkers() {
         try {
             if (startMarker != null) {
@@ -421,6 +451,12 @@ public class Map {
             mapView.invalidate();
         } catch (Exception e) {
         }
+    }
+
+    public void clearMap() {
+        clearMarkerTap();
+        clearMarkers();
+        clearRoute();
     }
 
 

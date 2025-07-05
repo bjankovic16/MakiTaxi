@@ -197,6 +197,8 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
 
         btnShowRoute.setOnClickListener(v -> handleShowRoute());
 
+        btnClearRoute.setOnClickListener(v -> map.clearMap());
+
         setupDebouncedAutocomplete(txtPickupLocation, true);
         setupDebouncedAutocomplete(txtDestination, false);
     }
@@ -236,7 +238,6 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
 
     private void checkAndDrawRoute(int remainingGeocodeCount) {
         if (remainingGeocodeCount == 0) {
-            // All geocoding operations completed
             if (pickupGeoPoint != null && destinationGeoPoint != null) {
                 drawRoute();
             } else {
@@ -246,11 +247,11 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
     }
 
     private void drawRoute() {
-        Toast.makeText(this, "🔄 Calculating route...", Toast.LENGTH_SHORT).show();
 
         map.drawRouteBetweenPoints(pickupGeoPoint, destinationGeoPoint, new Map.RoutingCallback() {
             @Override
             public void onRouteFound(List<GeoPoint> routePoints, double distanceKm, double durationMinutes) {
+                map.clearMarkerTap();
                 runOnUiThread(() -> {
                     Toast.makeText(PassengerScreen.this, 
                         String.format("✅ Route found: %.1f km, %.0f min", distanceKm, durationMinutes), 
@@ -260,6 +261,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
 
             @Override
             public void onRoutingError(String error) {
+                map.clearMarkerTap();
                 runOnUiThread(() -> {
                     Toast.makeText(PassengerScreen.this, "❌ Route calculation failed: " + error, Toast.LENGTH_SHORT).show();
                 });
@@ -422,6 +424,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
             iconCloseOverlay.setVisibility(View.GONE);
             frameMapButton.setVisibility(View.GONE);
             shouldCalculateStartOrDestinationFromMap = false;
+            map.clearMarkerTap();
             toggleControls.setText("🚕 ▼");
             iconCloseOverlay.setText("❌");
         } else {
@@ -434,6 +437,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
             btnChoseCurrentLocation.setVisibility(View.GONE);
             frameMapButton.setVisibility(View.GONE);
             shouldCalculateStartOrDestinationFromMap = false;
+            map.clearMarkerTap();
             hideKeyboard();
             toggleControls.setText("🚕 ▲");
             iconCloseOverlay.setText("❌");
@@ -463,6 +467,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
     @Override
     public void onTap(GeoPoint p) {
         if (shouldCalculateStartOrDestinationFromMap) {
+            map.setMapTapMarker(p);
             locationService.reverseGeocode(p, new LocationService.ReverseGeocodeListener() {
                 @Override
                 public void onReverseGeocodeSuccess(String address) {
@@ -487,7 +492,6 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
                 }
             });
         }
-
     }
 
     private void showPickupSpinner(boolean show) {
