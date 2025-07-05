@@ -23,6 +23,7 @@ import org.osmdroid.events.MapListener;
 import org.osmdroid.events.ScrollEvent;
 import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.CustomZoomButtonsController;
 import org.osmdroid.views.MapView;
@@ -223,7 +224,7 @@ public class Map {
 
     private void zoomToShowRoute(List<GeoPoint> routePoints) {
         try {
-            if (routePoints.size() < 2) return;
+            if (routePoints == null || routePoints.size() < 2) return;
 
             double minLat = routePoints.get(0).getLatitude();
             double maxLat = routePoints.get(0).getLatitude();
@@ -237,23 +238,29 @@ public class Map {
                 maxLon = Math.max(maxLon, point.getLongitude());
             }
 
-            double latPadding = (maxLat - minLat) * 0.15;
-            double lonPadding = (maxLon - minLon) * 0.15;
+            double latPadding = Math.max((maxLat - minLat) * 0.15, 0.002);
+            double lonPadding = Math.max((maxLon - minLon) * 0.15, 0.002);
 
-            org.osmdroid.util.BoundingBox boundingBox = new org.osmdroid.util.BoundingBox(
+            BoundingBox boundingBox = new BoundingBox(
                     maxLat + latPadding, maxLon + lonPadding,
                     minLat - latPadding, minLon - lonPadding
             );
 
             mapView.zoomToBoundingBox(boundingBox, true, 100);
 
+            double centerLat = (minLat + maxLat) / 2;
+            double centerLon = (minLon + maxLon) / 2;
+            GeoPoint center = new GeoPoint(centerLat, centerLon);
+
             mainHandler.postDelayed(() -> {
+                double zoomLevel = mapView.getZoomLevelDouble();
                 IMapController controller = mapView.getController();
-                double currentZoom = mapView.getZoomLevelDouble();
-                controller.setZoom(currentZoom - 2);
-            }, 150);
+                controller.setZoom(zoomLevel - 1);
+                controller.setCenter(center);
+            }, 300);
 
         } catch (Exception e) {
+            Log.e("zoomToShowRoute", "Error zooming to route", e);
         }
     }
 
