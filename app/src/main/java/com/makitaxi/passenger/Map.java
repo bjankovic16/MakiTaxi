@@ -1,6 +1,10 @@
 package com.makitaxi.passenger;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -10,6 +14,9 @@ import com.makitaxi.R;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.events.MapEventsReceiver;
+import org.osmdroid.events.MapListener;
+import org.osmdroid.events.ScrollEvent;
+import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.CustomZoomButtonsController;
@@ -95,7 +102,56 @@ public class Map {
 
         mapEventsOverlay = new MapEventsOverlay(mReceive);
         mapView.getOverlays().add(mapEventsOverlay);
+        mapView.addMapListener(new MapListener() {
+            @Override
+            public boolean onScroll(ScrollEvent event) {
+                return false; // we're not handling scroll here
+            }
+
+            @Override
+            public boolean onZoom(ZoomEvent event) {
+                double zoomLevel = event.getZoomLevel();
+                updateMarkerScale(zoomLevel);
+                return true;
+            }
+        });
     }
+
+    private void updateMarkerScale(double zoomLevel) {
+        float scaleFactor = getScaleFactor(zoomLevel);
+        Drawable drawable = ContextCompat.getDrawable(context, R.drawable.ic_location_red);
+        if (drawable != null) {
+            int width = (int) (drawable.getIntrinsicWidth() * scaleFactor);
+            int height = (int) (drawable.getIntrinsicHeight() * scaleFactor);
+
+            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            drawable.setBounds(0, 0, width, height);
+            drawable.draw(canvas);
+
+            destinationMarker.setIcon(new BitmapDrawable(context.getResources(), bitmap));
+        }
+        Drawable drawable1 = ContextCompat.getDrawable(context, R.drawable.ic_location_green);
+        if (drawable1 != null) {
+            int width = (int) (drawable1.getIntrinsicWidth() * scaleFactor);
+            int height = (int) (drawable1.getIntrinsicHeight() * scaleFactor);
+
+            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            drawable1.setBounds(0, 0, width, height);
+            drawable1.draw(canvas);
+
+            startMarker.setIcon(new BitmapDrawable(context.getResources(), bitmap));
+        }
+    }
+
+    private float getScaleFactor(double zoomLevel) {
+        // Customize scaling based on zoom level
+        if (zoomLevel >= 18) return 1.8f;
+        if (zoomLevel >= 15) return 1.5f;
+        return 1.3f; // default
+    }
+
 
     private void setupLocationOverlay() {
         myLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(context), mapView);
@@ -113,9 +169,18 @@ public class Map {
         startMarker = new Marker(mapView);
         startMarker.setPosition(point);
         startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+        float scaleFactor = getScaleFactor(mapView.getZoomLevelDouble());
+        Drawable drawable = ContextCompat.getDrawable(context, R.drawable.ic_location_green);
+        assert drawable != null;
+        int width = (int) (drawable.getIntrinsicWidth() * scaleFactor);
+        int height = (int) (drawable.getIntrinsicHeight() * scaleFactor);
 
-        startMarker.setIcon(ContextCompat.getDrawable(context, R.drawable.ic_location_green));
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, width, height);
+        drawable.draw(canvas);
 
+        startMarker.setIcon(new BitmapDrawable(context.getResources(), bitmap));
         mapView.getOverlays().add(startMarker);
         mapView.invalidate();
     }
@@ -124,13 +189,20 @@ public class Map {
         if (destinationMarker != null) {
             mapView.getOverlays().remove(destinationMarker);
         }
-
-        // Create new destination marker
         destinationMarker = new Marker(mapView);
         destinationMarker.setPosition(point);
         destinationMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+        float scaleFactor = getScaleFactor(mapView.getZoomLevelDouble());
+        Drawable drawable = ContextCompat.getDrawable(context, R.drawable.ic_location_red);
+        assert drawable != null;
+        int width = (int) (drawable.getIntrinsicWidth() * scaleFactor);
+        int height = (int) (drawable.getIntrinsicHeight() * scaleFactor);
 
-        destinationMarker.setIcon(ContextCompat.getDrawable(context, R.drawable.ic_location_red));
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, width, height);
+        drawable.draw(canvas);
+        destinationMarker.setIcon(new BitmapDrawable(context.getResources(), bitmap));
 
         mapView.getOverlays().add(destinationMarker);
         mapView.invalidate();
