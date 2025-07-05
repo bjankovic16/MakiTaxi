@@ -100,6 +100,7 @@ public class Map {
     }
 
     public void drawRouteBetweenPoints(GeoPoint startPoint, GeoPoint endPoint, RoutingCallback externalCallback) {
+        clearMarkers();
         clearRoute();
         getRouteFromOSRM(startPoint, endPoint, new Map.RoutingCallback() {
             @Override
@@ -117,6 +118,9 @@ public class Map {
     }
 
     private void getRouteFromOSRM(GeoPoint start, GeoPoint end, RoutingCallback callback) {
+        if(start == null || end == null) {
+            return;
+        }
         executorService.execute(() -> {
             try {
                 String urlString = OSRM_BASE_URL +
@@ -207,6 +211,10 @@ public class Map {
         routePolyline.setGeodesic(false);
 
         mapView.getOverlays().add(routePolyline);
+        mapView.getOverlays().remove(startMarker);
+        mapView.getOverlays().remove(destinationMarker);
+        this.addStartMarker(routePoints.get(0));
+        this.addDestinationMarker(routePoints.get(routePoints.size() - 1));
 
         zoomToShowRoute(routePoints);
 
@@ -238,6 +246,12 @@ public class Map {
             );
 
             mapView.zoomToBoundingBox(boundingBox, true, 100);
+
+            mainHandler.postDelayed(() -> {
+                IMapController controller = mapView.getController();
+                double currentZoom = mapView.getZoomLevelDouble();
+                controller.setZoom(currentZoom - 2);
+            }, 150);
 
         } catch (Exception e) {
         }
@@ -282,7 +296,7 @@ public class Map {
         mapView.addMapListener(new MapListener() {
             @Override
             public boolean onScroll(ScrollEvent event) {
-                return false; // we're not handling scroll here
+                return false;
             }
 
             @Override
