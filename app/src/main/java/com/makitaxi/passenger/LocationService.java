@@ -36,6 +36,12 @@ public class LocationService {
         void onReverseGeocodeError(String error);
     }
 
+    public interface GeocodeListener {
+        void onGeocodeSuccess(GeoPoint geoPoint);
+
+        void onGeocodeError(String error);
+    }
+
     public interface LocationSuggestionsListener {
         void onSuggestionsFound(List<String> foundResults);
 
@@ -165,7 +171,7 @@ public class LocationService {
                             String full = name + (city.isEmpty() ? "" : ", " + city) + (state.isEmpty() ? "" : ", " + state);
                             if (country.startsWith("Србија") && city.startsWith("Београд")) {
                                 String suggestion = cyrillicToSerbianLatin(full);
-                                if(!addedSuggestions.contains(suggestion)) {
+                                if (!addedSuggestions.contains(suggestion)) {
                                     suggestions.add(suggestion);
                                     addedSuggestions.add(suggestion);
                                 }
@@ -209,6 +215,33 @@ public class LocationService {
             }
         });
     }
+
+    public void geocode(String address, GeocodeListener listener) {
+        executorService.execute(() -> {
+            try {
+                Geocoder geocoder = new Geocoder(context, Locale.getDefault());
+                List<Address> addresses = geocoder.getFromLocationName(address, 1);
+
+                if (addresses != null && !addresses.isEmpty()) {
+                    Address found = addresses.get(0);
+                    double lat = found.getLatitude();
+                    double lon = found.getLongitude();
+
+                    GeoPoint geoPoint = new GeoPoint(lat, lon);
+
+                    handler.post(() -> listener.onGeocodeSuccess(geoPoint));
+                }else {
+                    handler.post(() -> listener.onGeocodeError("No location found for address"));
+                }
+
+            } catch (IOException e) {
+                handler.post(() -> listener.onGeocodeError("Network error: " + e.getMessage()));
+            } catch (Exception e) {
+                handler.post(() -> listener.onGeocodeError("Unexpected error: " + e.getMessage()));
+            }
+        });
+    }
+
 
     private String formatAddress(Address address) {
         StringBuilder addressText = new StringBuilder();

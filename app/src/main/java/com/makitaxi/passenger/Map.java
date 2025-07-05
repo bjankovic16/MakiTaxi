@@ -3,7 +3,10 @@ package com.makitaxi.passenger;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
+
+import androidx.core.content.ContextCompat;
+
+import com.makitaxi.R;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.events.MapEventsReceiver;
@@ -12,6 +15,7 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.CustomZoomButtonsController;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.MapEventsOverlay;
+import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
@@ -27,6 +31,10 @@ public class Map {
     private CallbackMapTap callbackMapTap;
     private Context context;
     private MapView mapView;
+
+    private Marker startMarker;
+
+    private Marker destinationMarker;
 
     private ExecutorService executorService;
 
@@ -70,7 +78,7 @@ public class Map {
         MapEventsReceiver mReceive = new MapEventsReceiver() {
             @Override
             public boolean singleTapConfirmedHelper(GeoPoint p) {
-                if(callbackMapTap != null) {
+                if (callbackMapTap != null) {
                     callbackMapTap.onTap(p);
                 }
                 return true;
@@ -78,7 +86,7 @@ public class Map {
 
             @Override
             public boolean longPressHelper(GeoPoint p) {
-                if(callbackMapTap != null) {
+                if (callbackMapTap != null) {
                     callbackMapTap.onTap(p);
                 }
                 return true;
@@ -97,6 +105,55 @@ public class Map {
         mapView.getOverlays().add(myLocationOverlay);
     }
 
+    public void addStartMarker(GeoPoint point) {
+        if (startMarker != null) {
+            mapView.getOverlays().remove(startMarker);
+        }
+
+        startMarker = new Marker(mapView);
+        startMarker.setPosition(point);
+        startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+
+        startMarker.setIcon(ContextCompat.getDrawable(context, R.drawable.ic_location_green));
+
+        mapView.getOverlays().add(startMarker);
+        mapView.invalidate();
+    }
+
+    public void addDestinationMarker(GeoPoint point) {
+        if (destinationMarker != null) {
+            mapView.getOverlays().remove(destinationMarker);
+        }
+
+        // Create new destination marker
+        destinationMarker = new Marker(mapView);
+        destinationMarker.setPosition(point);
+        destinationMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+
+        destinationMarker.setIcon(ContextCompat.getDrawable(context, R.drawable.ic_location_red));
+
+        mapView.getOverlays().add(destinationMarker);
+        mapView.invalidate();
+    }
+
+    public void clearMarkers() {
+        try {
+            if (startMarker != null) {
+                mapView.getOverlays().remove(startMarker);
+                startMarker = null;
+            }
+
+            if (destinationMarker != null) {
+                mapView.getOverlays().remove(destinationMarker);
+                destinationMarker = null;
+            }
+
+            mapView.invalidate();
+        } catch (Exception e) {
+        }
+    }
+
+
     public void zoomIn() {
         mapController.zoomIn();
     }
@@ -111,10 +168,6 @@ public class Map {
 
     public GeoPoint getCurrentLocation() {
         return myLocationOverlay.getMyLocation();
-    }
-
-    public GeoPoint getPressedLocation() {
-        return null;
     }
 
 }

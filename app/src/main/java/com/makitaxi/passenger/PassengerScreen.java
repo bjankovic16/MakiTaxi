@@ -22,6 +22,7 @@ import android.widget.TextView;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -73,6 +74,9 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
     private ImageView pickupLoadingSpinner;
     private ImageView destinationLoadingSpinner;
     private RotateAnimation spinnerAnimation;
+
+    private GeoPoint pickupGeoPoint;
+    private  GeoPoint destinationGeoPoint;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -190,8 +194,64 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
 
         btnChoseFromMap.setOnClickListener(v -> choseLocationFromMapAsStartOrDestination());
 
+        btnShowRoute.setOnClickListener(v -> handleShowRoute());
+
         setupDebouncedAutocomplete(txtPickupLocation, true);
         setupDebouncedAutocomplete(txtDestination, false);
+    }
+
+    private void handleShowRoute() {
+        String pickupLocation = txtPickupLocation.getText().toString().trim();
+        String destinationLocation = txtDestination.getText().toString().trim();
+
+        if (pickupLocation.isEmpty()) {
+            Toast.makeText(this, "❌ Please enter a pickup location", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (destinationLocation.isEmpty()) {
+            Toast.makeText(this, "❌ Please enter a destination location", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        map.clearMarkers();
+        if(pickupGeoPoint == null) {
+            geoCodeAddress(pickupLocation, true);
+        } else {
+            map.addStartMarker(pickupGeoPoint);
+        }
+        if(destinationGeoPoint == null) {
+            geoCodeAddress(destinationLocation, false);
+        } else {
+            map.addDestinationMarker(destinationGeoPoint);
+        }
+
+
+
+
+
+    }
+
+    private void geoCodeAddress(String address, boolean isPickup) {
+        locationService.geocode(address, new LocationService.GeocodeListener() {
+            @Override
+            public void onGeocodeSuccess(GeoPoint geoPoint) {
+                if (isPickup) {
+                    pickupGeoPoint = geoPoint;
+                    map.addStartMarker(pickupGeoPoint);
+                } else {
+                    destinationGeoPoint = geoPoint;
+                    map.addDestinationMarker(destinationGeoPoint);
+                }
+            }
+
+            @Override
+            public void onGeocodeError(String error) {
+                runOnUiThread(() -> {
+                    if(isPickup)
+                        Toast.makeText(PassengerScreen.this, "❌ Error finding pickup location: " + error, Toast.LENGTH_SHORT).show();
+                    else Toast.makeText(PassengerScreen.this, "❌ Error finding destination location: " + error, Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
 
     private void setupDebouncedAutocomplete(AutoCompleteTextView field, boolean isPickup) {
@@ -226,7 +286,11 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
                                         suggestions
                                 );
                                 field.setAdapter(adapter);
-
+                                if(isPickup) {
+                                    pickupGeoPoint = null;
+                                } else {
+                                    destinationGeoPoint = null;
+                                }
                                 if (!suggestions.isEmpty()) {
                                     field.showDropDown();
                                 }
@@ -262,14 +326,17 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
 
     private void choseCurrentLocationAsStartOrDestination() {
         if (!hasFocusPickup && !hasFocusDestination) return;
+        GeoPoint currentLocation = map.getCurrentLocation();
 
-        locationService.reverseGeocode(map.getCurrentLocation(), new LocationService.ReverseGeocodeListener() {
+        locationService.reverseGeocode(currentLocation, new LocationService.ReverseGeocodeListener() {
             @Override
             public void onReverseGeocodeSuccess(String address) {
                 if (hasFocusPickup) {
                     txtPickupLocation.setText(address);
+                    pickupGeoPoint = currentLocation;
                 } else {
                     txtDestination.setText(address);
+                    destinationGeoPoint = currentLocation;
                 }
             }
 
@@ -351,9 +418,11 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
                 @Override
                 public void onReverseGeocodeSuccess(String address) {
                     if (hasFocusPickup) {
+                        pickupGeoPoint = p;
                         txtPickupLocation.setText(address);
                     }
                     if (hasFocusDestination) {
+                        destinationGeoPoint = p;
                         txtDestination.setText(address);
                     }
                 }
