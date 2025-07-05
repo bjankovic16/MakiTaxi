@@ -33,6 +33,7 @@ import org.osmdroid.views.MapView;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class PassengerScreen extends AppCompatActivity implements Map.CallbackMapTap {
@@ -204,58 +205,99 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
         String pickupLocation = txtPickupLocation.getText().toString().trim();
         String destinationLocation = txtDestination.getText().toString().trim();
 
-        if (pickupLocation.isEmpty()) {
-            Toast.makeText(this, "❌ Please enter a pickup location", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (destinationLocation.isEmpty()) {
-            Toast.makeText(this, "❌ Please enter a destination location", Toast.LENGTH_SHORT).show();
+        if (pickupLocation.isEmpty() || destinationLocation.isEmpty()) {
+            Toast.makeText(this, "❌ Please enter both pickup and destination locations", Toast.LENGTH_SHORT).show();
             return;
         }
         map.clearMarkers();
-        if(pickupGeoPoint == null) {
-            geoCodeAddress(pickupLocation, true);
-        } else {
-            map.addStartMarker(pickupGeoPoint);
-        }
-        if(destinationGeoPoint == null) {
-            geoCodeAddress(destinationLocation, false);
-        } else {
-            map.addDestinationMarker(destinationGeoPoint);
+        AtomicInteger pendingGeocodeCount = new AtomicInteger();
+
+        if (pickupGeoPoint != null && destinationGeoPoint != null) {
+            drawRoute();
+            return;
         }
 
+        if(pickupGeoPoint == null) {
+            pendingGeocodeCount.getAndIncrement();
+            geoCodeAddress(pickupLocation, true, () -> {
+                pendingGeocodeCount.getAndDecrement();
+                checkAndDrawRoute(pendingGeocodeCount.get());
+            });
+        }
+
+        if(destinationGeoPoint == null) {
+            pendingGeocodeCount.getAndIncrement();
+            geoCodeAddress(destinationLocation, false, () -> {
+                pendingGeocodeCount.getAndDecrement();
+                checkAndDrawRoute(pendingGeocodeCount.get());
+            });
+        }
+    }
+
+    private void checkAndDrawRoute(int remainingGeocodeCount) {
+        if (remainingGeocodeCount == 0) {
+            // All geocoding operations completed
+            if (pickupGeoPoint != null && destinationGeoPoint != null) {
+                drawRoute();
+            } else {
+                Toast.makeText(this, "❌ Could not find one or both locations", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void drawRoute() {
         Toast.makeText(this, "🔄 Calculating route...", Toast.LENGTH_SHORT).show();
 
         map.drawRouteBetweenPoints(pickupGeoPoint, destinationGeoPoint, new Map.RoutingCallback() {
             @Override
             public void onRouteFound(List<GeoPoint> routePoints, double distanceKm, double durationMinutes) {
+                runOnUiThread(() -> {
+                    Toast.makeText(PassengerScreen.this, 
+                        String.format("✅ Route found: %.1f km, %.0f min", distanceKm, durationMinutes), 
+                        Toast.LENGTH_LONG).show();
+                });
             }
 
             @Override
             public void onRoutingError(String error) {
+                runOnUiThread(() -> {
+                    Toast.makeText(PassengerScreen.this, "❌ Route calculation failed: " + error, Toast.LENGTH_SHORT).show();
+                });
             }
         });
     }
 
-    private void geoCodeAddress(String address, boolean isPickup) {
+    private void geoCodeAddress(String address, boolean isPickup, Runnable onComplete) {
         locationService.geocode(address, new LocationService.GeocodeListener() {
             @Override
             public void onGeocodeSuccess(GeoPoint geoPoint) {
-                if (isPickup) {
-                    pickupGeoPoint = geoPoint;
-                    map.addStartMarker(pickupGeoPoint);
-                } else {
-                    destinationGeoPoint = geoPoint;
-                    map.addDestinationMarker(destinationGeoPoint);
-                }
+                runOnUiThread(() -> {
+                    if (isPickup) {
+                        pickupGeoPoint = geoPoint;
+                    } else {
+                        destinationGeoPoint = geoPoint;
+                    }
+                    
+                    if (onComplete != null) {
+                        onComplete.run();
+                    }
+                });
             }
 
             @Override
             public void onGeocodeError(String error) {
                 runOnUiThread(() -> {
-                    if(isPickup)
+                    if(isPickup) {
                         Toast.makeText(PassengerScreen.this, "❌ Error finding pickup location: " + error, Toast.LENGTH_SHORT).show();
-                    else Toast.makeText(PassengerScreen.this, "❌ Error finding destination location: " + error, Toast.LENGTH_SHORT).show();
+                        pickupGeoPoint = null;
+                    } else {
+                        Toast.makeText(PassengerScreen.this, "❌ Error finding destination location: " + error, Toast.LENGTH_SHORT).show();
+                        destinationGeoPoint = null;
+                    }
+                    
+                    if (onComplete != null) {
+                        onComplete.run();
+                    }
                 });
             }
         });
