@@ -320,7 +320,7 @@ public class Map {
     private void updateMarkerScale(double zoomLevel) {
         float scaleFactor = getScaleFactor(zoomLevel);
         Drawable drawable = ContextCompat.getDrawable(context, R.drawable.ic_location_red);
-        if (drawable != null) {
+        if (drawable != null && destinationMarker != null) {
             int width = (int) (drawable.getIntrinsicWidth() * scaleFactor);
             int height = (int) (drawable.getIntrinsicHeight() * scaleFactor);
 
@@ -332,7 +332,7 @@ public class Map {
             destinationMarker.setIcon(new BitmapDrawable(context.getResources(), bitmap));
         }
         Drawable drawable1 = ContextCompat.getDrawable(context, R.drawable.ic_location_green);
-        if (drawable1 != null) {
+        if (drawable1 != null && startMarker != null) {
             int width = (int) (drawable1.getIntrinsicWidth() * scaleFactor);
             int height = (int) (drawable1.getIntrinsicHeight() * scaleFactor);
 
