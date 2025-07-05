@@ -224,10 +224,17 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
             map.addDestinationMarker(destinationGeoPoint);
         }
 
+        Toast.makeText(this, "🔄 Calculating route...", Toast.LENGTH_SHORT).show();
 
+        map.drawRouteBetweenPoints(pickupGeoPoint, destinationGeoPoint, new Map.RoutingCallback() {
+            @Override
+            public void onRouteFound(List<GeoPoint> routePoints, double distanceKm, double durationMinutes) {
+            }
 
-
-
+            @Override
+            public void onRoutingError(String error) {
+            }
+        });
     }
 
     private void geoCodeAddress(String address, boolean isPickup) {

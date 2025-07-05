@@ -3,15 +3,20 @@ package com.makitaxi.passenger;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.core.content.ContextCompat;
 
 import com.makitaxi.R;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.events.MapListener;
@@ -23,17 +28,32 @@ import org.osmdroid.views.CustomZoomButtonsController;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.MapEventsOverlay;
 import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.views.overlay.Polyline;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Map {
 
+    public interface RoutingCallback {
+        void onRouteFound(List<GeoPoint> routePoints, double distance, double duration);
+
+        void onRoutingError(String error);
+    }
+
     public interface CallbackMapTap {
         public void onTap(GeoPoint p);
     }
+
+    private static final String OSRM_BASE_URL = "https://router.project-osrm.org/route/v1/driving/";
 
     private CallbackMapTap callbackMapTap;
     private Context context;
@@ -52,6 +72,8 @@ public class Map {
     private MyLocationNewOverlay myLocationOverlay;
 
     private MapEventsOverlay mapEventsOverlay;
+
+    private Polyline routePolyline;
 
     public Map(Context context, MapView mapView) {
         this.context = context;
@@ -76,6 +98,161 @@ public class Map {
         setupLocationOverlay();
         setupMapEvents();
     }
+
+    public void drawRouteBetweenPoints(GeoPoint startPoint, GeoPoint endPoint, RoutingCallback externalCallback) {
+        clearRoute();
+        getRouteFromOSRM(startPoint, endPoint, new Map.RoutingCallback() {
+            @Override
+            public void onRouteFound(List<GeoPoint> routePoints, double distance, double duration) {
+                mainHandler.post(() -> {
+                    displayRealRoute(routePoints);
+                    externalCallback.onRouteFound(routePoints, distance, duration);
+                });
+            }
+
+            @Override
+            public void onRoutingError(String error) {
+            }
+        });
+    }
+
+    private void getRouteFromOSRM(GeoPoint start, GeoPoint end, RoutingCallback callback) {
+        executorService.execute(() -> {
+            try {
+                String urlString = OSRM_BASE_URL +
+                        start.getLongitude() + "," + start.getLatitude() + ";" +
+                        end.getLongitude() + "," + end.getLatitude() +
+                        "?overview=full&geometries=geojson&steps=true";
+
+                URL url = new URL(urlString);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(10000);
+                connection.setReadTimeout(15000);
+                connection.setRequestProperty("User-Agent", "MakiTaxi/1.0");
+
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+                    reader.close();
+
+                    parseOSRMResponse(response.toString(), callback);
+
+                } else {
+                    callback.onRoutingError("HTTP error: " + responseCode);
+                }
+
+                connection.disconnect();
+
+            } catch (Exception e) {
+                callback.onRoutingError("Network error: " + e.getMessage());
+            }
+        });
+    }
+
+    private void parseOSRMResponse(String jsonResponse, RoutingCallback callback) {
+        try {
+            JSONObject response = new JSONObject(jsonResponse);
+            String code = response.getString("code");
+
+            if (!"Ok".equals(code)) {
+                callback.onRoutingError("OSRM returned: " + code);
+                return;
+            }
+
+            JSONArray routes = response.getJSONArray("routes");
+            if (routes.length() == 0) {
+                callback.onRoutingError("No routes found");
+                return;
+            }
+
+            JSONObject route = routes.getJSONObject(0);
+            JSONObject geometry = route.getJSONObject("geometry");
+            JSONArray coordinates = geometry.getJSONArray("coordinates");
+
+            double distance = route.getDouble("distance") / 1000.0;
+            double duration = route.getDouble("duration") / 60.0;
+
+            List<GeoPoint> routePoints = new ArrayList<>();
+            for (int i = 0; i < coordinates.length(); i++) {
+                JSONArray coord = coordinates.getJSONArray(i);
+                double lon = coord.getDouble(0);
+                double lat = coord.getDouble(1);
+                routePoints.add(new GeoPoint(lat, lon));
+            }
+
+            callback.onRouteFound(routePoints, distance, duration);
+
+        } catch (JSONException e) {
+            callback.onRoutingError("Failed to parse route data");
+        }
+    }
+
+
+    private void displayRealRoute(List<GeoPoint> routePoints) {
+        if (routePoints == null || routePoints.isEmpty()) {
+            return;
+        }
+
+        routePolyline = new Polyline();
+        routePolyline.setPoints(routePoints);
+        routePolyline.setColor(Color.parseColor("#343B71"));
+        routePolyline.setWidth(10.0f);
+        routePolyline.setGeodesic(false);
+
+        mapView.getOverlays().add(routePolyline);
+
+        zoomToShowRoute(routePoints);
+
+        mapView.invalidate();
+    }
+
+    private void zoomToShowRoute(List<GeoPoint> routePoints) {
+        try {
+            if (routePoints.size() < 2) return;
+
+            double minLat = routePoints.get(0).getLatitude();
+            double maxLat = routePoints.get(0).getLatitude();
+            double minLon = routePoints.get(0).getLongitude();
+            double maxLon = routePoints.get(0).getLongitude();
+
+            for (GeoPoint point : routePoints) {
+                minLat = Math.min(minLat, point.getLatitude());
+                maxLat = Math.max(maxLat, point.getLatitude());
+                minLon = Math.min(minLon, point.getLongitude());
+                maxLon = Math.max(maxLon, point.getLongitude());
+            }
+
+            double latPadding = (maxLat - minLat) * 0.15;
+            double lonPadding = (maxLon - minLon) * 0.15;
+
+            org.osmdroid.util.BoundingBox boundingBox = new org.osmdroid.util.BoundingBox(
+                    maxLat + latPadding, maxLon + lonPadding,
+                    minLat - latPadding, minLon - lonPadding
+            );
+
+            mapView.zoomToBoundingBox(boundingBox, true, 100);
+
+        } catch (Exception e) {
+        }
+    }
+
+    public void clearRoute() {
+        try {
+            if (routePolyline != null) {
+                mapView.getOverlays().remove(routePolyline);
+                routePolyline = null;
+            }
+        } catch (Exception e) {
+        }
+    }
+
 
     public void initCallbackMapTap(Map.CallbackMapTap callbackMapTap) {
         this.callbackMapTap = callbackMapTap;
