@@ -45,7 +45,7 @@
             android:focusable="true"
             android:gravity="end"
             android:padding="16dp"
-            android:text="🚕 ▼"
+            android:text="▼"
             android:textColor="@color/white"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -235,6 +235,7 @@
             android:id="@+id/btnClearRoute"
             android:layout_width="160dp"
             android:layout_height="48dp"
+            android:layout_marginBottom="8dp"
             android:background="@drawable/secondary_button_background"
             android:elevation="4dp"
             android:text="Clear"
@@ -242,19 +243,26 @@
 
     </LinearLayout>
 
-    <ImageButton
-        android:id="@+id/btnFilter"
+    <TextView
+        android:clickable="true"
+        android:id="@+id/btnRide"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_margin="16dp"
         android:layout_marginBottom="12dp"
-        android:contentDescription="Filter"
-        android:elevation="6dp"
-        android:src="@drawable/ic_filter"
         android:background="@drawable/circle_button_background"
+        android:contentDescription="Start Ride"
+        android:elevation="6dp"
+        android:lineHeight="48dp"
+        android:text="🚕"
+        android:textAlignment="center"
+        android:textSize="24sp"
+        android:alpha="0.5"
+        android:enabled="false"
+        android:focusable="true"
+        android:textColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:tint="#FFFFFF" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <!-- Zoom In Button (Bottom Right, Middle) -->
     <Button

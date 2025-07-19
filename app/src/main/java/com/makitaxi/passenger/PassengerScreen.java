@@ -53,7 +53,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
     private Button btnClearRoute;
     private Button btnZoomIn;
     private Button btnZoomOut;
-    private ImageButton btnFilter;
+    private TextView btnRide;
 
     private TextView iconCloseOverlay;
 
@@ -141,7 +141,9 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
         btnClearRoute = findViewById(R.id.btnClearRoute);
 
         // Map control buttons
-        btnFilter = findViewById(R.id.btnFilter);
+        btnRide = findViewById(R.id.btnRide);
+        btnRide.setEnabled(false);
+        btnRide.setAlpha(0.5f);
         btnZoomIn = findViewById(R.id.btnZoomIn);
         btnZoomOut = findViewById(R.id.btnZoomOut);
         btnMyLocation = findViewById(R.id.btnMyLocation);
@@ -200,9 +202,34 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
 
         btnShowRoute.setOnClickListener(v -> handleShowRoute());
 
-        btnClearRoute.setOnClickListener(v -> map.clearMap());
+        btnClearRoute.setOnClickListener(v -> {
+            map.clearMap();
+            btnRide.setEnabled(false);
+            btnRide.setAlpha(0.5f);
+            android.view.animation.Animation animation = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fade_out_scale_down);
+            btnRide.startAnimation(animation);
+            btnRide.clearAnimation();
+        });
 
         btnHamburgerMenu.setOnClickListener(v -> openHamburgerMenu());
+
+        btnRide.setOnClickListener(v -> {
+            if (btnRide.isEnabled()) {
+                btnRide.clearAnimation();
+
+                android.view.animation.ScaleAnimation quickScale = new android.view.animation.ScaleAnimation(
+                    1f, 0.8f, 1f, 0.8f,
+                    android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f,
+                    android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f
+                );
+                quickScale.setDuration(100);
+                quickScale.setRepeatCount(1);
+                quickScale.setRepeatMode(android.view.animation.Animation.REVERSE);
+                btnRide.startAnimation(quickScale);
+                
+                Toast.makeText(this, "🚗 Starting ride...", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         setupDebouncedAutocomplete(txtPickupLocation, true);
         setupDebouncedAutocomplete(txtDestination, false);
@@ -261,6 +288,12 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
                     Toast.makeText(PassengerScreen.this, 
                         String.format("✅ Route found: %.1f km, %.0f min", distanceKm, durationMinutes), 
                         Toast.LENGTH_LONG).show();
+
+                    btnRide.setEnabled(true);
+                    btnRide.setAlpha(1.0f);
+                    android.view.animation.Animation animation = android.view.animation.AnimationUtils.loadAnimation(PassengerScreen.this, R.anim.fade_in_scale_up);
+                    btnRide.startAnimation(animation);
+                    startPulsingAnimation();
                 });
             }
 
@@ -269,9 +302,29 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
                 map.clearMarkerTap();
                 runOnUiThread(() -> {
                     Toast.makeText(PassengerScreen.this, "❌ Route calculation failed: " + error, Toast.LENGTH_SHORT).show();
+
+                    btnRide.setEnabled(false);
+                    btnRide.setAlpha(0.5f);
+                    android.view.animation.Animation animation = android.view.animation.AnimationUtils.loadAnimation(PassengerScreen.this, R.anim.fade_out_scale_down);
+                    btnRide.startAnimation(animation);
+                    btnRide.clearAnimation();
                 });
             }
         });
+    }
+
+    private void startPulsingAnimation() {
+        android.view.animation.ScaleAnimation pulseAnim = new android.view.animation.ScaleAnimation(
+            1f, 1.1f, // X axis: start and end scale
+            1f, 1.1f, // Y axis: start and end scale
+            android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f, // Pivot point X
+            android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f  // Pivot point Y
+        );
+        pulseAnim.setDuration(1000);
+        pulseAnim.setRepeatCount(android.view.animation.Animation.INFINITE);
+        pulseAnim.setRepeatMode(android.view.animation.Animation.REVERSE);
+        pulseAnim.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
+        btnRide.startAnimation(pulseAnim);
     }
 
     private void geoCodeAddress(String address, boolean isPickup, Runnable onComplete) {
@@ -430,7 +483,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
             frameMapButton.setVisibility(View.GONE);
             shouldCalculateStartOrDestinationFromMap = false;
             map.clearMarkerTap();
-            toggleControls.setText("🚕 ▼");
+            toggleControls.setText("▼");
             iconCloseOverlay.setText("❌");
         } else {
             btnShowRoute.setVisibility(View.GONE);
@@ -444,7 +497,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
             shouldCalculateStartOrDestinationFromMap = false;
             map.clearMarkerTap();
             hideKeyboard();
-            toggleControls.setText("🚕 ▲");
+            toggleControls.setText("▲");
             iconCloseOverlay.setText("❌");
         }
     }
