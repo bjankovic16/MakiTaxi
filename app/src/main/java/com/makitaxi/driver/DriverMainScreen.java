@@ -4,84 +4,107 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
-import androidx.activity.EdgeToEdge;
-import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.makitaxi.R;
-import com.makitaxi.login.Login;
-import com.makitaxi.utils.NavigationClickListener;
+import com.makitaxi.menu.MenuMainScreen;
+import org.osmdroid.views.MapView;
 
-public class DriverMainScreen extends AppCompatActivity {
+
+public class DriverMainScreen extends AppCompatActivity{
+
+    // UI Components
+    private MapView mapView;
+    private TextView toggleControls;
+    private ImageButton btnHamburgerMenu;
+    private Button btnZoomIn;
+    private Button btnZoomOut;
+    private ImageButton btnMyLocation;
+    private LinearLayout pickupLocationContainer;
+    private LinearLayout destinationLocationContainer;
+    private MapDriver map;
+    private boolean controlsVisible = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.driver_main_screen);
-        //addButtonListener();
-
-        // Handle system bars (status bar and navigation bar)
         handleSystemBars();
-
-        // Handle back button press with modern approach
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                // Move app to background instead of going back to login
-                moveTaskToBack(true);
-            }
-        });
-
-        Button btnLogout = findViewById(R.id.btnLogout);
-        if (btnLogout != null) {
-            btnLogout.setOnClickListener(v -> {
-                FirebaseAuth.getInstance().signOut();
-                Intent intent = new Intent(DriverMainScreen.this, Login.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                finish();
-            });
-        }
+        initializeViews();
+        initializeControllers();
+        setupUIInteractions();
     }
 
-    private void addButtonListener() {
-        Button button = findViewById(R.id.takeSurveyButton);
-        if (button != null) {
-            button.setOnClickListener(
-                    NavigationClickListener.navigateTo(this, DriverMainScreen.class)
-            );
-        }
+    private void initializeControllers() {
+        map = new MapDriver(this, mapView);
     }
 
-    /**
-     * Handle System Bars (Status Bar and Navigation Bar)
-     * This ensures content is not covered by system UI elements
-     */
     private void handleSystemBars() {
-        // Get the root view
         View rootView = findViewById(android.R.id.content);
-        
-        // Set up window insets listener to handle system bars
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
-            // Get system bars insets (status bar, navigation bar)
             androidx.core.graphics.Insets systemBars = insets.getInsets(
-                androidx.core.view.WindowInsetsCompat.Type.systemBars()
+                    androidx.core.view.WindowInsetsCompat.Type.systemBars()
             );
-            
-            // Apply padding to avoid content being covered by system bars
-            // Top padding for status bar, bottom padding for navigation bar
             v.setPadding(
-                systemBars.left,    // Left padding (usually 0)
-                systemBars.top,     // Top padding (status bar)
-                systemBars.right,   // Right padding (usually 0)
-                systemBars.bottom   // Bottom padding (navigation bar)
+                    systemBars.left,
+                    systemBars.top,
+                    systemBars.right,
+                    systemBars.bottom
             );
-            
             return insets;
         });
     }
 
+    private void initializeViews() {
+        // Map
+        mapView = findViewById(R.id.mapView);
+
+        // Header components
+        btnHamburgerMenu = findViewById(R.id.btnHamburgerMenu);
+        toggleControls = findViewById(R.id.toggleControls);
+
+        // Location input containers
+        pickupLocationContainer = findViewById(R.id.pickupLocationContainer);
+        destinationLocationContainer = findViewById(R.id.destinationLocationContainer);
+
+        btnZoomIn = findViewById(R.id.btnZoomIn);
+        btnZoomOut = findViewById(R.id.btnZoomOut);
+        btnMyLocation = findViewById(R.id.btnMyLocation);
+    }
+
+    private void setupUIInteractions() {
+        toggleControls.setOnClickListener(v -> toggleControls());
+
+        btnZoomIn.setOnClickListener(v -> map.zoomIn());
+
+        btnZoomOut.setOnClickListener(v -> map.zoomOut());
+
+        btnMyLocation.setOnClickListener(v -> map.centerOnCurrentLocation());
+
+        btnHamburgerMenu.setOnClickListener(v -> openHamburgerMenu());
+    }
+
+    private void toggleControls() {
+        controlsVisible = !controlsVisible;
+        if (controlsVisible) {
+            pickupLocationContainer.setVisibility(View.VISIBLE);
+            destinationLocationContainer.setVisibility(View.VISIBLE);
+            toggleControls.setText("▼");
+        } else {
+            pickupLocationContainer.setVisibility(View.GONE);
+            destinationLocationContainer.setVisibility(View.GONE);
+            toggleControls.setText("▲");
+        }
+    }
+
+    private void openHamburgerMenu() {
+        Intent intent = new Intent(this, MenuMainScreen.class);
+        startActivity(intent);
+
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+    }
 }

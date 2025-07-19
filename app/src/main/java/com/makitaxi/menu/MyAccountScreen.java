@@ -55,7 +55,7 @@ public class MyAccountScreen extends AppCompatActivity {
     
     // Data
     private String currentUserId;
-    private Calendar birthdayCalendar = Calendar.getInstance();
+    private final Calendar birthdayCalendar = Calendar.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -271,18 +271,10 @@ public class MyAccountScreen extends AppCompatActivity {
                         database.getReference("users").child(currentUserId)
                                 .setValue(user)
                                 .addOnSuccessListener(aVoid -> {
-                                    btnSave.setEnabled(true);
-                                    btnSave.setText("Save Changes");
                                     Toast.makeText(MyAccountScreen.this, "✅ Profile updated successfully!", Toast.LENGTH_SHORT).show();
-                                    
-                                    // Update header info
                                     txtUserName.setText(name);
-                                    // Email stays the same
                                 })
                                 .addOnFailureListener(e -> {
-                                    btnSave.setEnabled(true);
-                                    btnSave.setText("Save Changes");
-                                    Log.e(TAG, "Failed to update profile", e);
                                     Toast.makeText(MyAccountScreen.this, "❌ Failed to update profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                 });
                     }
