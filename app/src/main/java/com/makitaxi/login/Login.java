@@ -19,7 +19,6 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.FirebaseDatabase;
 import com.makitaxi.R;
 import com.makitaxi.driver.DriverMainScreen;
-import com.makitaxi.passenger.PassengerMainScreen;
 import com.makitaxi.passenger.PassengerScreen;
 import com.makitaxi.utils.NavigationClickListener;
 import com.makitaxi.utils.PreferencesManager;
