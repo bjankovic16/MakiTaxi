@@ -587,32 +587,27 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
         
         com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
         dialog.setContentView(bottomSheetView);
-        
-        // Get references to car option layouts
+
         View layoutBasic = bottomSheetView.findViewById(R.id.layoutBasic);
         View layoutLuxury = bottomSheetView.findViewById(R.id.layoutLuxury);
         View layoutTransport = bottomSheetView.findViewById(R.id.layoutTransport);
         Button btnFindRide = bottomSheetView.findViewById(R.id.btnFindRide);
-        
-        // Track selected option
-        final View[] selectedLayout = {layoutBasic}; // Default selection
+
+        final View[] selectedLayout = {layoutBasic};
         layoutBasic.setBackgroundResource(R.drawable.car_option_selected_background);
         
         View.OnClickListener optionClickListener = v -> {
-            // Reset previous selection
             selectedLayout[0].setBackgroundResource(R.drawable.car_option_background);
-            // Update new selection
             v.setBackgroundResource(R.drawable.car_option_selected_background);
             selectedLayout[0] = v;
         };
-        
-        // Set click listeners
+
         layoutBasic.setOnClickListener(optionClickListener);
         layoutLuxury.setOnClickListener(optionClickListener);
         layoutTransport.setOnClickListener(optionClickListener);
         
         btnFindRide.setOnClickListener(v -> {
-            String selectedCar = "Basic"; // Default
+            String selectedCar = "Basic";
             if (selectedLayout[0] == layoutLuxury) {
                 selectedCar = "Luxury";
             } else if (selectedLayout[0] == layoutTransport) {
