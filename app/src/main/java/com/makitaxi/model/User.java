@@ -18,6 +18,8 @@ public class User {
     private boolean available;
     private double rating;
     private int totalRides;
+    private String gender;
+    private String birthday;
 
     // Required empty constructor for Firebase
     public User() {
@@ -157,5 +159,21 @@ public class User {
 
     public void setTotalRides(int totalRides) {
         this.totalRides = totalRides;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(String birthday) {
+        this.birthday = birthday;
     }
 }

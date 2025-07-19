@@ -82,6 +82,51 @@ public class MenuMainScreen extends AppCompatActivity {
         loadUserInfo();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Reload user name when returning from My Account screen
+        reloadUserName();
+    }
+
+    private void reloadUserName() {
+        FirebaseUser currentUser = auth.getCurrentUser();
+        if (currentUser != null) {
+            String userId = currentUser.getUid();
+            
+            database.getReference("users").child(userId)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        // Only update name and email, don't reload profile picture
+                        String fullName = dataSnapshot.child("fullName").getValue(String.class);
+                        String email = dataSnapshot.child("email").getValue(String.class);
+                        
+                        if (email != null) {
+                            txtUserEmail.setText(email);
+                        }
+                        
+                        if (fullName != null && !fullName.isEmpty()) {
+                            txtUserName.setText(fullName);
+                        } else {
+                            // Fallback to display name or extract from email
+                            String displayName = currentUser.getDisplayName();
+                            if (displayName != null && !displayName.isEmpty()) {
+                                txtUserName.setText(displayName);
+                            }
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    Log.e(TAG, "Failed to reload user name", databaseError.toException());
+                }
+            });
+        }
+    }
+
     private void initializeImagePicker() {
         // Image picker launcher
         imagePickerLauncher = registerForActivityResult(
@@ -146,7 +191,8 @@ public class MenuMainScreen extends AppCompatActivity {
         });
 
         layoutMyAccount.setOnClickListener(v -> {
-            Toast.makeText(this, "👤 My Account feature coming soon", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, MyAccountScreen.class);
+            startActivity(intent);
         });
 
         layoutLogOut.setOnClickListener(v -> handleLogout());
