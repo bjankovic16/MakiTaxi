@@ -32,6 +32,8 @@ import com.makitaxi.utils.CircularImageView;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MyAccountScreen extends AppCompatActivity {
 
@@ -48,6 +50,12 @@ public class MyAccountScreen extends AppCompatActivity {
     private TextView txtBirthday;
     private EditText editTextPhone;
     private Button btnSave;
+
+    // Add these fields to the class variables section
+    private LinearLayout carTypeContainer;
+    private LinearLayout carDetailsContainer;
+    private Spinner spinnerCarType;
+    private EditText editTextCarDetails;
 
     // Firebase
     private FirebaseAuth auth;
@@ -101,6 +109,12 @@ public class MyAccountScreen extends AppCompatActivity {
         txtBirthday = findViewById(R.id.txtBirthday);
         editTextPhone = findViewById(R.id.editTextPhone);
         btnSave = findViewById(R.id.btnSave);
+        
+        // Initialize car-related views
+        carTypeContainer = findViewById(R.id.carTypeContainer);
+        carDetailsContainer = findViewById(R.id.carDetailsContainer);
+        spinnerCarType = findViewById(R.id.spinnerCarType);
+        editTextCarDetails = findViewById(R.id.editTextCarDetails);
     }
 
     private void setupGenderSpinner() {
@@ -108,6 +122,13 @@ public class MyAccountScreen extends AppCompatActivity {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, genderOptions);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerGender.setAdapter(adapter);
+    }
+
+    private void setupCarTypeSpinner() {
+        String[] carTypes = {"BASIC", "LUXURY", "TRANSPORT"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, carTypes);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerCarType.setAdapter(adapter);
     }
 
     private void setupUIInteractions() {
@@ -195,6 +216,30 @@ public class MyAccountScreen extends AppCompatActivity {
 
         // Profile picture
         loadProfileImage(user.getProfilePicture());
+
+        if ("DRIVER".equals(user.getRole())) {
+            carTypeContainer.setVisibility(View.VISIBLE);
+            carDetailsContainer.setVisibility(View.VISIBLE);
+            
+            setupCarTypeSpinner();
+            
+            if (user.getCarType() != null && !user.getCarType().isEmpty()) {
+                setSpinnerSelection(spinnerCarType, user.getCarType());
+            }
+            
+            String carDetails = String.format("%s - %s (%s)",
+                user.getCarModel() != null ? user.getCarModel() : "",
+                user.getCarColor() != null ? user.getCarColor() : "",
+                user.getCarPlateNumber() != null ? user.getCarPlateNumber() : ""
+            ).trim();
+            
+            if (!carDetails.equals("- ()")) {
+                editTextCarDetails.setText(carDetails);
+            }
+        } else {
+            carTypeContainer.setVisibility(View.GONE);
+            carDetailsContainer.setVisibility(View.GONE);
+        }
     }
 
     private void setSpinnerSelection(Spinner spinner, String value) {
@@ -246,46 +291,63 @@ public class MyAccountScreen extends AppCompatActivity {
         String phone = editTextPhone.getText().toString().trim();
         String gender = spinnerGender.getSelectedItem().toString();
         String birthday = txtBirthday.getText().toString();
-
         if (name.isEmpty()) {
             editTextName.setError("Name is required");
-            editTextName.requestFocus();
             return;
         }
 
-        // Update user data
-        database.getReference("users").child(currentUserId)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    User user = dataSnapshot.getValue(User.class);
-                    if (user != null) {
-                        // Update fields (email remains unchanged)
-                        user.setFullName(name);
-                        user.setPhone(phone);
-                        user.setGender(gender);
-                        user.setBirthday(birthday);
+        if (phone.isEmpty()) {
+            editTextPhone.setError("Phone number is required");
+            return;
+        }
 
-                        // Save back to database
-                        database.getReference("users").child(currentUserId)
-                                .setValue(user)
-                                .addOnSuccessListener(aVoid -> {
-                                    Toast.makeText(MyAccountScreen.this, "✅ Profile updated successfully!", Toast.LENGTH_SHORT).show();
-                                    txtUserName.setText(name);
-                                })
-                                .addOnFailureListener(e -> {
-                                    Toast.makeText(MyAccountScreen.this, "❌ Failed to update profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                });
-                    }
-                }
+        if (birthday.equals("Select your birthday")) {
+            Toast.makeText(this, "❌ Please select your birthday", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("fullName", name);
+        updates.put("phone", phone);
+        updates.put("gender", gender);
+        updates.put("birthday", birthday);
+        
+        if (carTypeContainer.getVisibility() == View.VISIBLE) {
+            String carType = spinnerCarType.getSelectedItem().toString();
+            String carDetailsText = editTextCarDetails.getText().toString().trim();
+            
+            if (carDetailsText.isEmpty()) {
+                editTextCarDetails.setError("Please enter car details");
+                return;
             }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.e(TAG, "Failed to load user for update", databaseError.toException());
+            try {
+                String[] parts = carDetailsText.split(" - ");
+                String model = parts[0].trim();
+                String[] colorAndPlate = parts[1].split("\\(");
+                String color = colorAndPlate[0].trim();
+                String plate = colorAndPlate[1].replace(")", "").trim();
+
+                updates.put("carType", carType);
+                updates.put("carModel", model);
+                updates.put("carColor", color);
+                updates.put("carPlateNumber", plate);
+            } catch (Exception e) {
+                editTextCarDetails.setError("Please use format: Model - Color (Plate)");
+                return;
+            }
+        }
+
+        database.getReference("users")
+            .child(currentUserId)
+            .updateChildren(updates)
+            .addOnSuccessListener(aVoid -> {
+                Toast.makeText(MyAccountScreen.this, "✅ Profile updated successfully", Toast.LENGTH_SHORT).show();
+                finish();
+            })
+            .addOnFailureListener(e -> {
                 Toast.makeText(MyAccountScreen.this, "❌ Failed to update profile", Toast.LENGTH_SHORT).show();
-            }
-        });
+                Log.e(TAG, "Error updating user", e);
+            });
     }
 } 

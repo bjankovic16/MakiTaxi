@@ -107,7 +107,6 @@
                     android:background="@android:color/transparent"
                     android:hint="Bogdan Jankovic"
                     android:textColor="#666666"
-                    android:textColorHint="#999999"
                     android:textSize="16sp"
                     android:inputType="textPersonName" />
 
@@ -135,6 +134,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:textColor="#666666"
                     android:background="@android:color/transparent" />
 
             </LinearLayout>
@@ -186,7 +186,7 @@
                     android:layout_height="wrap_content"
                     android:text="Phone number"
                     android:textColor="#333333"
-                    android:textSize="14sp"
+                    android:textSize="16sp"
                     android:maxLines="2" />
 
                 <EditText
@@ -197,10 +197,83 @@
                     android:background="@android:color/transparent"
                     android:hint="+381 555 333 111"
                     android:textColor="#666666"
-                    android:textColorHint="#999999"
                     android:textSize="16sp"
                     android:inputType="phone" />
 
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/carTypeContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/input_field_background"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:text="Car Type"
+                    android:textColor="#333333"
+                    android:textSize="16sp" />
+
+                <Spinner
+                    android:id="@+id/spinnerCarType"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@android:color/transparent" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/carDetailsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/input_field_background"
+                android:gravity="center_vertical"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="Car"
+                        android:textColor="#333333"
+                        android:textSize="16sp"
+                        android:maxLines="2" />
+
+                    <EditText
+                        android:id="@+id/editTextCarDetails"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@android:color/transparent"
+                        android:hint="Car model and plates"
+                        android:textColor="#666666"
+                        android:textSize="16sp"
+                        android:inputType="text" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginStart="80dp"
+                    android:text="Format: Model - Color (Plate)"
+                    android:textColor="#999999"
+                    android:textSize="12sp" />
 
             </LinearLayout>
 

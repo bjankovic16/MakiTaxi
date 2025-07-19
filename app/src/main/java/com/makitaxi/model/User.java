@@ -15,6 +15,7 @@ public class User {
     private String carModel;
     private String carColor;
     private String carPlateNumber;
+    private String carType; // BASIC, LUXURY, LIMOUSINE
     private boolean available;
     private double rating;
     private int totalRides;
@@ -175,5 +176,13 @@ public class User {
 
     public void setBirthday(String birthday) {
         this.birthday = birthday;
+    }
+
+    public String getCarType() {
+        return carType;
+    }
+
+    public void setCarType(String carType) {
+        this.carType = carType;
     }
 }
