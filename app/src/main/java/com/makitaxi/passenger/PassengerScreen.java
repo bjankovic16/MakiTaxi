@@ -216,7 +216,6 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
         btnRide.setOnClickListener(v -> {
             if (btnRide.isEnabled()) {
                 btnRide.clearAnimation();
-
                 android.view.animation.ScaleAnimation quickScale = new android.view.animation.ScaleAnimation(
                     1f, 0.8f, 1f, 0.8f,
                     android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f,
@@ -226,8 +225,8 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
                 quickScale.setRepeatCount(1);
                 quickScale.setRepeatMode(android.view.animation.Animation.REVERSE);
                 btnRide.startAnimation(quickScale);
-                
-                Toast.makeText(this, "🚗 Starting ride...", Toast.LENGTH_SHORT).show();
+
+                showCarSelectionBottomSheet();
             }
         });
 
@@ -581,5 +580,49 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
         startActivity(intent);
 
         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+    }
+
+    private void showCarSelectionBottomSheet() {
+        View bottomSheetView = getLayoutInflater().inflate(R.layout.car_selection_bottom_sheet, null);
+        
+        com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        dialog.setContentView(bottomSheetView);
+        
+        // Get references to car option layouts
+        View layoutBasic = bottomSheetView.findViewById(R.id.layoutBasic);
+        View layoutLuxury = bottomSheetView.findViewById(R.id.layoutLuxury);
+        View layoutTransport = bottomSheetView.findViewById(R.id.layoutTransport);
+        Button btnFindRide = bottomSheetView.findViewById(R.id.btnFindRide);
+        
+        // Track selected option
+        final View[] selectedLayout = {layoutBasic}; // Default selection
+        layoutBasic.setBackgroundResource(R.drawable.car_option_selected_background);
+        
+        View.OnClickListener optionClickListener = v -> {
+            // Reset previous selection
+            selectedLayout[0].setBackgroundResource(R.drawable.car_option_background);
+            // Update new selection
+            v.setBackgroundResource(R.drawable.car_option_selected_background);
+            selectedLayout[0] = v;
+        };
+        
+        // Set click listeners
+        layoutBasic.setOnClickListener(optionClickListener);
+        layoutLuxury.setOnClickListener(optionClickListener);
+        layoutTransport.setOnClickListener(optionClickListener);
+        
+        btnFindRide.setOnClickListener(v -> {
+            String selectedCar = "Basic"; // Default
+            if (selectedLayout[0] == layoutLuxury) {
+                selectedCar = "Luxury";
+            } else if (selectedLayout[0] == layoutTransport) {
+                selectedCar = "Transport";
+            }
+            
+            Toast.makeText(this, "🚗 Finding " + selectedCar + " ride...", Toast.LENGTH_SHORT).show();
+            dialog.dismiss();
+        });
+        
+        dialog.show();
     }
 }
