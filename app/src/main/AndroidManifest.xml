@@ -15,6 +15,12 @@
 
     <!-- External storage permission for OSMDroid tile caching -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    
+    <!-- External storage permission for image picker -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    
+    <!-- Media permissions for Android 13+ -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <application
         android:allowBackup="true"
@@ -67,6 +73,10 @@
         </activity>
         <activity
             android:name=".driver.DriverMainScreen"
+            android:exported="true">
+        </activity>
+        <activity
+            android:name=".menu.MenuMainScreen"
             android:exported="true">
         </activity>
     </application>

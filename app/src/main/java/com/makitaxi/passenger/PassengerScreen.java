@@ -3,6 +3,7 @@ package com.makitaxi.passenger;
 import static com.google.android.material.internal.ViewUtils.showKeyboard;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -24,9 +25,11 @@ import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.makitaxi.R;
+import com.makitaxi.menu.MenuMainScreen;
 
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
@@ -198,6 +201,8 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
         btnShowRoute.setOnClickListener(v -> handleShowRoute());
 
         btnClearRoute.setOnClickListener(v -> map.clearMap());
+
+        btnHamburgerMenu.setOnClickListener(v -> openHamburgerMenu());
 
         setupDebouncedAutocomplete(txtPickupLocation, true);
         setupDebouncedAutocomplete(txtDestination, false);
@@ -516,5 +521,12 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
                 destinationLoadingSpinner.setVisibility(View.GONE);
             }
         }
+    }
+
+    private void openHamburgerMenu() {
+        Intent intent = new Intent(this, MenuMainScreen.class);
+        startActivity(intent);
+
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
 }

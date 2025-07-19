@@ -41,6 +41,7 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.database)
+    implementation(libs.firebase.storage)
     implementation(libs.play.services.auth)
     implementation(libs.play.services.identity)
     
@@ -52,6 +53,10 @@ dependencies {
     
     // JSON parsing for route data
     implementation(libs.json)
+    
+    // Image loading library
+    implementation(libs.glide)
+    annotationProcessor(libs.glide.compiler)
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

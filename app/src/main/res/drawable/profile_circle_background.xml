@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    
+    <!-- Gradient background -->
+    <gradient
+        android:startColor="#FFFFFF"
+        android:endColor="#F0F0F0"
+        android:angle="45"
+        android:type="linear" />
+    
+    <!-- Orange border -->
+    <stroke
+        android:width="4dp"
+        android:color="@color/background" />
+    
+    <!-- Fixed size for perfect circle -->
+    <size
+        android:width="120dp"
+        android:height="120dp" />
+        
+</shape> 
