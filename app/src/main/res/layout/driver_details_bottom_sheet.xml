@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/background"
+    android:padding="16dp">
+
+    <!-- Driver Info Section -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.makitaxi.utils.CircularImageView
+            android:id="@+id/imgDriverProfile"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/taxi_logo"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/imgDriverProfile"
+            android:layout_marginStart="16dp"
+            android:layout_centerVertical="true"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtDriverName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Miki Manojlović"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/rating_background"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@android:drawable/btn_star_big_on"
+                    app:tint="#FFC107" />
+
+                <TextView
+                    android:id="@+id/txtDriverRating"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="4.4"
+                    android:textColor="@android:color/white"
+                    android:layout_marginStart="4dp"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btnCallDriver"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/stat_sys_phone_call"
+                app:tint="@android:color/white" />
+
+            <ImageButton
+                android:id="@+id/btnMessageDriver"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_dialog_email"
+                app:tint="@android:color/white" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#4DFFFFFF"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Car & Price Info Section -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/imgCarIcon"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_car_luxury"
+            app:tint="@android:color/white"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_toEndOf="@id/imgCarIcon"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="16dp">
+
+            <TextView
+                android:id="@+id/txtCarType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Luxury"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/txtDriverDistance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2.3 km"
+                android:textColor="#B3FFFFFF"/>
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:gravity="end">
+
+            <TextView
+                android:id="@+id/txtRidePrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1500 din"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/txtRideTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="10 min"
+                android:textColor="#B3FFFFFF"/>
+        </LinearLayout>
+    </RelativeLayout>
+
+    <!-- Action Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="24dp">
+
+        <Button
+            android:id="@+id/btnDecline"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/primary_button_background"
+            android:text="DECLINE"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/btnProceed"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/secondary_button_background"
+            android:text="PROCEED"
+            android:textColor="@color/background"
+            android:textSize="16sp" />
+    </LinearLayout>
+</LinearLayout> 

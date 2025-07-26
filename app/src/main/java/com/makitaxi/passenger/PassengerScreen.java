@@ -1,7 +1,5 @@
 package com.makitaxi.passenger;
 
-import static com.google.android.material.internal.ViewUtils.showKeyboard;
-
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -25,21 +23,42 @@ import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.AlertDialog;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.makitaxi.R;
 import com.makitaxi.menu.MenuMainScreen;
+import com.makitaxi.model.RideRequest;
+import com.makitaxi.model.User;
 
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Map;
+
+import com.bumptech.glide.Glide;
+import com.makitaxi.utils.CircularImageView;
+import com.makitaxi.utils.FirebaseHelper;
+
+import android.net.Uri;
 
 
-public class PassengerScreen extends AppCompatActivity implements Map.CallbackMapTap {
+public class PassengerScreen extends AppCompatActivity implements com.makitaxi.passenger.Map.CallbackMapTap {
 
     // UI Components
     private MapView mapView;
@@ -67,7 +86,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
 
     private boolean shouldCalculateStartOrDestinationFromMap;
 
-    private Map map;
+    private com.makitaxi.passenger.Map map;
 
     private LocationService locationService;
     private boolean controlsVisible = true;
@@ -80,7 +99,10 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
     private RotateAnimation spinnerAnimation;
 
     private GeoPoint pickupGeoPoint;
-    private  GeoPoint destinationGeoPoint;
+    private GeoPoint destinationGeoPoint;
+
+    private double lastRouteDistance;
+    private double lastRouteDuration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +115,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
     }
 
     private void initializeControllers() {
-        map = new Map(this, mapView);
+        map = new com.makitaxi.passenger.Map(this, mapView);
         locationService = new LocationService(this);
         map.initCallbackMapTap(this);
     }
@@ -217,9 +239,9 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
             if (btnRide.isEnabled()) {
                 btnRide.clearAnimation();
                 android.view.animation.ScaleAnimation quickScale = new android.view.animation.ScaleAnimation(
-                    1f, 0.8f, 1f, 0.8f,
-                    android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f,
-                    android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f
+                        1f, 0.8f, 1f, 0.8f,
+                        android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f,
+                        android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f
                 );
                 quickScale.setDuration(100);
                 quickScale.setRepeatCount(1);
@@ -250,7 +272,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
             return;
         }
 
-        if(pickupGeoPoint == null) {
+        if (pickupGeoPoint == null) {
             pendingGeocodeCount.getAndIncrement();
             geoCodeAddress(pickupLocation, true, () -> {
                 pendingGeocodeCount.getAndDecrement();
@@ -258,7 +280,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
             });
         }
 
-        if(destinationGeoPoint == null) {
+        if (destinationGeoPoint == null) {
             pendingGeocodeCount.getAndIncrement();
             geoCodeAddress(destinationLocation, false, () -> {
                 pendingGeocodeCount.getAndDecrement();
@@ -279,14 +301,16 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
 
     private void drawRoute() {
 
-        map.drawRouteBetweenPoints(pickupGeoPoint, destinationGeoPoint, new Map.RoutingCallback() {
+        map.drawRouteBetweenPoints(pickupGeoPoint, destinationGeoPoint, new com.makitaxi.passenger.Map.RoutingCallback() {
             @Override
             public void onRouteFound(List<GeoPoint> routePoints, double distanceKm, double durationMinutes) {
+                lastRouteDistance = distanceKm;
+                lastRouteDuration = durationMinutes;
                 map.clearMarkerTap();
                 runOnUiThread(() -> {
-                    Toast.makeText(PassengerScreen.this, 
-                        String.format("✅ Route found: %.1f km, %.0f min", distanceKm, durationMinutes), 
-                        Toast.LENGTH_LONG).show();
+                    Toast.makeText(PassengerScreen.this,
+                            String.format("✅ Route found: %.1f km, %.0f min", distanceKm, durationMinutes),
+                            Toast.LENGTH_LONG).show();
 
                     btnRide.setEnabled(true);
                     btnRide.setAlpha(1.0f);
@@ -314,10 +338,10 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
 
     private void startPulsingAnimation() {
         android.view.animation.ScaleAnimation pulseAnim = new android.view.animation.ScaleAnimation(
-            1f, 1.1f, // X axis: start and end scale
-            1f, 1.1f, // Y axis: start and end scale
-            android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f, // Pivot point X
-            android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f  // Pivot point Y
+                1f, 1.1f, // X axis: start and end scale
+                1f, 1.1f, // Y axis: start and end scale
+                android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f, // Pivot point X
+                android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f  // Pivot point Y
         );
         pulseAnim.setDuration(1000);
         pulseAnim.setRepeatCount(android.view.animation.Animation.INFINITE);
@@ -336,7 +360,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
                     } else {
                         destinationGeoPoint = geoPoint;
                     }
-                    
+
                     if (onComplete != null) {
                         onComplete.run();
                     }
@@ -346,14 +370,14 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
             @Override
             public void onGeocodeError(String error) {
                 runOnUiThread(() -> {
-                    if(isPickup) {
+                    if (isPickup) {
                         Toast.makeText(PassengerScreen.this, "❌ Error finding pickup location: " + error, Toast.LENGTH_SHORT).show();
                         pickupGeoPoint = null;
                     } else {
                         Toast.makeText(PassengerScreen.this, "❌ Error finding destination location: " + error, Toast.LENGTH_SHORT).show();
                         destinationGeoPoint = null;
                     }
-                    
+
                     if (onComplete != null) {
                         onComplete.run();
                     }
@@ -394,7 +418,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
                                         suggestions
                                 );
                                 field.setAdapter(adapter);
-                                if(isPickup) {
+                                if (isPickup) {
                                     pickupGeoPoint = null;
                                 } else {
                                     destinationGeoPoint = null;
@@ -427,8 +451,13 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
                 handler.postDelayed(task, 800);
             }
 
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void afterTextChanged(Editable s) {}
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
         });
     }
 
@@ -452,7 +481,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
             public void onReverseGeocodeError(String error) {
                 if (hasFocusPickup) {
                     txtPickupLocation.setText(error);
-                }else {
+                } else {
                     txtDestination.setText(error);
                 }
             }
@@ -584,8 +613,8 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
 
     private void showCarSelectionBottomSheet() {
         View bottomSheetView = getLayoutInflater().inflate(R.layout.car_selection_bottom_sheet, null);
-        
-        com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
         dialog.setContentView(bottomSheetView);
 
         View layoutBasic = bottomSheetView.findViewById(R.id.layoutBasic);
@@ -595,7 +624,7 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
 
         final View[] selectedLayout = {layoutBasic};
         layoutBasic.setBackgroundResource(R.drawable.car_option_selected_background);
-        
+
         View.OnClickListener optionClickListener = v -> {
             selectedLayout[0].setBackgroundResource(R.drawable.car_option_background);
             v.setBackgroundResource(R.drawable.car_option_selected_background);
@@ -605,19 +634,186 @@ public class PassengerScreen extends AppCompatActivity implements Map.CallbackMa
         layoutBasic.setOnClickListener(optionClickListener);
         layoutLuxury.setOnClickListener(optionClickListener);
         layoutTransport.setOnClickListener(optionClickListener);
-        
+
         btnFindRide.setOnClickListener(v -> {
-            String selectedCar = "Basic";
+            String selectedCar = "BASIC";
             if (selectedLayout[0] == layoutLuxury) {
-                selectedCar = "Luxury";
+                selectedCar = "LUXURY";
             } else if (selectedLayout[0] == layoutTransport) {
-                selectedCar = "Transport";
+                selectedCar = "TRANSPORT";
             }
-            
-            Toast.makeText(this, "🚗 Finding " + selectedCar + " ride...", Toast.LENGTH_SHORT).show();
-            dialog.dismiss();
+
+            btnFindRide.setEnabled(false);
+            createRideRequest(selectedCar, dialog);
         });
-        
+
         dialog.show();
+    }
+
+    private void createRideRequest(String carType, BottomSheetDialog dialog) {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        String passengerId = Objects.requireNonNull(auth.getCurrentUser()).getUid();
+
+        RideRequest request = new RideRequest(
+                passengerId,
+                pickupGeoPoint,
+                destinationGeoPoint,
+                txtPickupLocation.getText().toString(),
+                txtDestination.getText().toString(),
+                carType,
+                lastRouteDistance,
+                lastRouteDuration
+        );
+
+        DatabaseReference requestsRef = FirebaseDatabase.getInstance("https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app/").getReference("ride_requests");
+        String requestId = requestsRef.push().getKey();
+        request.setRequestId(requestId);
+
+        if (requestId != null) {
+            requestsRef.child(requestId).setValue(request)
+                    .addOnSuccessListener(aVoid -> {
+                        dialog.dismiss();
+                        showSearchingForDriverDialog(requestId);
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(this, "❌ Failed to create ride request", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                    });
+        }
+    }
+
+    private void showSearchingForDriverDialog(String requestId) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.searching_driver_dialog, null);
+        builder.setView(dialogView);
+        builder.setCancelable(false);
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        Button btnCancel = dialogView.findViewById(R.id.btnCancelSearch);
+        DatabaseReference requestRef = FirebaseHelper.getRideRequestsRef().child(requestId);
+
+        btnCancel.setOnClickListener(v -> {
+            java.util.Map<String, Object> updates = new HashMap<>();
+            updates.put("status", "CANCELLED");
+            requestRef.updateChildren(updates).addOnSuccessListener(aVoid -> {
+                dialog.dismiss();
+            });
+        });
+
+        ValueEventListener statusListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                RideRequest request = snapshot.getValue(RideRequest.class);
+                if (request != null && "ACCEPTED".equals(request.getStatus())) {
+                    dialog.dismiss();
+                    showDriverDetailsBottomSheet(request);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                dialog.dismiss();
+            }
+        };
+        requestRef.addValueEventListener(statusListener);
+
+        dialog.setOnDismissListener(dialogInterface -> requestRef.removeEventListener(statusListener));
+
+        dialog.show();
+    }
+
+    private void showDriverDetailsBottomSheet(RideRequest request) {
+        View bottomSheetView = getLayoutInflater().inflate(R.layout.driver_details_bottom_sheet, null);
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        dialog.setContentView(bottomSheetView);
+        dialog.setCancelable(false);
+
+        DatabaseReference driverRef = FirebaseHelper.getUserRequestsRef().child(request.getDriverId());
+        driverRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                User driver = snapshot.getValue(User.class);
+
+                assert driver != null;
+                populateDriverView(bottomSheetView, driver, request, dialog);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                dialog.dismiss();
+                Toast.makeText(PassengerScreen.this, "❌ Error loading driver details", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void populateDriverView(View bottomSheetView, User driver, RideRequest request, BottomSheetDialog dialog) {
+        CircularImageView imgDriverProfile = bottomSheetView.findViewById(R.id.imgDriverProfile);
+        TextView txtDriverName = bottomSheetView.findViewById(R.id.txtDriverName);
+        TextView txtDriverRating = bottomSheetView.findViewById(R.id.txtDriverRating);
+        TextView txtCarType = bottomSheetView.findViewById(R.id.txtCarType);
+        TextView txtRidePrice = bottomSheetView.findViewById(R.id.txtRidePrice);
+        TextView txtRideTime = bottomSheetView.findViewById(R.id.txtRideTime);
+        Button btnProceed = bottomSheetView.findViewById(R.id.btnProceed);
+        Button btnDecline = bottomSheetView.findViewById(R.id.btnDecline);
+        ImageButton btnCallDriver = bottomSheetView.findViewById(R.id.btnCallDriver);
+        ImageButton btnMessageDriver = bottomSheetView.findViewById(R.id.btnMessageDriver);
+
+        Glide.with(PassengerScreen.this)
+                .load(driver.getProfilePicture())
+                .placeholder(R.drawable.taxi_logo)
+                .error(R.drawable.taxi_logo)
+                .into(imgDriverProfile);
+
+        txtDriverName.setText(driver.getFullName());
+        txtDriverRating.setText(String.valueOf(driver.getRating()));
+        txtCarType.setText(request.getCarType());
+        txtRidePrice.setText(String.format("%.0f din", request.getEstimatedPrice()));
+        txtRideTime.setText(String.format("%.0f min", request.getDuration()));
+
+        btnCallDriver.setOnClickListener(v -> {
+            if (driver.getPhone() != null && !driver.getPhone().isEmpty()) {
+                Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + driver.getPhone()));
+                startActivity(intent);
+            } else {
+                Toast.makeText(PassengerScreen.this, "Driver's phone number is not available.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        btnMessageDriver.setOnClickListener(v -> {
+            if (driver.getPhone() != null && !driver.getPhone().isEmpty()) {
+                Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:" + driver.getPhone()));
+                startActivity(intent);
+            } else {
+                Toast.makeText(PassengerScreen.this, "Driver's phone number is not available.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        btnProceed.setOnClickListener(v -> {
+            DatabaseReference requestRef = FirebaseHelper.getRideRequestsRef().child(request.getRequestId());
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("status", "CONFIRMED");
+            requestRef.updateChildren(updates).addOnSuccessListener(aVoid -> {
+                dialog.dismiss();
+                Toast.makeText(PassengerScreen.this, "✅ Ride confirmed!", Toast.LENGTH_SHORT).show();
+            });
+        });
+
+        btnDecline.setOnClickListener(v -> {
+            DatabaseReference requestRef = FirebaseHelper.getRideRequestsRef().child(request.getRequestId());
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("status", "PENDING");
+            updates.put("driverId", null);
+            updates.put("declinedBy/" + request.getDriverId(), true);
+            requestRef.updateChildren(updates).addOnSuccessListener(aVoid -> {
+                dialog.dismiss();
+                showSearchingForDriverDialog(request.getRequestId());
+            });
+        });
     }
 }

@@ -3,6 +3,7 @@ package com.makitaxi.menu;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,11 +19,17 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -85,7 +92,6 @@ public class MenuMainScreen extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Reload user name when returning from My Account screen
         reloadUserName();
     }
 
@@ -99,7 +105,6 @@ public class MenuMainScreen extends AppCompatActivity {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     if (dataSnapshot.exists()) {
-                        // Only update name and email, don't reload profile picture
                         String fullName = dataSnapshot.child("fullName").getValue(String.class);
                         String email = dataSnapshot.child("email").getValue(String.class);
                         
@@ -110,7 +115,6 @@ public class MenuMainScreen extends AppCompatActivity {
                         if (fullName != null && !fullName.isEmpty()) {
                             txtUserName.setText(fullName);
                         } else {
-                            // Fallback to display name or extract from email
                             String displayName = currentUser.getDisplayName();
                             if (displayName != null && !displayName.isEmpty()) {
                                 txtUserName.setText(displayName);
@@ -211,16 +215,14 @@ public class MenuMainScreen extends AppCompatActivity {
     
     private void checkStoragePermissionAndLaunchPicker() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // Android 13+ uses READ_MEDIA_IMAGES
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES) 
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES)
                     == PackageManager.PERMISSION_GRANTED) {
                 launchImagePicker();
             } else {
                 permissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES);
             }
         } else {
-            // Android 12 and below use READ_EXTERNAL_STORAGE
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE) 
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)
                     == PackageManager.PERMISSION_GRANTED) {
                 launchImagePicker();
             } else {
@@ -284,9 +286,8 @@ public class MenuMainScreen extends AppCompatActivity {
             database.getReference("users").child(userId)
                     .addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     if (dataSnapshot.exists()) {
-                        // Load user name
                         String fullName = dataSnapshot.child("fullName").getValue(String.class);
                         String email = dataSnapshot.child("email").getValue(String.class);
                         String profilePictureUrl = dataSnapshot.child("profilePicture").getValue(String.class);
@@ -298,21 +299,19 @@ public class MenuMainScreen extends AppCompatActivity {
                         if (fullName != null && !fullName.isEmpty()) {
                             txtUserName.setText(fullName);
                         } else {
-                            // Fallback to display name or extract from email
                             String displayName = currentUser.getDisplayName();
                             if (displayName != null && !displayName.isEmpty()) {
                                 txtUserName.setText(displayName);
                             }
                         }
                         
-                        // Load profile picture
                         currentProfileImageUrl = profilePictureUrl;
                         loadProfileImage(profilePictureUrl);
                     }
                 }
 
                 @Override
-                public void onCancelled(DatabaseError databaseError) {
+                public void onCancelled(@NonNull DatabaseError databaseError) {
                     Toast.makeText(MenuMainScreen.this, "❌ Failed to load user info", Toast.LENGTH_SHORT).show();
                 }
             });
@@ -338,11 +337,24 @@ public class MenuMainScreen extends AppCompatActivity {
                     imgProfilePicture.setImageResource(R.drawable.taxi_logo);
                 }
             } else {
-                // Handle regular URL
                 Glide.with(this)
                         .load(imageUrl)
                         .placeholder(R.drawable.taxi_logo)
                         .error(R.drawable.taxi_logo)
+                        .listener(new RequestListener<>() {
+                            @Override
+                            public boolean onLoadFailed(@Nullable GlideException e, Object model,
+                                                        @NonNull Target<Drawable> target, boolean isFirstResource) {
+                                return false;
+                            }
+
+                            @Override
+                            public boolean onResourceReady(@NonNull Drawable resource, @NonNull Object model,
+                                                           Target<Drawable> target, @NonNull DataSource dataSource, boolean isFirstResource) {
+                                Log.d(TAG, "Image loaded");
+                                return false;
+                            }
+                        })
                         .into(imgProfilePicture);
             }
         } else {
