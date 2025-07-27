@@ -1,0 +1,12 @@
+package com.makitaxi.utils;
+
+public enum NotificationStatus {
+    CREATED,
+    CANCELLED_BY_PASSENGER,
+    NO_AVAILABLE_DRIVERS,
+    ALL_DRIVERS_DECLINED,
+    CANCELLED_BY_DRIVER,
+    ACCEPTED_BY_DRIVER,
+    ACCEPTED_BY_PASSENGER,
+    REJECTED_BY_PASSENGER
+}

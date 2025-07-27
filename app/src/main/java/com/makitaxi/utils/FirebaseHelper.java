@@ -15,4 +15,18 @@ public class FirebaseHelper {
     public static DatabaseReference getUserRequestsRef() {
         return rootRef.child("users");
     }
+
+    public static DatabaseReference getDriverLocationRef() {
+        return rootRef.child("driver_locations");
+    }
+
+    public static DatabaseReference getDriverNotificationRef() {
+        return rootRef.child("driver_notifications");
+    }
+
+    public static DatabaseReference gerPassengerResponse() {
+        return rootRef.child("passenger_response");
+    }
+
+
 }

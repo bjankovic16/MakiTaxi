@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.View;
 
 import androidx.core.content.ContextCompat;
 
@@ -43,11 +44,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MapDriver {
+    private static final double DEFAULT_ZOOM = 16;
+    private static final double MIN_ZOOM = 3;
+    private static final double MAX_ZOOM = 21;
+    private static final GeoPoint BELGRADE_CENTER = new GeoPoint(44.7866, 20.4489);
+
     private Context context;
     private MapView mapView;
-
     private IMapController mapController;
-
     private MyLocationNewOverlay myLocationOverlay;
 
     public MapDriver(Context context, MapView mapView) {
@@ -62,20 +66,62 @@ public class MapDriver {
         mapView.getZoomController().setVisibility(CustomZoomButtonsController.Visibility.NEVER);
 
         mapController = mapView.getController();
-        mapController.setZoom(15.0);
-        GeoPoint belgradeCenter = new GeoPoint(44.7866, 20.4489);
-        mapController.setCenter(belgradeCenter);
+        mapController.setZoom(DEFAULT_ZOOM);
+        mapController.setCenter(BELGRADE_CENTER);
 
         setupLocationOverlay();
     }
 
-
     private void setupLocationOverlay() {
-        myLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(context), mapView);
+        // Create and configure the location overlay
+        GpsMyLocationProvider locationProvider = new GpsMyLocationProvider(context);
+        locationProvider.setLocationUpdateMinDistance(10); // Update if moved by 10 meters
+        locationProvider.setLocationUpdateMinTime(2000); // Update every 2 seconds
+
+        myLocationOverlay = new MyLocationNewOverlay(locationProvider, mapView);
         myLocationOverlay.enableMyLocation();
         myLocationOverlay.enableFollowLocation();
         myLocationOverlay.setDrawAccuracyEnabled(true);
+        
+        // Customize the location indicator
+        Drawable locationIcon = ContextCompat.getDrawable(context, R.drawable.ic_my_location);
+        if (locationIcon != null) {
+            Bitmap locationBitmap = drawableToBitmap(locationIcon);
+            myLocationOverlay.setDirectionArrow(locationBitmap, locationBitmap);
+            myLocationOverlay.setPersonIcon(locationBitmap);
+        }
+
         mapView.getOverlays().add(myLocationOverlay);
+        
+        // Add scale bar
+        org.osmdroid.views.overlay.ScaleBarOverlay scaleBarOverlay = new org.osmdroid.views.overlay.ScaleBarOverlay(mapView);
+        scaleBarOverlay.setCentred(true);
+        scaleBarOverlay.setScaleBarOffset(context.getResources().getDisplayMetrics().widthPixels / 2, 10);
+        mapView.getOverlays().add(scaleBarOverlay);
+
+        // Add compass
+        org.osmdroid.views.overlay.compass.CompassOverlay compassOverlay = new org.osmdroid.views.overlay.compass.CompassOverlay(
+            context, mapView);
+        compassOverlay.enableCompass();
+        mapView.getOverlays().add(compassOverlay);
+    }
+
+    private Bitmap drawableToBitmap(Drawable drawable) {
+        if (drawable instanceof BitmapDrawable) {
+            return ((BitmapDrawable) drawable).getBitmap();
+        }
+
+        int width = drawable.getIntrinsicWidth();
+        width = width > 0 ? width : 48; // Default size if intrinsic width not available
+        int height = drawable.getIntrinsicHeight();
+        height = height > 0 ? height : 48; // Default size if intrinsic height not available
+
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+
+        return bitmap;
     }
 
     public void zoomIn() {
@@ -87,7 +133,37 @@ public class MapDriver {
     }
 
     public void centerOnCurrentLocation() {
-        mapController.animateTo(myLocationOverlay.getMyLocation());
+        GeoPoint myLocation = myLocationOverlay.getMyLocation();
+        if (myLocation != null) {
+            mapController.animateTo(myLocation);
+            mapController.setZoom(DEFAULT_ZOOM);
+        }
     }
 
+    public GeoPoint getCurrentLocation() {
+        return myLocationOverlay.getMyLocation();
+    }
+
+    public void onResume() {
+        mapView.onResume();
+        myLocationOverlay.enableMyLocation();
+        myLocationOverlay.enableFollowLocation();
+        
+        // Clear old tiles and reload
+        mapView.getTileProvider().clearTileCache();
+        mapView.invalidate();
+    }
+
+    public void onPause() {
+        mapView.onPause();
+        myLocationOverlay.disableMyLocation();
+        myLocationOverlay.disableFollowLocation();
+    }
+
+    public void onDestroy() {
+        if (mapView != null) {
+            mapView.onDetach();
+            mapView.getTileProvider().clearTileCache();
+        }
+    }
 }

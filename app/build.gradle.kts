@@ -58,6 +58,8 @@ dependencies {
     implementation(libs.glide)
     annotationProcessor(libs.glide.compiler)
     
+    implementation(libs.geofire.android)
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

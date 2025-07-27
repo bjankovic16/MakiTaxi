@@ -2,6 +2,7 @@ package com.makitaxi.driver;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -10,6 +11,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -17,19 +20,25 @@ import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.Query;
 import com.makitaxi.R;
 import com.makitaxi.menu.MenuMainScreen;
+import com.makitaxi.model.DriverNotification;
+import com.makitaxi.model.PassengerResponse;
 import com.makitaxi.model.RideRequest;
 import com.makitaxi.utils.FirebaseHelper;
+import com.makitaxi.utils.NotificationStatus;
 
 import org.osmdroid.views.MapView;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
 public class DriverMainScreen extends AppCompatActivity {
+
+    private static final String TAG = "DriverMainScreen";
 
     // UI Components
     private MapView mapView;
@@ -46,21 +55,39 @@ public class DriverMainScreen extends AppCompatActivity {
     private MapDriver map;
     private boolean controlsVisible = true;
 
+    // Firebase References
     private DatabaseReference rideRequestsRef;
-    private String currentDriverId;
+    private DatabaseReference driverNotificationRef;
+    private String driverId;
     private boolean isDriverOnline = false;
+
+    // Listeners
     private ChildEventListener rideRequestListener;
+    private ChildEventListener driverNotificationListener;
+    private ChildEventListener passengerResponseListener;
+
+    // Services
+    private LocationUpdateService locationUpdateService;
+    private AlertDialog rideRequestDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.driver_main_screen);
+
         handleSystemBars();
         initializeViews();
         initializeControllers();
         setupUIInteractions();
+        stopListeningForRideRequests();
+
+        // Initialize Firebase
         rideRequestsRef = FirebaseHelper.getRideRequestsRef();
-        currentDriverId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+        driverNotificationRef = FirebaseHelper.getDriverNotificationRef();
+        driverId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+
+        // Initialize services
+        locationUpdateService = new LocationUpdateService(driverId, map);
     }
 
     private void initializeControllers() {
@@ -107,149 +134,200 @@ public class DriverMainScreen extends AppCompatActivity {
 
     private void toggleDriverStatus() {
         isDriverOnline = !isDriverOnline;
+        updateDriverStatusUI();
+
         if (isDriverOnline) {
-            txtPickupLocation.setText("🟢 Online - Ready for rides");
+            locationUpdateService.startUpdates();
+            listenForRideRequests();
             Toast.makeText(this, "✅ You are now online", Toast.LENGTH_SHORT).show();
-            listenForRides();
         } else {
-            txtPickupLocation.setText("🔴 Offline - Not accepting rides");
+            locationUpdateService.stopUpdates();
+            stopListeningForRideRequests();
             Toast.makeText(this, "⏸️ You are now offline", Toast.LENGTH_SHORT).show();
-            if (rideRequestListener != null && rideRequestsRef != null) {
-                rideRequestsRef.removeEventListener(rideRequestListener);
-            }
-            txtPickupLocation.setText(isDriverOnline ? "🟢 Online - Ready for rides" : "🔴 Offline - Not accepting rides");
-            txtDestination.setText("Waiting for ride requests...");
         }
     }
 
-    private void listenForRides() {
-        rideRequestListener = new ChildEventListener() {
+    private void updateDriverStatusUI() {
+        txtPickupLocation.setText(isDriverOnline ? "🟢 Online - Ready for rides" : "🔴 Offline - Not accepting rides");
+        txtDestination.setText(isDriverOnline ? "Waiting for ride requests..." : "");
+    }
+
+    private void listenForRideRequests() {
+        if (driverNotificationListener != null) {
+            driverNotificationRef.removeEventListener(driverNotificationListener);
+        }
+
+        driverNotificationListener = new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, String previousChildName) {
-                RideRequest request = snapshot.getValue(RideRequest.class);
-                assert request != null;
-                if ("PENDING".equals(request.getStatus())) {
-                    if (request.getDeclinedBy() == null || !request.getDeclinedBy().containsKey(currentDriverId)) {
-                        showRideRequestDialog(request);
-                    }
+                DriverNotification request = snapshot.getValue(DriverNotification.class);
+                if (request != null && NotificationStatus.CREATED.equals(request.getStatus())) {
+                    showRideRequestDialog(request.getRideRequest());
                 }
             }
-            @Override public void onChildChanged(@NonNull DataSnapshot snapshot, String previousChildName) {
-                RideRequest request = snapshot.getValue(RideRequest.class);
-                assert request != null;
-                if ("PENDING".equals(request.getStatus())) {
-                    if (request.getDeclinedBy() == null || !request.getDeclinedBy().containsKey(currentDriverId)) {
-                        showRideRequestDialog(request);
-                    }
-                }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                Log.d(TAG, "Ride request changed: " + snapshot.getKey());
             }
-            @Override public void onChildRemoved(@NonNull DataSnapshot snapshot) {}
-            @Override public void onChildMoved(@NonNull DataSnapshot snapshot, String previousChildName) {}
-            @Override public void onCancelled(@NonNull DatabaseError error) {}
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+                Log.d(TAG, "Ride request removed: " + snapshot.getKey());
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                Log.d(TAG, "Ride request moved: " + snapshot.getKey());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Error listening for ride requests: " + error.getMessage());
+                Toast.makeText(DriverMainScreen.this, "Error loading ride requests", Toast.LENGTH_SHORT).show();
+            }
         };
 
-        //adding listener to only pending status
-        rideRequestsRef.orderByChild("status").equalTo("PENDING").addChildEventListener(rideRequestListener);
+        driverNotificationRef.orderByChild("driverId")
+                .equalTo(driverId)
+                .addChildEventListener(driverNotificationListener);
+    }
+
+    private void stopListeningForRideRequests() {
+        if (driverNotificationListener != null) {
+            driverNotificationRef.removeEventListener(driverNotificationListener);
+        }
     }
 
     private void showRideRequestDialog(RideRequest request) {
-        new android.app.AlertDialog.Builder(this)
-            .setTitle("New Ride Request")
-            .setMessage(String.format("Pickup: %s\nDrop-off: %s\nDistance: %.1f km\nEstimated: %.0f RSD", request.getPickupAddress(), request.getDropoffAddress(), request.getDistance(), request.getEstimatedPrice()))
-            .setPositiveButton("Accept", (dialog, which) -> acceptRide(request))
-            .setNegativeButton("Decline", (dialog, which) -> declineRide(request, dialog))
-            .setCancelable(false)
-            .show();
+        if (rideRequestDialog != null && rideRequestDialog.isShowing()) {
+            rideRequestDialog.dismiss();
+        }
+
+        rideRequestDialog = new AlertDialog.Builder(this)
+                .setTitle("New Ride Request")
+                .setMessage(String.format(Locale.getDefault(),
+                        "Pickup: %s\nDrop-off: %s\nDistance: %.1f km\nEstimated: %.0f RSD\n\n",
+                        request.getPickupAddress(),
+                        request.getDropoffAddress(),
+                        request.getDistance(),
+                        request.getEstimatedPrice()))
+                .setPositiveButton("Accept", (dialog, which) -> acceptRide(request))
+                .setNegativeButton("Decline", (dialog, which) -> declineRide(request))
+                .setCancelable(false)
+                .show();
     }
 
-    private void declineRide(RideRequest request, android.content.DialogInterface dialog) {
-        DatabaseReference declinedRef = rideRequestsRef.child(request.getRequestId()).child("declinedBy").child(currentDriverId);
-        declinedRef.setValue(true).addOnSuccessListener(aVoid -> {
-            dialog.dismiss();
-            Toast.makeText(this, "Ride declined.", Toast.LENGTH_SHORT).show();
-        });
+    private void declineRide(RideRequest request) {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("status", NotificationStatus.CANCELLED_BY_DRIVER);
+
+        driverNotificationRef.child(request.getRequestId()).updateChildren(updates)
+                .addOnSuccessListener(aVoid -> {
+                    if (rideRequestDialog != null) {
+                        rideRequestDialog.dismiss();
+                    }
+                    Toast.makeText(this, "Ride declined", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to decline ride", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Error declining ride: " + e.getMessage());
+                });
     }
 
     private void acceptRide(RideRequest request) {
-        DatabaseReference currentRequestRef = rideRequestsRef.child(request.getRequestId());
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("status", NotificationStatus.ACCEPTED_BY_DRIVER);
 
-        currentRequestRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    String currentStatus = snapshot.child("status").getValue(String.class);
-                    if ("PENDING".equals(currentStatus)) {
-                        Map<String, Object> updates = new HashMap<>();
-                        updates.put("status", "ACCEPTED");
-                        updates.put("driverId", currentDriverId);
-
-                        currentRequestRef.updateChildren(updates)
-                            .addOnSuccessListener(aVoid -> {
-                                isDriverOnline = false;
-                                txtPickupLocation.setText("⏳ Waiting for passenger confirmation...");
-                                txtDestination.setText(request.getDropoffAddress());
-                                Toast.makeText(DriverMainScreen.this, "✅ Offer sent! Waiting for confirmation...", Toast.LENGTH_SHORT).show();
-                                waitForPassengerConfirmation(request.getRequestId());
-                            })
-                            .addOnFailureListener(e -> Toast.makeText(DriverMainScreen.this, "❌ Failed to send offer", Toast.LENGTH_SHORT).show());
-                    } else {
-                        Toast.makeText(DriverMainScreen.this, "Ride is no longer available.", Toast.LENGTH_SHORT).show();
+        driverNotificationRef.child(request.getRequestId()).updateChildren(updates)
+                .addOnSuccessListener(aVoid -> {
+                    if (rideRequestDialog != null) {
+                        rideRequestDialog.dismiss();
                     }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(DriverMainScreen.this, "Failed to check ride status.", Toast.LENGTH_SHORT).show();
-            }
-        });
+                    waitForPassengerConfirmation(request.getRequestId());
+                    txtPickupLocation.setText("⏳ Waiting for passenger confirmation...");
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to accept ride", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Error accepting ride: " + e.getMessage());
+                });
     }
 
     private void waitForPassengerConfirmation(String requestId) {
-        DatabaseReference requestRef = rideRequestsRef.child(requestId);
-        requestRef.addValueEventListener(new ValueEventListener() {
+        DatabaseReference responsesRef = FirebaseHelper.gerPassengerResponse();
+
+        if (passengerResponseListener != null) {
+            responsesRef.removeEventListener(passengerResponseListener);
+        }
+
+        Query passengerResponse = responsesRef
+                .orderByChild("driverId_RideRequestId")
+                .equalTo(driverId + "_" + requestId)
+                .limitToLast(1);
+
+        passengerResponseListener = new ChildEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    RideRequest request = snapshot.getValue(RideRequest.class);
-                    if (request != null) {
-                        switch (request.getStatus()) {
-                            case "CONFIRMED":
-                                isDriverOnline = false; // Stay offline for the ride
-                                Toast.makeText(DriverMainScreen.this, "✅ Ride Confirmed!", Toast.LENGTH_SHORT).show();
-                                txtPickupLocation.setText("🚗 Ride confirmed! Heading to pickup...");
-                                txtDestination.setText(request.getDropoffAddress());
-                                if (rideRequestListener != null && rideRequestsRef != null) {
-                                    rideRequestsRef.removeEventListener(rideRequestListener);
-                                }
-                                requestRef.removeEventListener(this);
-                                break;
-                            case "PENDING": // This means passenger declined
-                            case "CANCELLED":
-                                isDriverOnline = true; // Go back online
-                                Toast.makeText(DriverMainScreen.this, "Ride was not confirmed.", Toast.LENGTH_SHORT).show();
-                                txtPickupLocation.setText("🟢 Online - Ready for rides");
-                                txtDestination.setText("Waiting for ride requests...");
-                                listenForRides(); // Listen for new rides
-                                requestRef.removeEventListener(this);
-                                break;
-                        }
-                    }
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                PassengerResponse response = snapshot.getValue(PassengerResponse.class);
+                if (response != null) {
+                    handlePassengerResponse(response);
+                    responsesRef.removeEventListener(this);
                 }
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(DriverMainScreen.this, "Error waiting for confirmation.", Toast.LENGTH_SHORT).show();
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                Log.d(TAG, "Passenger response changed: " + snapshot.getKey());
             }
-        });
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+                Log.d(TAG, "Passenger response removed: " + snapshot.getKey());
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                Log.d(TAG, "Passenger response moved: " + snapshot.getKey());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Error listening for passenger response: " + error.getMessage());
+                Toast.makeText(DriverMainScreen.this, "Error checking passenger response", Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        passengerResponse.addChildEventListener(passengerResponseListener);
+    }
+
+    private void handlePassengerResponse(PassengerResponse response) {
+        switch (response.getStatus()) {
+            case ACCEPTED_BY_PASSENGER:
+                isDriverOnline = false;
+                updateDriverStatusUI();
+                Toast.makeText(this, "✅ Ride Confirmed!", Toast.LENGTH_SHORT).show();
+                txtPickupLocation.setText("🚗 Ride confirmed! Heading to pickup...");
+                locationUpdateService.stopUpdates();
+                stopListeningForRideRequests();
+                break;
+
+            case REJECTED_BY_PASSENGER:
+                isDriverOnline = true;
+                updateDriverStatusUI();
+                Toast.makeText(this, "Ride was not confirmed by passenger", Toast.LENGTH_SHORT).show();
+                listenForRideRequests();
+                break;
+        }
     }
 
     private void toggleControls() {
         controlsVisible = !controlsVisible;
         float translationY = controlsVisible ? 0f : -100f;
         float alpha = controlsVisible ? 1f : 0.3f;
-        View[] views = {pickupLocationContainer, destinationLocationContainer, btnZoomIn, btnZoomOut, btnMyLocation};
+
+        View[] views = {pickupLocationContainer, destinationLocationContainer,
+                btnZoomIn, btnZoomOut, btnMyLocation};
+
         for (View view : views) {
             view.animate().translationY(translationY).alpha(alpha).setDuration(300).start();
         }
@@ -264,23 +342,50 @@ public class DriverMainScreen extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (mapView != null) mapView.onResume();
+        if (mapView != null) {
+            mapView.onResume();
+        }
+        if (isDriverOnline) {
+            listenForRideRequests();
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (mapView != null) mapView.onPause();
+        if (mapView != null) {
+            mapView.onPause();
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (rideRequestListener != null && rideRequestsRef != null) {
+
+        // Clean up Firebase listeners
+        if (rideRequestListener != null) {
             rideRequestsRef.removeEventListener(rideRequestListener);
         }
+        if (driverNotificationListener != null) {
+            driverNotificationRef.removeEventListener(driverNotificationListener);
+        }
+        if (passengerResponseListener != null) {
+            FirebaseHelper.gerPassengerResponse().removeEventListener(passengerResponseListener);
+        }
+
+        // Clean up map
         if (mapView != null) {
             mapView.onDetach();
+        }
+
+        // Clean up dialogs
+        if (rideRequestDialog != null && rideRequestDialog.isShowing()) {
+            rideRequestDialog.dismiss();
+        }
+
+        // Stop services
+        if (locationUpdateService != null) {
+            locationUpdateService.stopUpdates();
         }
     }
 }

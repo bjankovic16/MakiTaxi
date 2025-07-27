@@ -2,9 +2,11 @@ package com.makitaxi.passenger;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -35,10 +37,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.makitaxi.R;
 import com.makitaxi.menu.MenuMainScreen;
+import com.makitaxi.model.PassengerResponse;
 import com.makitaxi.model.RideRequest;
 import com.makitaxi.model.User;
 
@@ -53,10 +55,9 @@ import java.util.Map;
 
 import com.bumptech.glide.Glide;
 import com.makitaxi.utils.CircularImageView;
+import com.makitaxi.utils.DriverPollingService;
 import com.makitaxi.utils.FirebaseHelper;
-
-import android.net.Uri;
-
+import com.makitaxi.utils.NotificationStatus;
 
 public class PassengerScreen extends AppCompatActivity implements com.makitaxi.passenger.Map.CallbackMapTap {
 
@@ -80,6 +81,11 @@ public class PassengerScreen extends AppCompatActivity implements com.makitaxi.p
     private ImageButton btnMyLocation;
     private LinearLayout pickupLocationContainer;
     private LinearLayout destinationLocationContainer;
+    private AlertDialog waitForDriverDialog;
+
+    private View bottomSheetDriverDetailsView;
+
+    private BottomSheetDialog bottomSheetDriverDetailsDialog;
 
     private boolean hasFocusPickup = false;
     private boolean hasFocusDestination = false;
@@ -656,8 +662,10 @@ public class PassengerScreen extends AppCompatActivity implements com.makitaxi.p
 
         RideRequest request = new RideRequest(
                 passengerId,
-                pickupGeoPoint,
-                destinationGeoPoint,
+                pickupGeoPoint.getLatitude(),
+                pickupGeoPoint.getLongitude(),
+                destinationGeoPoint.getLatitude(),
+                destinationGeoPoint.getLongitude(),
                 txtPickupLocation.getText().toString(),
                 txtDestination.getText().toString(),
                 carType,
@@ -665,15 +673,56 @@ public class PassengerScreen extends AppCompatActivity implements com.makitaxi.p
                 lastRouteDuration
         );
 
-        DatabaseReference requestsRef = FirebaseDatabase.getInstance("https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app/").getReference("ride_requests");
-        String requestId = requestsRef.push().getKey();
+        DatabaseReference requestRef = FirebaseHelper.getRideRequestsRef().push();
+        String requestId = requestRef.getKey();
         request.setRequestId(requestId);
 
+        DriverPollingService.MatchingCallback callback = new DriverPollingService.MatchingCallback() {
+            @Override
+            public void onNoDriversAvailable() {
+                Map<String, Object> updates = new HashMap<>();
+                updates.put("status", NotificationStatus.NO_AVAILABLE_DRIVERS);
+
+                requestRef.updateChildren(updates).addOnSuccessListener(aVoid -> {
+                    Toast.makeText(PassengerScreen.this, "❌ No drivers available", Toast.LENGTH_SHORT).show();
+                    waitForDriverDialog.dismiss();
+                });
+            }
+
+            @Override
+            public void onAllDriversDeclined() {
+                Map<String, Object> updates = new HashMap<>();
+                updates.put("status", NotificationStatus.ALL_DRIVERS_DECLINED);
+
+                requestRef.updateChildren(updates).addOnSuccessListener(aVoid -> {
+                    Toast.makeText(PassengerScreen.this, "❌ There is no driver who accepted this ride", Toast.LENGTH_SHORT).show();
+                    waitForDriverDialog.dismiss();
+                });
+            }
+
+            @Override
+            public void onDriverAccepted(String driverId, RideRequest rideRequest) {
+                Map<String, Object> updates = new HashMap<>();
+                updates.put("status", NotificationStatus.ACCEPTED_BY_DRIVER);
+
+                requestRef.updateChildren(updates).addOnSuccessListener(aVoid -> {
+                    waitForDriverDialog.dismiss();
+                    showDriverDetailsBottomSheet(driverId, rideRequest);
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+
+            }
+        };
+
         if (requestId != null) {
-            requestsRef.child(requestId).setValue(request)
+            requestRef.setValue(request)
                     .addOnSuccessListener(aVoid -> {
                         dialog.dismiss();
-                        showSearchingForDriverDialog(requestId);
+                        DriverPollingService.notifyNearDrivers(request, callback);
+                        showSearchingForDriverDialog(request);
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(this, "❌ Failed to create ride request", Toast.LENGTH_SHORT).show();
@@ -682,87 +731,70 @@ public class PassengerScreen extends AppCompatActivity implements com.makitaxi.p
         }
     }
 
-    private void showSearchingForDriverDialog(String requestId) {
+    private void showSearchingForDriverDialog(RideRequest request) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View dialogView = getLayoutInflater().inflate(R.layout.searching_driver_dialog, null);
         builder.setView(dialogView);
         builder.setCancelable(false);
 
-        AlertDialog dialog = builder.create();
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        waitForDriverDialog = builder.create();
+        if (waitForDriverDialog.getWindow() != null) {
+            waitForDriverDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
 
         Button btnCancel = dialogView.findViewById(R.id.btnCancelSearch);
-        DatabaseReference requestRef = FirebaseHelper.getRideRequestsRef().child(requestId);
+        DatabaseReference requestRef = FirebaseHelper.getRideRequestsRef().child(request.getRequestId());
 
         btnCancel.setOnClickListener(v -> {
-            java.util.Map<String, Object> updates = new HashMap<>();
-            updates.put("status", "CANCELLED");
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("status", NotificationStatus.CANCELLED_BY_PASSENGER);
+            request.setStatus(NotificationStatus.CANCELLED_BY_PASSENGER);
             requestRef.updateChildren(updates).addOnSuccessListener(aVoid -> {
-                dialog.dismiss();
+                DriverPollingService.stopNotifyingDrivers();
+                waitForDriverDialog.dismiss();
             });
         });
-
-        ValueEventListener statusListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                RideRequest request = snapshot.getValue(RideRequest.class);
-                if (request != null && "ACCEPTED".equals(request.getStatus())) {
-                    dialog.dismiss();
-                    showDriverDetailsBottomSheet(request);
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                dialog.dismiss();
-            }
-        };
-        requestRef.addValueEventListener(statusListener);
-
-        dialog.setOnDismissListener(dialogInterface -> requestRef.removeEventListener(statusListener));
-
-        dialog.show();
+        waitForDriverDialog.show();
     }
 
-    private void showDriverDetailsBottomSheet(RideRequest request) {
-        View bottomSheetView = getLayoutInflater().inflate(R.layout.driver_details_bottom_sheet, null);
-        BottomSheetDialog dialog = new BottomSheetDialog(this);
-        dialog.setContentView(bottomSheetView);
-        dialog.setCancelable(false);
+    private void showDriverDetailsBottomSheet(String driverId, RideRequest rideRequest) {
+        bottomSheetDriverDetailsView = getLayoutInflater().inflate(R.layout.driver_details_bottom_sheet, null);
+        bottomSheetDriverDetailsDialog = new BottomSheetDialog(this);
+        bottomSheetDriverDetailsDialog.setContentView(bottomSheetDriverDetailsView);
+        bottomSheetDriverDetailsDialog.setCancelable(false);
 
-        DatabaseReference driverRef = FirebaseHelper.getUserRequestsRef().child(request.getDriverId());
+        DatabaseReference driverRef = FirebaseHelper.getUserRequestsRef().child(driverId);
         driverRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 User driver = snapshot.getValue(User.class);
 
                 assert driver != null;
-                populateDriverView(bottomSheetView, driver, request, dialog);
+                populateDriverView(driver, rideRequest, driverId);
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                dialog.dismiss();
+                bottomSheetDriverDetailsDialog.dismiss();
                 Toast.makeText(PassengerScreen.this, "❌ Error loading driver details", Toast.LENGTH_SHORT).show();
             }
         });
 
-        dialog.show();
+        bottomSheetDriverDetailsDialog.show();
     }
 
-    private void populateDriverView(View bottomSheetView, User driver, RideRequest request, BottomSheetDialog dialog) {
-        CircularImageView imgDriverProfile = bottomSheetView.findViewById(R.id.imgDriverProfile);
-        TextView txtDriverName = bottomSheetView.findViewById(R.id.txtDriverName);
-        TextView txtDriverRating = bottomSheetView.findViewById(R.id.txtDriverRating);
-        TextView txtCarType = bottomSheetView.findViewById(R.id.txtCarType);
-        TextView txtRidePrice = bottomSheetView.findViewById(R.id.txtRidePrice);
-        TextView txtRideTime = bottomSheetView.findViewById(R.id.txtRideTime);
-        Button btnProceed = bottomSheetView.findViewById(R.id.btnProceed);
-        Button btnDecline = bottomSheetView.findViewById(R.id.btnDecline);
-        ImageButton btnCallDriver = bottomSheetView.findViewById(R.id.btnCallDriver);
-        ImageButton btnMessageDriver = bottomSheetView.findViewById(R.id.btnMessageDriver);
+
+    private void populateDriverView(User driver, RideRequest rideRequest, String driverId) {
+        CircularImageView imgDriverProfile = bottomSheetDriverDetailsView.findViewById(R.id.imgDriverProfile);
+        TextView txtDriverName = bottomSheetDriverDetailsView.findViewById(R.id.txtDriverName);
+        TextView txtDriverRating = bottomSheetDriverDetailsView.findViewById(R.id.txtDriverRating);
+        TextView txtCarType = bottomSheetDriverDetailsView.findViewById(R.id.txtCarType);
+        TextView txtRidePrice = bottomSheetDriverDetailsView.findViewById(R.id.txtRidePrice);
+        TextView txtRideTime = bottomSheetDriverDetailsView.findViewById(R.id.txtRideTime);
+        Button btnProceed = bottomSheetDriverDetailsView.findViewById(R.id.btnProceed);
+        Button btnDecline = bottomSheetDriverDetailsView.findViewById(R.id.btnDecline);
+        ImageButton btnCallDriver = bottomSheetDriverDetailsView.findViewById(R.id.btnCallDriver);
+        ImageButton btnMessageDriver = bottomSheetDriverDetailsView.findViewById(R.id.btnMessageDriver);
 
         Glide.with(PassengerScreen.this)
                 .load(driver.getProfilePicture())
@@ -772,9 +804,9 @@ public class PassengerScreen extends AppCompatActivity implements com.makitaxi.p
 
         txtDriverName.setText(driver.getFullName());
         txtDriverRating.setText(String.valueOf(driver.getRating()));
-        txtCarType.setText(request.getCarType());
-        txtRidePrice.setText(String.format("%.0f din", request.getEstimatedPrice()));
-        txtRideTime.setText(String.format("%.0f min", request.getDuration()));
+        txtCarType.setText(rideRequest.getCarType());
+        txtRidePrice.setText(String.format("%.0f din", rideRequest.getEstimatedPrice()));
+        txtRideTime.setText(String.format("%.0f min", rideRequest.getDuration()));
 
         btnCallDriver.setOnClickListener(v -> {
             if (driver.getPhone() != null && !driver.getPhone().isEmpty()) {
@@ -795,25 +827,47 @@ public class PassengerScreen extends AppCompatActivity implements com.makitaxi.p
         });
 
         btnProceed.setOnClickListener(v -> {
-            DatabaseReference requestRef = FirebaseHelper.getRideRequestsRef().child(request.getRequestId());
-            Map<String, Object> updates = new HashMap<>();
-            updates.put("status", "CONFIRMED");
-            requestRef.updateChildren(updates).addOnSuccessListener(aVoid -> {
-                dialog.dismiss();
-                Toast.makeText(PassengerScreen.this, "✅ Ride confirmed!", Toast.LENGTH_SHORT).show();
-            });
+            PassengerResponse response = new PassengerResponse(
+                    driverId,
+                    rideRequest.getPassengerId(),
+                    rideRequest.getRequestId(),
+                    System.currentTimeMillis(),
+                    NotificationStatus.ACCEPTED_BY_PASSENGER
+            );
+
+            DatabaseReference requestRef = FirebaseHelper.gerPassengerResponse().push();
+
+            requestRef.setValue(response)
+                    .addOnSuccessListener(aVoid -> {
+                        bottomSheetDriverDetailsDialog.dismiss();
+                        Toast.makeText(PassengerScreen.this, "✅ Ride confirmed!", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(PassengerScreen.this, "❌ Failed to confirm ride.", Toast.LENGTH_SHORT).show();
+                    });
         });
 
         btnDecline.setOnClickListener(v -> {
-            DatabaseReference requestRef = FirebaseHelper.getRideRequestsRef().child(request.getRequestId());
-            Map<String, Object> updates = new HashMap<>();
-            updates.put("status", "PENDING");
-            updates.put("driverId", null);
-            updates.put("declinedBy/" + request.getDriverId(), true);
-            requestRef.updateChildren(updates).addOnSuccessListener(aVoid -> {
-                dialog.dismiss();
-                showSearchingForDriverDialog(request.getRequestId());
-            });
+            PassengerResponse response = new PassengerResponse(
+                    driverId,
+                    rideRequest.getPassengerId(),
+                    rideRequest.getRequestId(),
+                    System.currentTimeMillis(),
+                    NotificationStatus.REJECTED_BY_PASSENGER
+            );
+
+            DatabaseReference requestRef = FirebaseHelper.gerPassengerResponse().push();
+
+            requestRef.setValue(response)
+                    .addOnSuccessListener(aVoid -> {
+                        bottomSheetDriverDetailsDialog.dismiss();
+                        DriverPollingService.continueWithDriverNotification(rideRequest);
+                        Toast.makeText(PassengerScreen.this, "Ride reject!", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(PassengerScreen.this, "❌ Failed to reject ride.", Toast.LENGTH_SHORT).show();
+                    });
         });
     }
+
 }
