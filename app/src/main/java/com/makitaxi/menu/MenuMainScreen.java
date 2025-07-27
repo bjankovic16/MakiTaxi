@@ -28,6 +28,7 @@ import androidx.core.content.ContextCompat;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.google.firebase.auth.FirebaseAuth;
@@ -322,6 +323,8 @@ public class MenuMainScreen extends AppCompatActivity {
 
     private void loadProfileImage(String imageUrl) {
         if (imageUrl != null && !imageUrl.isEmpty()) {
+            progressBarUpload.setVisibility(View.VISIBLE);
+
             if (imageUrl.startsWith("data:image/")) {
                 try {
                     String base64Data = imageUrl.substring(imageUrl.indexOf(",") + 1);
@@ -335,23 +338,24 @@ public class MenuMainScreen extends AppCompatActivity {
                 } catch (Exception e) {
                     Log.e(TAG, "Error decoding Base64 image", e);
                     imgProfilePicture.setImageResource(R.drawable.taxi_logo);
+                } finally {
+                    progressBarUpload.setVisibility(View.GONE);
                 }
             } else {
                 Glide.with(this)
                         .load(imageUrl)
-                        .placeholder(R.drawable.taxi_logo)
                         .error(R.drawable.taxi_logo)
-                        .listener(new RequestListener<>() {
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .listener(new RequestListener<Drawable>() {
                             @Override
-                            public boolean onLoadFailed(@Nullable GlideException e, Object model,
-                                                        @NonNull Target<Drawable> target, boolean isFirstResource) {
+                            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                progressBarUpload.setVisibility(View.GONE);
                                 return false;
                             }
 
                             @Override
-                            public boolean onResourceReady(@NonNull Drawable resource, @NonNull Object model,
-                                                           Target<Drawable> target, @NonNull DataSource dataSource, boolean isFirstResource) {
-                                Log.d(TAG, "Image loaded");
+                            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                progressBarUpload.setVisibility(View.GONE);
                                 return false;
                             }
                         })

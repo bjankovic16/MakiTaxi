@@ -44,8 +44,7 @@
                 android:id="@+id/imgProfilePicture"
                 android:layout_width="160dp"
                 android:layout_height="160dp"
-                android:scaleType="centerCrop"
-                android:src="@drawable/taxi_logo" />
+                android:scaleType="centerCrop" />
 
             <!-- Camera Button Overlay -->
             <FrameLayout
@@ -67,17 +66,13 @@
 
             </FrameLayout>
 
-            <!-- Upload Progress Bar -->
+            <!-- Loading/Upload Progress Bar -->
             <ProgressBar
                 android:id="@+id/progressBarUpload"
-                style="?android:attr/progressBarStyleHorizontal"
+                style="?android:attr/progressBarStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="bottom|center"
-                android:layout_marginBottom="16dp"
-                android:max="100"
-                android:progressBackgroundTint="#30FFFFFF"
-                android:progressTint="@color/orange"
+                android:layout_gravity="center"
                 android:visibility="gone" />
 
         </FrameLayout>
