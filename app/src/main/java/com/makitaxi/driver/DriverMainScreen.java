@@ -70,6 +70,8 @@ public class DriverMainScreen extends AppCompatActivity {
     private LocationUpdateService locationUpdateService;
     private AlertDialog rideRequestDialog;
 
+    private Long rideActivationTime;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -137,6 +139,7 @@ public class DriverMainScreen extends AppCompatActivity {
         updateDriverStatusUI();
 
         if (isDriverOnline) {
+            rideActivationTime = System.currentTimeMillis();
             locationUpdateService.startUpdates();
             listenForRideRequests();
             Toast.makeText(this, "✅ You are now online", Toast.LENGTH_SHORT).show();
@@ -161,8 +164,10 @@ public class DriverMainScreen extends AppCompatActivity {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, String previousChildName) {
                 DriverNotification request = snapshot.getValue(DriverNotification.class);
-                if (request != null && NotificationStatus.CREATED.equals(request.getStatus())) {
-                    showRideRequestDialog(request.getRideRequest());
+                if (request != null) {
+                     if (request.getNotificationTimestamp() > rideActivationTime && NotificationStatus.CREATED.equals(request.getStatus())) {
+                        showRideRequestDialog(request.getRideRequest());
+                    }
                 }
             }
 
