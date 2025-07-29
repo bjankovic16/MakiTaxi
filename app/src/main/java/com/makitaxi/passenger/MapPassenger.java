@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class Map {
+public class MapPassenger {
 
     public interface RoutingCallback {
         void onRouteFound(List<GeoPoint> routePoints, double distance, double duration);
@@ -78,7 +78,7 @@ public class Map {
 
     private Polyline routePolyline;
 
-    public Map(Context context, MapView mapView) {
+    public MapPassenger(Context context, MapView mapView) {
         this.context = context;
         this.mapView = mapView;
         // thread for executing
@@ -105,7 +105,7 @@ public class Map {
     public void drawRouteBetweenPoints(GeoPoint startPoint, GeoPoint endPoint, RoutingCallback externalCallback) {
         clearMarkers();
         clearRoute();
-        getRouteFromOSRM(startPoint, endPoint, new Map.RoutingCallback() {
+        getRouteFromOSRM(startPoint, endPoint, new MapPassenger.RoutingCallback() {
             @Override
             public void onRouteFound(List<GeoPoint> routePoints, double distance, double duration) {
                 mainHandler.post(() -> {
@@ -277,7 +277,7 @@ public class Map {
     }
 
 
-    public void initCallbackMapTap(Map.CallbackMapTap callbackMapTap) {
+    public void initCallbackMapTap(MapPassenger.CallbackMapTap callbackMapTap) {
         this.callbackMapTap = callbackMapTap;
     }
 
