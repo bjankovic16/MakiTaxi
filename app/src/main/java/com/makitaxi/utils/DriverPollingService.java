@@ -137,22 +137,23 @@ public class DriverPollingService {
 
         String driverId = nearbyDrivers.get(currentDriverIndex);
 
+        DatabaseReference requestRef = FirebaseHelper.getDriverNotificationRef().push();
+        String notificationId = requestRef.getKey();
+
+        request.setNotificationId(notificationId);
+
         DriverNotification driverNotification = new DriverNotification(driverId, System.currentTimeMillis(), request);
 
-        DatabaseReference requestRef = FirebaseHelper.getDriverNotificationRef().push();
-        String requestId = requestRef.getKey();
-        request.setRequestId(requestId);
-
-        if (requestId != null) {
+        if (notificationId != null) {
             requestRef.setValue(driverNotification).addOnSuccessListener(aVoid -> {
-                waitForRiderResponse(requestId, driverId);
+                waitForRiderResponse(notificationId, driverId);
             }).addOnFailureListener(e -> {
                 Log.e(TAG, "Failed to notify driver");
             });
         }
     }
 
-    private static void waitForRiderResponse(String requestId, String driverId) {
+    private static void waitForRiderResponse(String notificationId, String driverId) {
         driverResponseListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -171,7 +172,7 @@ public class DriverPollingService {
             public void onCancelled(@NonNull DatabaseError error) {}
         };
 
-        DatabaseReference ref = FirebaseHelper.getDriverNotificationRef().child(requestId);
+        DatabaseReference ref = FirebaseHelper.getDriverNotificationRef().child(notificationId);
         ref.addValueEventListener(driverResponseListener);
     }
 } 

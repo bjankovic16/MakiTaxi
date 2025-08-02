@@ -13,6 +13,7 @@ public class RideRequest {
     private Long notificationTimestamp;
     private Long timeout;
     private Map<String, Boolean> declinedBy;
+    private String notificationId; // ID of the driver notification
 
     // Changed from GeoPoint to primitive types
     private double pickupLatitude;
@@ -210,5 +211,13 @@ public class RideRequest {
 
     public void setEstimatedPrice(double estimatedPrice) {
         this.estimatedPrice = estimatedPrice;
+    }
+
+    public String getNotificationId() {
+        return notificationId;
+    }
+
+    public void setNotificationId(String notificationId) {
+        this.notificationId = notificationId;
     }
 }
