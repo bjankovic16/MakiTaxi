@@ -48,18 +48,15 @@ public class DriverMainScreen extends AppCompatActivity {
     }
 
     private void initializeManagers() {
-        // Initialize Firebase
         rideRequestsRef = FirebaseHelper.getRideRequestsRef();
         driverId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
 
-        // Initialize managers
         uiManager = new DriverUIManager(this, driverId);
+        uiManager.setMapDriver(map);
         rideManager = new DriverRideManager(this, driverId, uiManager);
 
-        // Initialize services
         locationUpdateService = new LocationUpdateService(driverId, map);
 
-        // Set up callbacks
         uiManager.setStatusChangeListener(new DriverUIManager.OnDriverStatusChangeListener() {
             @Override
             public void onDriverStatusChanged(boolean isOnline) {
@@ -141,7 +138,6 @@ public class DriverMainScreen extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        // Clean up Firebase listeners
         if (rideRequestsRef != null) {
             // Cleanup handled by managers
         }

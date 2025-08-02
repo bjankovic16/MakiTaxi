@@ -30,8 +30,10 @@ import com.makitaxi.utils.FirebaseHelper;
 import com.makitaxi.utils.NotificationStatus;
 
 import org.osmdroid.views.MapView;
+import org.osmdroid.util.GeoPoint;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -67,6 +69,7 @@ public class DriverUIManager {
     private OnDriverStatusChangeListener statusChangeListener;
     private OnRideActionListener rideActionListener;
     private OnMapInteractionListener mapInteractionListener;
+    private MapDriver mapDriver;
 
     public interface OnDriverStatusChangeListener {
         void onDriverStatusChanged(boolean isOnline);
@@ -89,6 +92,10 @@ public class DriverUIManager {
         initializeViews();
         setupUIInteractions();
         initializeFirebase();
+    }
+
+    public void setMapDriver(MapDriver mapDriver) {
+        this.mapDriver = mapDriver;
     }
 
     private void initializeViews() {
@@ -307,6 +314,7 @@ public class DriverUIManager {
                 isDriverOnline = false;
                 updateDriverStatusUI();
                 showRideDetailsPanel(rideRequest);
+                drawRouteForRide(rideRequest);
                 Toast.makeText(activity, "✅ Ride Confirmed!", Toast.LENGTH_SHORT).show();
                 txtStatus.setText("On a ride");
                 break;
@@ -315,6 +323,7 @@ public class DriverUIManager {
                 isDriverOnline = true;
                 updateDriverStatusUI();
                 hideRideDetailsPanel();
+                clearRoute();
                 Toast.makeText(activity, "Ride was not confirmed by passenger", Toast.LENGTH_SHORT).show();
                 listenForRideRequests();
                 break;
@@ -346,6 +355,11 @@ public class DriverUIManager {
     private void hideRideDetailsPanel() {
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         adjustMapControls(false);
+        clearRoute();
+        isDriverOnline = true;
+        updateDriverStatusUI();
+        listenForRideRequests();
+        Toast.makeText(activity, "✅ Ride finished!", Toast.LENGTH_SHORT).show();
     }
 
     private void adjustMapControls(boolean isPanelVisible) {
@@ -353,6 +367,63 @@ public class DriverUIManager {
 
         float translationY = isPanelVisible ? -rideDetailsBottomSheet.getHeight() : 0;
         mapControls.animate().translationY(translationY).setDuration(300).start();
+    }
+
+    private void drawRouteForRide(RideRequest rideRequest) {
+        if (mapDriver == null) return;
+
+        // Check if coordinates are available
+        if (rideRequest.getPickupLatitude() != 0 && rideRequest.getPickupLongitude() != 0 &&
+            rideRequest.getDropoffLatitude() != 0 && rideRequest.getDropoffLongitude() != 0) {
+            
+            GeoPoint pickupPoint = new GeoPoint(rideRequest.getPickupLatitude(), rideRequest.getPickupLongitude());
+            GeoPoint dropoffPoint = new GeoPoint(rideRequest.getDropoffLatitude(), rideRequest.getDropoffLongitude());
+            
+            // Get driver's current location
+            GeoPoint driverLocation = mapDriver.getCurrentLocation();
+            if (driverLocation == null) {
+                Toast.makeText(activity, "⚠️ Driver location not available", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Step 1: Draw route from driver to pickup point
+            mapDriver.drawDriverRouteToPickup(driverLocation, pickupPoint, new MapDriver.RoutingCallback() {
+                @Override
+                public void onRouteFound(List<GeoPoint> routePoints, double distance, double duration) {
+                    Toast.makeText(activity, 
+                        String.format("✅ Driver route: %.1f km, %.0f min", distance, duration), 
+                        Toast.LENGTH_SHORT).show();
+                    
+                    // Step 2: Draw route from pickup to destination
+                    mapDriver.drawPickupToDestinationRoute(pickupPoint, dropoffPoint, new MapDriver.RoutingCallback() {
+                        @Override
+                        public void onRouteFound(List<GeoPoint> routePoints, double distance, double duration) {
+                            Toast.makeText(activity, 
+                                String.format("✅ Main route: %.1f km, %.0f min", distance, duration), 
+                                Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onRoutingError(String error) {
+                            Toast.makeText(activity, "❌ Failed to draw main route: " + error, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+
+                @Override
+                public void onRoutingError(String error) {
+                    Toast.makeText(activity, "❌ Failed to draw driver route: " + error, Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            Toast.makeText(activity, "⚠️ Route coordinates not available", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void clearRoute() {
+        if (mapDriver != null) {
+            mapDriver.clearMap();
+        }
     }
 
     public void setStatusChangeListener(OnDriverStatusChangeListener listener) {
