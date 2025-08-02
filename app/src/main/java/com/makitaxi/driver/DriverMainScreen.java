@@ -78,6 +78,11 @@ public class DriverMainScreen extends AppCompatActivity {
             public void onRideDeclined(RideRequest request) {
                 rideManager.declineRide(request);
             }
+
+            @Override
+            public void onRideFinished(RideRequest request) {
+                rideManager.finisRide(request);
+            }
         });
 
         uiManager.setMapInteractionListener(new DriverUIManager.OnMapInteractionListener() {

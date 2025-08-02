@@ -34,6 +34,25 @@ public class DriverRideManager {
         handleRideDecision(request, NotificationStatus.CANCELLED_BY_DRIVER, "Ride declined", false);
     }
 
+    public void finisRide(RideRequest request) {
+        DatabaseReference rideRequestRef = FirebaseHelper.getRideRequestsRef().child(request.getRequestId());
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("status", NotificationStatus.FINISHED);
+
+        rideRequestRef.updateChildren(updates)
+                .addOnSuccessListener(aVoid -> {
+                    showToast("Ride finished");
+                    uiManager.hideRideDetailsPanel();
+                    uiManager.clearRoute();
+                    uiManager.listenForRideRequests();
+                })
+                .addOnFailureListener(e -> {
+                    showToast("Failed to update ride request");
+                    Log.e(TAG, "Error updating ride request: " + e.getMessage());
+                });
+
+    }
+
     private void handleRideDecision(RideRequest request, NotificationStatus newStatus, String successMessage, boolean waitForPassenger) {
         DatabaseReference rideRequestRef = FirebaseHelper.getRideRequestsRef().child(request.getRequestId());
 

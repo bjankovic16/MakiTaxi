@@ -78,6 +78,7 @@ public class DriverUIManager {
     public interface OnRideActionListener {
         void onRideAccepted(RideRequest request);
         void onRideDeclined(RideRequest request);
+        void onRideFinished(RideRequest request);
     }
 
     public interface OnMapInteractionListener {
@@ -160,7 +161,7 @@ public class DriverUIManager {
         switchOnline.setChecked(isDriverOnline);
     }
 
-    private void listenForRideRequests() {
+    public void listenForRideRequests() {
         if (driverNotificationListener != null) {
             driverNotificationRef.removeEventListener(driverNotificationListener);
         }
@@ -311,7 +312,6 @@ public class DriverUIManager {
     private void handlePassengerResponse(PassengerResponse response, RideRequest rideRequest) {
         switch (response.getStatus()) {
             case ACCEPTED_BY_PASSENGER:
-                isDriverOnline = false;
                 updateDriverStatusUI();
                 showRideDetailsPanel(rideRequest);
                 drawRouteForRide(rideRequest);
@@ -320,7 +320,6 @@ public class DriverUIManager {
                 break;
 
             case REJECTED_BY_PASSENGER:
-                isDriverOnline = true;
                 updateDriverStatusUI();
                 hideRideDetailsPanel();
                 clearRoute();
@@ -345,14 +344,17 @@ public class DriverUIManager {
         txtPrice.setText(String.format(Locale.getDefault(), "%.0f Din", ride.getEstimatedPrice()));
         
         btnFinishRide.setOnClickListener(v -> {
-            hideRideDetailsPanel();
+            if (rideActionListener != null) {
+                rideActionListener.onRideFinished(ride);
+                hideRideDetailsPanel();
+            }
         });
         
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         adjustMapControls(true);
     }
     
-    private void hideRideDetailsPanel() {
+    public void hideRideDetailsPanel() {
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         adjustMapControls(false);
         clearRoute();
@@ -420,7 +422,7 @@ public class DriverUIManager {
         }
     }
 
-    private void clearRoute() {
+    public void clearRoute() {
         if (mapDriver != null) {
             mapDriver.clearMap();
         }

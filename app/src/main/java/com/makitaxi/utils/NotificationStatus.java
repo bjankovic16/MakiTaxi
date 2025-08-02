@@ -9,5 +9,6 @@ public enum NotificationStatus {
     ACCEPTED_BY_DRIVER,
     ACCEPTED_BY_PASSENGER,
     REJECTED_BY_PASSENGER,
-    TIMEOUT
+    TIMEOUT,
+    FINISHED
 }
