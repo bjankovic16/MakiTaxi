@@ -106,6 +106,9 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
     private void initializeManagers() {
         uiManager = new PassengerUIManager(this);
         rideManager = new PassengerRideManager(this, uiManager);
+        
+        // Pass the map instance to the UI manager for driver tracking
+        uiManager.setMapPassenger(map);
 
         // Set up callbacks
         uiManager.setRouteRequestListener(new PassengerUIManager.OnRouteRequestListener() {
@@ -667,5 +670,16 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
                 txtPickupLocation.getText().toString(), txtDestination.getText().toString(),
                 lastRouteDistance, lastRouteDuration);
         dialog.dismiss();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (uiManager != null) {
+            uiManager.cleanup();
+        }
+        if (locationService != null) {
+            locationService.shutdown();
+        }
     }
 }

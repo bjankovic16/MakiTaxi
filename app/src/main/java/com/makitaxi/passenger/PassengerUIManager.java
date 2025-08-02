@@ -42,13 +42,17 @@ import com.makitaxi.utils.FirebaseHelper;
 import com.makitaxi.utils.NotificationStatus;
 
 import org.osmdroid.util.GeoPoint;
+
 import java.util.HashMap;
 import java.util.Map;
+
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
+
 import android.graphics.drawable.Drawable;
+
 import androidx.annotation.Nullable;
 
 public class PassengerUIManager {
@@ -79,6 +83,14 @@ public class PassengerUIManager {
     private ImageView destinationLoadingSpinner;
     private RotateAnimation spinnerAnimation;
     private boolean controlsVisible = true;
+    private MapPassenger mapPassenger;
+
+    private ValueEventListener rideRequestListener;
+
+    private ValueEventListener driverLocationListener;
+
+    DatabaseReference driverLocationRef = FirebaseHelper.getDriverLocationRef();
+    DatabaseReference rideRequestRef = FirebaseHelper.getRideRequestsRef();
 
     // Callbacks
     private OnRouteRequestListener routeRequestListener;
@@ -87,18 +99,23 @@ public class PassengerUIManager {
 
     public interface OnRouteRequestListener {
         void onShowRouteRequested();
+
         void onClearRouteRequested();
+
         void onRideRequested();
     }
 
     public interface OnLocationSelectedListener {
         void onCurrentLocationSelected();
+
         void onMapLocationSelected();
     }
 
     public interface OnMapInteractionListener {
         void onZoomIn();
+
         void onZoomOut();
+
         void onMyLocation();
     }
 
@@ -180,7 +197,8 @@ public class PassengerUIManager {
         });
 
         btnChoseCurrentLocation.setOnClickListener(v -> {
-            if (locationSelectedListener != null) locationSelectedListener.onCurrentLocationSelected();
+            if (locationSelectedListener != null)
+                locationSelectedListener.onCurrentLocationSelected();
         });
 
         btnChoseFromMap.setOnClickListener(v -> {
@@ -342,6 +360,10 @@ public class PassengerUIManager {
 
     public void setMapInteractionListener(OnMapInteractionListener listener) {
         this.mapInteractionListener = listener;
+    }
+
+    public void setMapPassenger(MapPassenger mapPassenger) {
+        this.mapPassenger = mapPassenger;
     }
 
     public void enableRideButton() {
@@ -512,6 +534,7 @@ public class PassengerUIManager {
             requestRef.setValue(response)
                     .addOnSuccessListener(aVoid -> {
                         bottomSheetDriverDetailsDialog.dismiss();
+                        startUpdatingRiderPositionOnMap(driverId, rideRequest.getRequestId());
                         Toast.makeText(activity, "✅ Ride confirmed!", Toast.LENGTH_SHORT).show();
                     })
                     .addOnFailureListener(e -> {
@@ -539,4 +562,83 @@ public class PassengerUIManager {
                     });
         });
     }
-} 
+
+    private void startUpdatingRiderPositionOnMap(String driverId, String rideRequestId) {
+        driverLocationRef = FirebaseHelper.getDriverLocationRef().child(driverId);
+        rideRequestRef = FirebaseHelper.getRideRequestsRef().child(rideRequestId);
+
+        driverLocationListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    Double latitude = snapshot.child("l").child("0").getValue(Double.class);
+                    Double longitude = snapshot.child("l").child("1").getValue(Double.class);
+
+                    if (latitude != null && longitude != null) {
+                        GeoPoint driverLocation = new GeoPoint(latitude, longitude);
+                        Log.d("PassengerUIManager", "Driver location updated: " + latitude + ", " + longitude);
+
+                        updateDriverMarker(driverLocation);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("DriverLocationListener", "Failed to read driver location: " + error.getMessage());
+            }
+        };
+
+        rideRequestListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    RideRequest rideRequest = snapshot.getValue(RideRequest.class);
+                    if (rideRequest != null) {
+                        NotificationStatus status = rideRequest.getStatus();
+                        Log.d("PassengerUIManager", "Ride status: " + status);
+
+                        // Check if ride is finished
+                        if (status == NotificationStatus.FINISHED) {
+                            Log.d("PassengerUIManager", "Ride finished with status: " + status + ", stopping tracking");
+                            stopUpdatingDriverMarker();
+                            Toast.makeText(activity, "✅ Ride completed!", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("PassengerUIManager", "Failed to read ride request: " + error.getMessage());
+            }
+        };
+
+        rideRequestRef.addValueEventListener(rideRequestListener);
+        driverLocationRef.addValueEventListener(driverLocationListener);
+    }
+
+    private void updateDriverMarker(GeoPoint point) {
+        mapPassenger.updateDriverPosition(point);
+    }
+
+    private void stopUpdatingDriverMarker() {
+        mapPassenger.removeDriverFromMap();
+        if (driverLocationListener != null) {
+            driverLocationRef.removeEventListener(driverLocationListener);
+        }
+        if (rideRequestListener != null) {
+            rideRequestRef.removeEventListener(rideRequestListener);
+        }
+    }
+
+    public void cleanup() {
+        stopUpdatingDriverMarker();
+        if (bottomSheetDriverDetailsDialog != null) {
+            bottomSheetDriverDetailsDialog.dismiss();
+        }
+        if (waitForDriverDialog != null) {
+            waitForDriverDialog.dismiss();
+        }
+    }
+}

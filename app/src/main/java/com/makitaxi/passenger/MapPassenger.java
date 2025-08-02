@@ -62,6 +62,8 @@ public class MapPassenger {
 
     private Marker startMarker;
 
+    private Marker driverMarker;
+
     private Marker destinationMarker;
 
     private Marker mapTapMarker;
@@ -121,7 +123,7 @@ public class MapPassenger {
     }
 
     private void getRouteFromOSRM(GeoPoint start, GeoPoint end, RoutingCallback callback) {
-        if(start == null || end == null) {
+        if (start == null || end == null) {
             return;
         }
         executorService.execute(() -> {
@@ -434,6 +436,45 @@ public class MapPassenger {
 
         mapView.getOverlays().add(mapTapMarker);
         mapView.invalidate();
+    }
+
+    public void updateDriverPosition(GeoPoint point) {
+        if (driverMarker != null) {
+            mapView.getOverlays().remove(driverMarker);
+        }
+        driverMarker = new Marker(mapView);
+        driverMarker.setPosition(point);
+        driverMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+
+        double zoomLevel = mapView.getZoomLevelDouble();
+        int iconSize;
+
+        if (zoomLevel >= 18) {
+            iconSize = 100;
+        } else if (zoomLevel >= 15) {
+            iconSize = 84;
+        } else if (zoomLevel >= 12) {
+            iconSize = 68;
+        } else {
+            iconSize = 52;
+        }
+        Drawable taxiDrawable = ContextCompat.getDrawable(context, R.drawable.taxi);
+        if (taxiDrawable != null) {
+            Bitmap taxiBitmap = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(taxiBitmap);
+            taxiDrawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+            taxiDrawable.draw(canvas);
+            driverMarker.setIcon(new BitmapDrawable(context.getResources(), taxiBitmap));
+        }
+        mapView.getOverlays().add(driverMarker);
+        mapView.invalidate();
+    }
+
+    public void removeDriverFromMap() {
+        if (driverMarker != null) {
+            mapView.getOverlays().remove(driverMarker);
+            mapView.invalidate();
+        }
     }
 
     public void clearMarkers() {

@@ -254,28 +254,6 @@ public class MapDriver {
         });
     }
 
-    private void displayRealRoute(List<GeoPoint> routePoints) {
-        if (routePoints == null || routePoints.isEmpty()) {
-            return;
-        }
-
-        routePolyline = new Polyline();
-        routePolyline.setPoints(routePoints);
-        routePolyline.setColor(Color.parseColor("#343B71"));
-        routePolyline.setWidth(10.0f);
-        routePolyline.setGeodesic(false);
-
-        mapView.getOverlays().add(routePolyline);
-        mapView.getOverlays().remove(startMarker);
-        mapView.getOverlays().remove(destinationMarker);
-        this.addStartMarker(routePoints.get(0));
-        this.addDestinationMarker(routePoints.get(routePoints.size() - 1));
-
-        zoomToShowRoute(routePoints);
-
-        mapView.invalidate();
-    }
-
     private void zoomToShowRoute(List<GeoPoint> routePoints) {
         try {
             if (routePoints == null || routePoints.size() < 2) return;
