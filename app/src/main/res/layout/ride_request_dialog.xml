@@ -3,28 +3,15 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:layout_margin="0dp"
-    android:padding="0dp"
-    android:background="@drawable/rounded_dark_background">
-
-    <!-- Header -->
-    <TextView
-        android:id="@+id/txtRideHeader"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="New Ride Request"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:padding="16dp"
-        android:textColor="#FFFFFFFF"
-        android:gravity="center"/>
+    android:background="@drawable/rounded_dark_background"
+    android:padding="16dp">
 
     <!-- Ride Details Section -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp"
+        android:layout_marginBottom="16dp"
         android:gravity="center_horizontal">
 
         <!-- Pickup Location -->
@@ -35,11 +22,14 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="12dp">
 
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_location_green"
-                android:layout_marginEnd="8dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pickup:  "
+                android:textColor="#B3FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp"/>
 
             <TextView
                 android:id="@+id/txtPickupLocation"
@@ -47,11 +37,11 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Pickup Address"
-                android:textColor="#FFFFFFFF"
+                android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:maxLines="2"
                 android:ellipsize="end"
-                android:gravity="start" />
+                android:gravity="left"/>
         </LinearLayout>
 
         <!-- Dropoff Location -->
@@ -60,13 +50,16 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="16dp">
 
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_location_red"
-                android:layout_marginEnd="8dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dropoff:  "
+                android:textColor="#B3FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp"/>
 
             <TextView
                 android:id="@+id/txtDropoffLocation"
@@ -74,11 +67,11 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Dropoff Address"
-                android:textColor="#FFFFFFFF"
+                android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:maxLines="2"
                 android:ellipsize="end"
-                android:gravity="start" />
+                android:gravity="left"/>
         </LinearLayout>
 
         <!-- Ride Details Row -->
@@ -86,7 +79,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="8dp"
             android:gravity="center">
 
             <!-- Distance -->
@@ -102,7 +95,7 @@
                     android:layout_height="20dp"
                     android:src="@drawable/ic_distance"
                     android:layout_marginEnd="4dp"
-                    android:tint="#FFFFFFFF" />
+                    android:tint="@android:color/white"/>
 
                 <TextView
                     android:id="@+id/txtDistance"
@@ -110,7 +103,7 @@
                     android:layout_height="wrap_content"
                     android:text="2.5 km"
                     android:textColor="#B3FFFFFF"
-                    android:textSize="16sp" />
+                    android:textSize="16sp"/>
             </LinearLayout>
 
             <!-- Duration -->
@@ -126,7 +119,7 @@
                     android:layout_height="20dp"
                     android:src="@drawable/ic_duration"
                     android:layout_marginEnd="4dp"
-                    android:tint="#FFFFFFFF" />
+                    android:tint="@android:color/white"/>
 
                 <TextView
                     android:id="@+id/txtDuration"
@@ -134,7 +127,7 @@
                     android:layout_height="wrap_content"
                     android:text="8 min"
                     android:textColor="#B3FFFFFF"
-                    android:textSize="16sp" />
+                    android:textSize="16sp"/>
             </LinearLayout>
 
             <!-- Price -->
@@ -150,7 +143,7 @@
                     android:layout_height="20dp"
                     android:src="@drawable/ic_price"
                     android:layout_marginEnd="4dp"
-                    android:tint="#FFFFFFFF" />
+                    android:tint="@android:color/white"/>
 
                 <TextView
                     android:id="@+id/txtPrice"
@@ -158,7 +151,7 @@
                     android:layout_height="wrap_content"
                     android:text="850 din"
                     android:textColor="#B3FFFFFF"
-                    android:textSize="16sp" />
+                    android:textSize="16sp"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
@@ -168,7 +161,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="10dp"
+        android:padding="8dp"
         android:gravity="center">
 
         <Button

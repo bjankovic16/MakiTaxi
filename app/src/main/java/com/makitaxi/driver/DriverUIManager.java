@@ -227,6 +227,11 @@ public class DriverUIManager {
         
         rideRequestDialog = builder.create();
         
+        // Remove dialog padding to eliminate white spaces
+        if (rideRequestDialog.getWindow() != null) {
+            rideRequestDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+        
         btnAccept.setOnClickListener(v -> {
             if (rideActionListener != null) {
                 rideActionListener.onRideAccepted(request);
