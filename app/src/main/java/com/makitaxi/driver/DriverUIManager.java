@@ -44,8 +44,8 @@ public class DriverUIManager {
     // UI Components
     private MapView mapView;
     private ImageButton btnHamburgerMenu;
-    private ImageButton btnZoomIn;
-    private ImageButton btnZoomOut;
+    private Button btnZoomIn;
+    private Button btnZoomOut;
     private ImageButton btnMyLocation;
     private TextView txtStatus;
     private SwitchMaterial switchOnline;

@@ -49,19 +49,25 @@
         android:layout_gravity="bottom|start"
         android:layout_margin="16dp">
 
-        <ImageButton
+        <Button
             android:id="@+id/btnZoomIn"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:src="@drawable/zoom_in"
+            android:text="+"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
             android:background="@drawable/circle_button_background"
             android:layout_marginBottom="8dp"/>
 
-        <ImageButton
+        <Button
             android:id="@+id/btnZoomOut"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:src="@drawable/zoom_out"
+            android:text="−"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
             android:background="@drawable/circle_button_background"
             android:layout_marginBottom="8dp"/>
 
