@@ -209,14 +209,21 @@ public class DriverUIManager {
         View view = activity.getLayoutInflater().inflate(R.layout.ride_request_dialog, null);
         builder.setView(view);
         
-        TextView txtRideDetails = view.findViewById(R.id.txtRideDetails);
+        // Find all the new views
+        TextView txtPickupLocation = view.findViewById(R.id.txtPickupLocation);
+        TextView txtDropoffLocation = view.findViewById(R.id.txtDropoffLocation);
+        TextView txtDistance = view.findViewById(R.id.txtDistance);
+        TextView txtDuration = view.findViewById(R.id.txtDuration);
+        TextView txtPrice = view.findViewById(R.id.txtPrice);
         Button btnAccept = view.findViewById(R.id.btnAccept);
         Button btnDecline = view.findViewById(R.id.btnDecline);
-        
-        txtRideDetails.setText(String.format(Locale.getDefault(),
-                "Pickup: %s\nDrop-off: %s\nDistance: %.1f km\nEstimated: %.0f RSD",
-                request.getPickupAddress(), request.getDropoffAddress(),
-                request.getDistance(), request.getEstimatedPrice()));
+
+        // Populate the enhanced fields
+        txtPickupLocation.setText(request.getPickupAddress());
+        txtDropoffLocation.setText(request.getDropoffAddress());
+        txtDistance.setText(String.format(Locale.getDefault(), "%.1f km", request.getDistance()));
+        txtDuration.setText(String.format(Locale.getDefault(), "%.0f min", request.getDuration()));
+        txtPrice.setText(String.format(Locale.getDefault(), "%.0f din", request.getEstimatedPrice()));
         
         rideRequestDialog = builder.create();
         

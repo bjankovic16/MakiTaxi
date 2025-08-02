@@ -3,50 +3,196 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="24dp"
+    android:layout_margin="0dp"
+    android:padding="0dp"
     android:background="@drawable/rounded_dark_background">
 
+    <!-- Header -->
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="New Ride Request"
-        android:textColor="@android:color/white"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:layout_gravity="center"
-        android:layout_marginBottom="16dp"/>
-
-    <TextView
-        android:id="@+id/txtRideDetails"
+        android:id="@+id/txtRideHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@android:color/white"
-        android:textSize="16sp"
-        android:layout_marginBottom="24dp"/>
+        android:text="New Ride Request"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:padding="16dp"
+        android:textColor="#FFFFFFFF"
+        android:gravity="center"/>
 
+    <!-- Ride Details Section -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:gravity="center_horizontal">
+
+        <!-- Pickup Location -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_location_green"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:id="@+id/txtPickupLocation"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Pickup Address"
+                android:textColor="#FFFFFFFF"
+                android:textSize="16sp"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:gravity="start" />
+        </LinearLayout>
+
+        <!-- Dropoff Location -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_location_red"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:id="@+id/txtDropoffLocation"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Dropoff Address"
+                android:textColor="#FFFFFFFF"
+                android:textSize="16sp"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:gravity="start" />
+        </LinearLayout>
+
+        <!-- Ride Details Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="10dp"
+            android:gravity="center">
+
+            <!-- Distance -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_distance"
+                    android:layout_marginEnd="4dp"
+                    android:tint="#FFFFFFFF" />
+
+                <TextView
+                    android:id="@+id/txtDistance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2.5 km"
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- Duration -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_duration"
+                    android:layout_marginEnd="4dp"
+                    android:tint="#FFFFFFFF" />
+
+                <TextView
+                    android:id="@+id/txtDuration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="8 min"
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- Price -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_price"
+                    android:layout_marginEnd="4dp"
+                    android:tint="#FFFFFFFF" />
+
+                <TextView
+                    android:id="@+id/txtPrice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="850 din"
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="16sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Action Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="10dp"
+        android:gravity="center">
 
         <Button
             android:id="@+id/btnDecline"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
-            android:text="Decline"
+            android:text="DECLINE"
+            android:textSize="14sp"
+            android:layout_marginEnd="8dp"
+            android:textStyle="bold"
             android:background="@drawable/secondary_button_background"
-            android:textColor="@color/background"
-            android:layout_marginEnd="8dp"/>
+            android:textColor="@color/background" />
 
         <Button
             android:id="@+id/btnAccept"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
-            android:text="Accept"
-            android:background="@drawable/primary_button_background"
-            android:textColor="@android:color/white"
-            android:layout_marginStart="8dp"/>
+            android:text="ACCEPT"
+            android:layout_marginStart="8dp"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:background="@drawable/circle_button_background"
+            android:textColor="#FFFFFFFF" />
     </LinearLayout>
-</LinearLayout> 
+</LinearLayout>
