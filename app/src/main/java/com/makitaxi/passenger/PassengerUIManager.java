@@ -624,6 +624,7 @@ public class PassengerUIManager {
 
     private void stopUpdatingDriverMarker() {
         mapPassenger.removeDriverFromMap();
+        mapPassenger.clearMap();
         if (driverLocationListener != null) {
             driverLocationRef.removeEventListener(driverLocationListener);
         }
