@@ -27,106 +27,101 @@ public class DriverRideManager {
     }
 
     public void acceptRide(RideRequest request) {
+        handleRideDecision(request, NotificationStatus.ACCEPTED_BY_DRIVER, "Ride accepted", true);
+    }
+
+    public void declineRide(RideRequest request) {
+        handleRideDecision(request, NotificationStatus.CANCELLED_BY_DRIVER, "Ride declined", false);
+    }
+
+    private void handleRideDecision(RideRequest request, NotificationStatus newStatus, String successMessage, boolean waitForPassenger) {
         DatabaseReference rideRequestRef = FirebaseHelper.getRideRequestsRef().child(request.getRequestId());
-        
+
         rideRequestRef.get().addOnSuccessListener(snapshot -> {
             if (!snapshot.exists()) {
-                Toast.makeText(activity, "Ride request not found", Toast.LENGTH_SHORT).show();
+                showToast("Ride request not found");
                 Log.w(TAG, "Ride request not found: " + request.getRequestId());
+                updateDriverNotificationWithCancelledByPassenger(request);
                 return;
             }
 
             RideRequest currentRequest = snapshot.getValue(RideRequest.class);
             if (currentRequest == null) {
-                Toast.makeText(activity, "Failed to read ride request", Toast.LENGTH_SHORT).show();
+                showToast("Failed to read ride request");
                 Log.e(TAG, "Failed to parse ride request from database");
+                updateDriverNotificationWithCancelledByPassenger(request);
                 return;
             }
 
             if (currentRequest.getStatus() != NotificationStatus.CREATED) {
-                Toast.makeText(activity, "Passenger cancelled the ride", Toast.LENGTH_SHORT).show();
-                Log.w(TAG, "Attempted to accept ride with status: " + currentRequest.getStatus());
+                showToast("Passenger cancelled the ride");
+                Log.w(TAG, "Attempted to update ride with status: " + currentRequest.getStatus());
+                updateDriverNotificationWithCancelledByPassenger(request);
                 return;
             }
 
             Map<String, Object> updates = new HashMap<>();
-            updates.put("status", NotificationStatus.ACCEPTED_BY_DRIVER);
+            updates.put("status", newStatus);
 
             rideRequestRef.updateChildren(updates)
                     .addOnSuccessListener(aVoid -> {
-                        if (request.getNotificationId() != null) {
-                            DatabaseReference driverNotificationRef = FirebaseHelper.getDriverNotificationRef().child(request.getNotificationId());
-                            driverNotificationRef.updateChildren(updates)
-                                    .addOnSuccessListener(aVoid2 -> {
-                                        Toast.makeText(activity, "Ride accepted", Toast.LENGTH_SHORT).show();
-                                        uiManager.waitForPassengerConfirmation(currentRequest);
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        Toast.makeText(activity, "Failed to update driver notification", Toast.LENGTH_SHORT).show();
-                                        Log.e(TAG, "Error updating driver notification: " + e.getMessage());
-                                    });
-                        } else {
-                            Toast.makeText(activity, "Ride accepted", Toast.LENGTH_SHORT).show();
+                        updateDriverNotification(request, updates, successMessage);
+                        if (waitForPassenger) {
                             uiManager.waitForPassengerConfirmation(currentRequest);
                         }
                     })
                     .addOnFailureListener(e -> {
-                        Toast.makeText(activity, "Failed to accept ride", Toast.LENGTH_SHORT).show();
-                        Log.e(TAG, "Error accepting ride: " + e.getMessage());
+                        showToast("Failed to update ride request");
+                        Log.e(TAG, "Error updating ride request: " + e.getMessage());
                     });
+
         }).addOnFailureListener(e -> {
-            Toast.makeText(activity, "Failed to fetch ride status", Toast.LENGTH_SHORT).show();
+            showToast("Failed to fetch ride status");
             Log.e(TAG, "Error fetching ride status: " + e.getMessage());
         });
     }
 
-    public void declineRide(RideRequest request) {
-        DatabaseReference rideRequestRef = FirebaseHelper.getRideRequestsRef().child(request.getRequestId());
-        
-        rideRequestRef.get().addOnSuccessListener(snapshot -> {
-            if (!snapshot.exists()) {
-                Toast.makeText(activity, "Ride request not found", Toast.LENGTH_SHORT).show();
-                Log.w(TAG, "Ride request not found: " + request.getRequestId());
-                return;
-            }
+    private void updateDriverNotification(RideRequest request, Map<String, Object> updates, String successMessage) {
+        if (request.getNotificationId() != null) {
+            DatabaseReference driverNotificationRef = FirebaseHelper.getDriverNotificationRef().child(request.getNotificationId());
+            driverNotificationRef.updateChildren(updates)
+                    .addOnSuccessListener(aVoid -> showToast(successMessage))
+                    .addOnFailureListener(e -> {
+                        showToast("Failed to update driver notification");
+                        Log.e(TAG, "Error updating driver notification: " + e.getMessage());
+                    });
+        } else {
+            showToast(successMessage);
+        }
+    }
 
-            RideRequest currentRequest = snapshot.getValue(RideRequest.class);
-            if (currentRequest == null) {
-                Toast.makeText(activity, "Failed to read ride request", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            if (currentRequest.getStatus() != NotificationStatus.CREATED) {
-                Toast.makeText(activity, "Passenger cancelled the ride", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            Map<String, Object> updates = new HashMap<>();
-            updates.put("status", NotificationStatus.CANCELLED_BY_DRIVER);
-
-            rideRequestRef.updateChildren(updates)
+    private void updateDriverNotificationWithCancelledByPassenger(RideRequest request) {
+        if (request.getNotificationId() != null) {
+            DatabaseReference driverNotificationRef = FirebaseHelper.getDriverNotificationRef().child(request.getNotificationId());
+            
+            // Update the top-level status
+            Map<String, Object> statusUpdates = new HashMap<>();
+            statusUpdates.put("status", NotificationStatus.CANCELLED_BY_PASSENGER);
+            
+            driverNotificationRef.updateChildren(statusUpdates)
                     .addOnSuccessListener(aVoid -> {
-                        if (request.getNotificationId() != null) {
-                            DatabaseReference driverNotificationRef = FirebaseHelper.getDriverNotificationRef().child(request.getNotificationId());
-                            driverNotificationRef.updateChildren(updates)
-                                    .addOnSuccessListener(aVoid2 -> {
-                                        Toast.makeText(activity, "Ride declined", Toast.LENGTH_SHORT).show();
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        Toast.makeText(activity, "Failed to update driver notification", Toast.LENGTH_SHORT).show();
-                                        Log.e(TAG, "Error updating driver notification: " + e.getMessage());
-                                    });
-                        } else {
-                            Toast.makeText(activity, "Ride declined", Toast.LENGTH_SHORT).show();
-                        }
+                        DatabaseReference rideRequestStatusRef = driverNotificationRef.child("rideRequest").child("status");
+                        rideRequestStatusRef.setValue(NotificationStatus.CANCELLED_BY_PASSENGER)
+                                .addOnSuccessListener(aVoid2 -> {
+                                    Log.d(TAG, "Driver notification and rideRequest status updated with CANCELLED_BY_PASSENGER");
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e(TAG, "Error updating rideRequest status: " + e.getMessage());
+                                });
                     })
                     .addOnFailureListener(e -> {
-                        Toast.makeText(activity, "Failed to decline ride", Toast.LENGTH_SHORT).show();
-                        Log.e(TAG, "Error declining ride: " + e.getMessage());
+                        Log.e(TAG, "Error updating driver notification status: " + e.getMessage());
                     });
-        }).addOnFailureListener(e -> {
-            Toast.makeText(activity, "Failed to fetch ride status", Toast.LENGTH_SHORT).show();
-            Log.e(TAG, "Error fetching ride status: " + e.getMessage());
-        });
+        }
     }
+
+    private void showToast(String message) {
+        Toast.makeText(activity, message, Toast.LENGTH_SHORT).show();
+    }
+
 } 
