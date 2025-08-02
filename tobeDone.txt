@@ -1,9 +1,4 @@
-// what is passenger cancel the ride, --- RIDE REQUEST
-// adjustments for car selection, 
-// better icons for zoom in/ zoom out and all the others icons
 // on pause adjustments on resume on exit screen what is happenning ---- ROLLBACK
-// sending car position to passenger 
-// driving route on driver screen
 // timeout implementation
 // feedback for driver after ride finish
 // handling ride finish
