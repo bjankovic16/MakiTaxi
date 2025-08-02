@@ -44,6 +44,12 @@ import com.makitaxi.utils.NotificationStatus;
 import org.osmdroid.util.GeoPoint;
 import java.util.HashMap;
 import java.util.Map;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
+import android.graphics.drawable.Drawable;
+import androidx.annotation.Nullable;
 
 public class PassengerUIManager {
     private final AppCompatActivity activity;
@@ -419,8 +425,6 @@ public class PassengerUIManager {
                 Toast.makeText(activity, "❌ Error loading driver details", Toast.LENGTH_SHORT).show();
             }
         });
-
-        bottomSheetDriverDetailsDialog.show();
     }
 
     private void populateDriverView(User driver, RideRequest rideRequest, String driverId) {
@@ -436,19 +440,12 @@ public class PassengerUIManager {
         ImageButton btnCallDriver = bottomSheetDriverDetailsView.findViewById(R.id.btnCallDriver);
         ImageButton btnMessageDriver = bottomSheetDriverDetailsView.findViewById(R.id.btnMessageDriver);
 
-        Glide.with(activity)
-                .load(driver.getProfilePicture())
-                .placeholder(R.drawable.taxi_logo)
-                .error(R.drawable.taxi_logo)
-                .into(imgDriverProfile);
-
         txtDriverName.setText(driver.getFullName());
         txtDriverRating.setText(String.valueOf(driver.getRating()));
         txtCarType.setText(rideRequest.getCarType());
         txtRidePrice.setText(String.format("%.0f din", rideRequest.getEstimatedPrice()));
         txtRideTime.setText(String.format("%.0f min", rideRequest.getDuration()));
 
-        // Set the appropriate car icon based on the selected car type
         String carType = rideRequest.getCarType();
         switch (carType) {
             case "BASIC":
@@ -464,6 +461,25 @@ public class PassengerUIManager {
                 imgCarIcon.setImageResource(R.drawable.basic_car);
                 break;
         }
+
+        Glide.with(activity)
+                .load(driver.getProfilePicture())
+                .placeholder(R.drawable.taxi_logo)
+                .error(R.drawable.taxi_logo)
+                .listener(new RequestListener<Drawable>() {
+                    @Override
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                        bottomSheetDriverDetailsDialog.show();
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                        bottomSheetDriverDetailsDialog.show();
+                        return false;
+                    }
+                })
+                .into(imgDriverProfile);
 
         btnCallDriver.setOnClickListener(v -> {
             if (driver.getPhone() != null && !driver.getPhone().isEmpty()) {
@@ -516,7 +532,7 @@ public class PassengerUIManager {
             requestRef.setValue(response)
                     .addOnSuccessListener(aVoid -> {
                         bottomSheetDriverDetailsDialog.dismiss();
-                        Toast.makeText(activity, "❌ Ride rejected!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(activity, "Ride rejected!", Toast.LENGTH_SHORT).show();
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(activity, "❌ Failed to reject ride.", Toast.LENGTH_SHORT).show();
