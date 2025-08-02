@@ -428,6 +428,7 @@ public class PassengerUIManager {
         TextView txtDriverName = bottomSheetDriverDetailsView.findViewById(R.id.txtDriverName);
         TextView txtDriverRating = bottomSheetDriverDetailsView.findViewById(R.id.txtDriverRating);
         TextView txtCarType = bottomSheetDriverDetailsView.findViewById(R.id.txtCarType);
+        ImageView imgCarIcon = bottomSheetDriverDetailsView.findViewById(R.id.imgCarIcon);
         TextView txtRidePrice = bottomSheetDriverDetailsView.findViewById(R.id.txtRidePrice);
         TextView txtRideTime = bottomSheetDriverDetailsView.findViewById(R.id.txtRideTime);
         Button btnProceed = bottomSheetDriverDetailsView.findViewById(R.id.btnProceed);
@@ -446,6 +447,23 @@ public class PassengerUIManager {
         txtCarType.setText(rideRequest.getCarType());
         txtRidePrice.setText(String.format("%.0f din", rideRequest.getEstimatedPrice()));
         txtRideTime.setText(String.format("%.0f min", rideRequest.getDuration()));
+
+        // Set the appropriate car icon based on the selected car type
+        String carType = rideRequest.getCarType();
+        switch (carType) {
+            case "BASIC":
+                imgCarIcon.setImageResource(R.drawable.basic_car);
+                break;
+            case "LUXURY":
+                imgCarIcon.setImageResource(R.drawable.lux_car);
+                break;
+            case "TRANSPORT":
+                imgCarIcon.setImageResource(R.drawable.transport_car);
+                break;
+            default:
+                imgCarIcon.setImageResource(R.drawable.basic_car);
+                break;
+        }
 
         btnCallDriver.setOnClickListener(v -> {
             if (driver.getPhone() != null && !driver.getPhone().isEmpty()) {
@@ -498,7 +516,7 @@ public class PassengerUIManager {
             requestRef.setValue(response)
                     .addOnSuccessListener(aVoid -> {
                         bottomSheetDriverDetailsDialog.dismiss();
-                        Toast.makeText(activity, "Ride rejected!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(activity, "❌ Ride rejected!", Toast.LENGTH_SHORT).show();
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(activity, "❌ Failed to reject ride.", Toast.LENGTH_SHORT).show();
