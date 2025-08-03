@@ -83,6 +83,7 @@ public class PassengerUIManager {
     private ImageView destinationLoadingSpinner;
     private RotateAnimation spinnerAnimation;
     private boolean controlsVisible = true;
+    private boolean shouldShowBottomSheet = false;
     private MapPassenger mapPassenger;
 
     private ValueEventListener rideRequestListener;
@@ -427,6 +428,7 @@ public class PassengerUIManager {
     }
 
     public void showDriverDetailsBottomSheet(String driverId, RideRequest rideRequest) {
+        shouldShowBottomSheet = true;
         bottomSheetDriverDetailsView = activity.getLayoutInflater().inflate(R.layout.driver_details_bottom_sheet, null);
         bottomSheetDriverDetailsDialog = new BottomSheetDialog(activity);
         bottomSheetDriverDetailsDialog.setContentView(bottomSheetDriverDetailsView);
@@ -491,13 +493,17 @@ public class PassengerUIManager {
                 .listener(new RequestListener<Drawable>() {
                     @Override
                     public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-                        bottomSheetDriverDetailsDialog.show();
+                        if (shouldShowBottomSheet) {
+                            bottomSheetDriverDetailsDialog.show();
+                        }
                         return false;
                     }
 
                     @Override
                     public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                        bottomSheetDriverDetailsDialog.show();
+                        if (shouldShowBottomSheet) {
+                            bottomSheetDriverDetailsDialog.show();
+                        }
                         return false;
                     }
                 })
@@ -533,6 +539,7 @@ public class PassengerUIManager {
             DatabaseReference requestRef = FirebaseHelper.gerPassengerResponse().push();
             requestRef.setValue(response)
                     .addOnSuccessListener(aVoid -> {
+                        shouldShowBottomSheet = false;
                         bottomSheetDriverDetailsDialog.dismiss();
                         startUpdatingRiderPositionOnMap(driverId, rideRequest.getRequestId());
                         Toast.makeText(activity, "✅ Ride confirmed!", Toast.LENGTH_SHORT).show();
@@ -554,6 +561,7 @@ public class PassengerUIManager {
             DatabaseReference requestRef = FirebaseHelper.gerPassengerResponse().push();
             requestRef.setValue(response)
                     .addOnSuccessListener(aVoid -> {
+                        shouldShowBottomSheet = false;
                         bottomSheetDriverDetailsDialog.dismiss();
                         Toast.makeText(activity, "Ride rejected!", Toast.LENGTH_SHORT).show();
                     })
@@ -635,6 +643,7 @@ public class PassengerUIManager {
 
     public void cleanup() {
         stopUpdatingDriverMarker();
+        shouldShowBottomSheet = false;
         if (bottomSheetDriverDetailsDialog != null) {
             bottomSheetDriverDetailsDialog.dismiss();
         }
