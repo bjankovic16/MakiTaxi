@@ -1,11 +1,13 @@
 package com.makitaxi.driver;
 
 import android.content.Intent;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -64,6 +66,11 @@ public class DriverUIManager {
     private boolean isDriverOnline = false;
     private Long rideActivationTime;
     private AlertDialog rideRequestDialog;
+    
+    // Timer related fields
+    private CountDownTimer rideRequestTimer;
+    private TextView txtTimer;
+    private ProgressBar timerProgress;
 
     // Callbacks
     private OnDriverStatusChangeListener statusChangeListener;
@@ -79,6 +86,8 @@ public class DriverUIManager {
         void onRideAccepted(RideRequest request);
         void onRideDeclined(RideRequest request);
         void onRideFinished(RideRequest request);
+
+        void onRideTimeout(RideRequest request);
     }
 
     public interface OnMapInteractionListener {
@@ -217,7 +226,7 @@ public class DriverUIManager {
         View view = activity.getLayoutInflater().inflate(R.layout.ride_request_dialog, null);
         builder.setView(view);
         
-        // Find all the new views
+        // Find all the views
         TextView txtPickupLocation = view.findViewById(R.id.txtPickupLocation);
         TextView txtDropoffLocation = view.findViewById(R.id.txtDropoffLocation);
         TextView txtDistance = view.findViewById(R.id.txtDistance);
@@ -225,6 +234,10 @@ public class DriverUIManager {
         TextView txtPrice = view.findViewById(R.id.txtPrice);
         Button btnAccept = view.findViewById(R.id.btnAccept);
         Button btnDecline = view.findViewById(R.id.btnDecline);
+        
+        // Timer views
+        txtTimer = view.findViewById(R.id.txtTimer);
+        timerProgress = view.findViewById(R.id.timerProgress);
 
         // Populate the enhanced fields
         txtPickupLocation.setText(request.getPickupAddress());
@@ -239,8 +252,11 @@ public class DriverUIManager {
         if (rideRequestDialog.getWindow() != null) {
             rideRequestDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
+
+        startRideRequestTimer(request);
         
         btnAccept.setOnClickListener(v -> {
+            stopRideRequestTimer();
             if (rideActionListener != null) {
                 rideActionListener.onRideAccepted(request);
             }
@@ -248,6 +264,7 @@ public class DriverUIManager {
         });
         
         btnDecline.setOnClickListener(v -> {
+            stopRideRequestTimer();
             if (rideActionListener != null) {
                 rideActionListener.onRideDeclined(request);
             }
@@ -361,7 +378,6 @@ public class DriverUIManager {
         isDriverOnline = true;
         updateDriverStatusUI();
         listenForRideRequests();
-        Toast.makeText(activity, "✅ Ride finished!", Toast.LENGTH_SHORT).show();
     }
 
     private void adjustMapControls(boolean isPanelVisible) {
@@ -453,6 +469,45 @@ public class DriverUIManager {
         }
         if (rideRequestDialog != null && rideRequestDialog.isShowing()) {
             rideRequestDialog.dismiss();
+        }
+        stopRideRequestTimer();
+    }
+
+    private void startRideRequestTimer(RideRequest request) {
+        stopRideRequestTimer();
+
+        rideRequestTimer = new CountDownTimer(60000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                int secondsLeft = (int) (millisUntilFinished / 1000);
+                int progress = (int) ((millisUntilFinished / 60000.0) * 100);
+                
+                if (txtTimer != null) {
+                    txtTimer.setText(String.valueOf(secondsLeft));
+                }
+                if (timerProgress != null) {
+                    timerProgress.setProgress(progress);
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                if (rideRequestDialog != null && rideRequestDialog.isShowing()) {
+                    if (rideActionListener != null) {
+                        rideActionListener.onRideTimeout(request);
+                    }
+                    rideRequestDialog.dismiss();
+                }
+            }
+        };
+        
+        rideRequestTimer.start();
+    }
+
+    private void stopRideRequestTimer() {
+        if (rideRequestTimer != null) {
+            rideRequestTimer.cancel();
+            rideRequestTimer = null;
         }
     }
 } 

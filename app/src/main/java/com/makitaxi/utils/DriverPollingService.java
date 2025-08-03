@@ -159,7 +159,8 @@ public class DriverPollingService {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 DriverNotification request = snapshot.getValue(DriverNotification.class);
                 if (request != null) {
-                    if (NotificationStatus.CANCELLED_BY_DRIVER.equals(request.getStatus())) {
+                    if (NotificationStatus.CANCELLED_BY_DRIVER.equals(request.getStatus()) ||
+                            NotificationStatus.TIMEOUT.equals(request.getStatus())) {
                         currentDriverIndex++;
                         startDriverNotification(request.getRideRequest());
                     } else if (NotificationStatus.ACCEPTED_BY_DRIVER.equals(request.getStatus())) {
@@ -169,7 +170,8 @@ public class DriverPollingService {
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
+            public void onCancelled(@NonNull DatabaseError error) {
+            }
         };
 
         DatabaseReference ref = FirebaseHelper.getDriverNotificationRef().child(notificationId);

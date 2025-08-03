@@ -34,7 +34,11 @@ public class DriverRideManager {
         handleRideDecision(request, NotificationStatus.CANCELLED_BY_DRIVER, "Ride declined", false);
     }
 
-    public void finisRide(RideRequest request) {
+    public void timeoutRide(RideRequest request) {
+        handleRideDecision(request, NotificationStatus.TIMEOUT, "Ride timeout", false);
+    }
+
+    public void finishRide(RideRequest request) {
         DatabaseReference rideRequestRef = FirebaseHelper.getRideRequestsRef().child(request.getRequestId());
         Map<String, Object> updates = new HashMap<>();
         updates.put("status", NotificationStatus.FINISHED);

@@ -81,8 +81,14 @@ public class DriverMainScreen extends AppCompatActivity {
 
             @Override
             public void onRideFinished(RideRequest request) {
-                rideManager.finisRide(request);
+                rideManager.finishRide(request);
             }
+
+            @Override
+            public void onRideTimeout(RideRequest request) {
+                rideManager.timeoutRide(request);
+            }
+
         });
 
         uiManager.setMapInteractionListener(new DriverUIManager.OnMapInteractionListener() {

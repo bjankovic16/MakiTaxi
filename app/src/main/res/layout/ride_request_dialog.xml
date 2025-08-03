@@ -1,11 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
     android:background="@drawable/rounded_dark_background"
     android:padding="16dp">
+
+    <TextView
+        android:id="@+id/txtRideRequestTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"
+        android:text="New Ride Request"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        android:textStyle="bold"/>
+    <FrameLayout
+        android:id="@+id/timerContainer"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true">
+
+        <!-- Circular Progress Background -->
+        <ProgressBar
+            android:id="@+id/timerProgress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:progressDrawable="@drawable/circular_progress_timer"
+            android:progress="100"
+            android:rotation="270"/>
+
+        <!-- Timer Text -->
+        <TextView
+            android:id="@+id/txtTimer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="60"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"/>
+
+    </FrameLayout>
+
+    <!-- Main Content -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_below="@id/txtRideRequestTitle"
+        android:layout_marginTop="20dp">
 
     <!-- Ride Details Section -->
     <LinearLayout
@@ -189,4 +236,5 @@
             android:background="@drawable/circle_button_background"
             android:textColor="#FFFFFFFF" />
     </LinearLayout>
-</LinearLayout>
+    </LinearLayout>
+</RelativeLayout>
