@@ -1,5 +1,4 @@
 // on pause adjustments on resume on exit screen what is happenning ---- ROLLBACK
-// timeout implementation
 // feedback for driver after ride finish
 // handling ride finish
 // feedback on menu screen
