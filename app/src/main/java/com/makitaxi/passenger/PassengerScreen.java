@@ -28,6 +28,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.makitaxi.R;
 import com.makitaxi.menu.MenuMainScreen;
+import com.makitaxi.utils.TextUtils;
 
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
@@ -294,6 +295,52 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
 
         setupDebouncedAutocomplete(txtPickupLocation, true);
         setupDebouncedAutocomplete(txtDestination, false);
+        
+        // Add Latin transformation to input fields
+        setupLatinTransformation(txtPickupLocation);
+        setupLatinTransformation(txtDestination);
+    }
+
+    private void setupLatinTransformation(AutoCompleteTextView field) {
+        field.addTextChangedListener(new TextWatcher() {
+            private boolean isTransforming = false;
+            
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Not used
+            }
+            
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Not used
+            }
+            
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (isTransforming) {
+                    return; // Avoid infinite loop
+                }
+                
+                String originalText = s.toString();
+                String transformedText = TextUtils.transformToLatin(originalText);
+                
+                if (!originalText.equals(transformedText)) {
+                    isTransforming = true;
+                    
+                    // Save cursor position
+                    int cursorPosition = field.getSelectionStart();
+                    
+                    // Replace text
+                    s.replace(0, s.length(), transformedText);
+                    
+                    // Restore cursor position (adjust if text length changed)
+                    int newCursorPosition = Math.min(cursorPosition, transformedText.length());
+                    field.setSelection(newCursorPosition);
+                    
+                    isTransforming = false;
+                }
+            }
+        });
     }
 
     private void handleShowRoute() {
@@ -484,11 +531,12 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
         locationService.reverseGeocode(currentLocation, new LocationService.ReverseGeocodeListener() {
             @Override
             public void onReverseGeocodeSuccess(String address) {
+                String latinAddress = TextUtils.transformToLatin(address);
                 if (hasFocusPickup) {
-                    txtPickupLocation.setText(address);
+                    txtPickupLocation.setText(latinAddress);
                     pickupGeoPoint = currentLocation;
                 } else {
-                    txtDestination.setText(address);
+                    txtDestination.setText(latinAddress);
                     destinationGeoPoint = currentLocation;
                 }
             }
@@ -573,13 +621,14 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
             locationService.reverseGeocode(p, new LocationService.ReverseGeocodeListener() {
                 @Override
                 public void onReverseGeocodeSuccess(String address) {
+                    String latinAddress = TextUtils.transformToLatin(address);
                     if (hasFocusPickup) {
                         pickupGeoPoint = p;
-                        txtPickupLocation.setText(address);
+                        txtPickupLocation.setText(latinAddress);
                     }
                     if (hasFocusDestination) {
                         destinationGeoPoint = p;
-                        txtDestination.setText(address);
+                        txtDestination.setText(latinAddress);
                     }
                 }
 
