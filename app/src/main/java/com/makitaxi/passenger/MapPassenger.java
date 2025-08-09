@@ -111,7 +111,7 @@ public class MapPassenger {
             @Override
             public void onRouteFound(List<GeoPoint> routePoints, double distance, double duration) {
                 mainHandler.post(() -> {
-                    displayRealRoute(routePoints);
+                    displayRealRoute(routePoints, distance);
                     externalCallback.onRouteFound(routePoints, distance, duration);
                 });
             }
@@ -204,8 +204,8 @@ public class MapPassenger {
     }
 
 
-    private void displayRealRoute(List<GeoPoint> routePoints) {
-        if (routePoints == null || routePoints.isEmpty()) {
+    private void displayRealRoute(List<GeoPoint> routePoints, double distance) {
+        if (routePoints == null || routePoints.isEmpty() || distance < 1.0) {
             return;
         }
 

@@ -394,11 +394,18 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
                 lastRouteDuration = durationMinutes;
                 map.clearMarkerTap();
                 runOnUiThread(() -> {
-                    Toast.makeText(PassengerScreen.this,
-                            String.format("✅ Route found: %.1f km, %.0f min", distanceKm, durationMinutes),
-                            Toast.LENGTH_LONG).show();
-
-                    uiManager.enableRideButton();
+                    if (distanceKm < 1.0) {
+                        // For short distances, only show error message - no map operations
+                        Toast.makeText(PassengerScreen.this,
+                                String.format("❌ Minimum ride distance is 1 km. Current distance: %.1f km", distanceKm),
+                                Toast.LENGTH_LONG).show();
+                        uiManager.disableRideButton();
+                    } else {
+                        Toast.makeText(PassengerScreen.this,
+                                String.format("✅ Route found: %.1f km, %.0f min", distanceKm, durationMinutes),
+                                Toast.LENGTH_LONG).show();
+                        uiManager.enableRideButton();
+                    }
                 });
             }
 
@@ -675,6 +682,14 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
     }
 
     private void showCarSelectionBottomSheet() {
+        // Double-check minimum distance before showing car selection
+        if (lastRouteDistance < 1.0) {
+            Toast.makeText(this, 
+                    String.format("❌ Minimum ride distance is 1 km. Current distance: %.1f km", lastRouteDistance),
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+        
         View bottomSheetView = getLayoutInflater().inflate(R.layout.car_selection_bottom_sheet, null);
 
         BottomSheetDialog dialog = new BottomSheetDialog(this);
@@ -714,6 +729,15 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
     }
 
     private void createRideRequest(String carType, BottomSheetDialog dialog) {
+        // Final validation check before creating ride request
+        if (lastRouteDistance < 1.0) {
+            Toast.makeText(this, 
+                    String.format("❌ Cannot create ride. Minimum distance is 1 km. Current: %.1f km", lastRouteDistance),
+                    Toast.LENGTH_LONG).show();
+            dialog.dismiss();
+            return;
+        }
+        
         rideManager.createRideRequest(carType, pickupGeoPoint, destinationGeoPoint,
                 txtPickupLocation.getText().toString(), txtDestination.getText().toString(),
                 lastRouteDistance, lastRouteDuration);
