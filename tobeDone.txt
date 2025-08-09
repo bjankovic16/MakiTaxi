@@ -2,5 +2,8 @@
 // toast message improvement and icons iprovement pickup and dropoff
 // refactoring code
 
+IMPROVEMENTS:
 // feedback screen after ride finsih
-// picking dates from to in ride and passanger menu screen
+// picking dates from-to in ride and passanger menu screen
+// adding filters in ride section for giving feedbacks (not given yet)
+// adding section for money earned and money spent
