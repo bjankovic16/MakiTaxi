@@ -14,9 +14,8 @@ public class RideRequest {
     private Long notificationTimestamp;
     private Long timeout;
     private Map<String, Boolean> declinedBy;
-    private String notificationId; // ID of the driver notification
+    private String notificationId;
 
-    // Changed from GeoPoint to primitive types
     private double pickupLatitude;
     private double pickupLongitude;
     private double dropoffLatitude;
@@ -69,7 +68,6 @@ public class RideRequest {
         this.estimatedPrice = basePrice + (distance * perKmPrice);
     }
 
-    // Getters and Setters for primitive coordinates
     public double getPickupLatitude() {
         return pickupLatitude;
     }
@@ -102,7 +100,6 @@ public class RideRequest {
         this.dropoffLongitude = dropoffLongitude;
     }
 
-    // Rest of the getters and setters remain the same
     public String getRequestId() {
         return requestId;
     }

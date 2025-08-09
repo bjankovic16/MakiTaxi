@@ -16,7 +16,6 @@ public class RideReview {
     private String carType;
 
     public RideReview() {
-        // Required empty constructor for Firebase
     }
 
     public RideReview(String reviewId, String rideRequestId, String passengerId, String driverId, 
@@ -38,7 +37,6 @@ public class RideReview {
         this.carType = carType;
     }
 
-    // Getters and Setters
     public String getReviewId() {
         return reviewId;
     }

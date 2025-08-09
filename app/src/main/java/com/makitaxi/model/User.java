@@ -10,7 +10,6 @@ public class User {
     private boolean verified;
     private String profilePicture;
 
-    // Driver-specific fields
     private String licenseNumber;
     private String carModel;
     private String carColor;
@@ -27,7 +26,6 @@ public class User {
     private String gender;
     private String birthday;
 
-    // Required empty constructor for Firebase
     public User() {
         this.role = "PASSENGER"; // Default role
         this.verified = false; // Default verification status
@@ -41,7 +39,6 @@ public class User {
         this.totalMoneyEarned = 0.0;
     }
 
-    // Optional: constructor with fields
     public User(String fullName, String email, String phone, String username) {
         this();
         this.fullName = fullName;
@@ -49,8 +46,6 @@ public class User {
         this.phone = phone;
         this.username = username;
     }
-
-    // Getters and Setters
 
     public String getRole() {
         return role;
@@ -240,15 +235,11 @@ public class User {
         this.totalMoneyEarned = totalMoneyEarned;
     }
 
-    // Utility methods for updating statistics
     public void updateStatisticsAfterRide(int newRating, int rideDistance) {
-        // Increment total rides
         this.totalRides++;
         
-        // Add distance
         this.totalDistance += rideDistance;
         
-        // Update rating if provided
         if (newRating > 0) {
             this.ratingCount++;
             this.totalRatingSum += newRating;

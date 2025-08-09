@@ -98,10 +98,8 @@ public class DriverRideManager {
 
         rideRequestRef.updateChildren(updates)
                 .addOnSuccessListener(aVoid -> {
-                    // Update ride statistics for both users immediately
                     updateRideStatisticsOnCompletion(request);
                     
-                    // Create feedback request for the passenger
                     createFeedbackRequest(request);
                     showToast("Ride finished");
                     uiManager.hideRideDetailsPanel();
@@ -115,7 +113,6 @@ public class DriverRideManager {
     }
 
     private void updateRideStatisticsOnCompletion(RideRequest request) {
-        // Update statistics for both passenger and driver immediately when ride is completed
         updateUserRideStatistics(request.getPassengerId(), request.getDistance(), request.getEstimatedPrice(), false); // Passenger
         updateUserRideStatistics(request.getDriverId(), request.getDistance(), request.getEstimatedPrice(), true); // Driver
     }
@@ -130,26 +127,22 @@ public class DriverRideManager {
                             if (user != null) {
                                 int actualDistance = (int) Math.round(distance);
                                 
-                                // Fallback calculation if distance is 0
                                 if (actualDistance <= 0) {
-                                    actualDistance = Math.max(1, (int) (price / 50)); // Minimum 1 km
+                                    actualDistance = 1;
                                 }
                                 
                                 Log.d(TAG, "Updating ride completion stats for " + (isDriver ? "driver" : "passenger") + 
                                       " - Distance: " + distance + " -> " + actualDistance + " km, Price: " + price);
                                 
-                                // Update ride count and distance for both users
                                 user.incrementRideCount();
                                 user.addDistance(actualDistance);
                                 
-                                // Update money tracking
                                 if (isDriver) {
                                     user.addMoneyEarned(price);
                                 } else {
                                     user.addMoneySpent(price);
                                 }
                                 
-                                // Save updated user
                                 FirebaseHelper.getUserRequestsRef().child(userId).setValue(user)
                                         .addOnSuccessListener(aVoid -> 
                                             Log.d(TAG, "Ride completion statistics updated successfully for " + (isDriver ? "driver" : "passenger")))
@@ -180,11 +173,10 @@ public class DriverRideManager {
                 request.getDropoffAddress(),
                 request.getEstimatedPrice(),
                 request.getCarType(),
-                request.getDistance(), // Use actual distance from RideRequest
+                request.getDistance(),
                 System.currentTimeMillis()
         );
 
-        // Save feedback request to Firebase
         FirebaseHelper.getFeedbackRequestsRef().child(feedbackId).setValue(feedbackRequest)
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "Feedback request created successfully");
@@ -261,7 +253,6 @@ public class DriverRideManager {
         if (request.getNotificationId() != null) {
             DatabaseReference driverNotificationRef = FirebaseHelper.getDriverNotificationRef().child(request.getNotificationId());
             
-            // Update the top-level status
             Map<String, Object> statusUpdates = new HashMap<>();
             statusUpdates.put("status", NotificationStatus.CANCELLED_BY_PASSENGER);
             

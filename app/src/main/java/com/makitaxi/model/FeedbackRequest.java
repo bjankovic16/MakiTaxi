@@ -20,7 +20,6 @@ public class FeedbackRequest implements Serializable {
     private String comment;
 
     public FeedbackRequest() {
-        // Required empty constructor for Firebase
     }
 
     public FeedbackRequest(String feedbackId, String rideRequestId, String passengerId, String driverId,
@@ -43,7 +42,6 @@ public class FeedbackRequest implements Serializable {
         this.comment = "";
     }
 
-    // Getters and Setters
     public String getFeedbackId() {
         return feedbackId;
     }

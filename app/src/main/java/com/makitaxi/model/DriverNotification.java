@@ -11,7 +11,6 @@ public class DriverNotification {
     private NotificationStatus status = NotificationStatus.CREATED;
 
     public DriverNotification() {
-        // Required empty constructor for Firebase
     }
 
     public DriverNotification(String driverId, Long notificationTimestamp, RideRequest rideRequest) {

@@ -45,7 +45,6 @@ public class DriverUIManager {
     private final AppCompatActivity activity;
     private final String driverId;
 
-    // UI Components
     private MapView mapView;
     private ImageButton btnHamburgerMenu;
     private Button btnZoomIn;
@@ -57,22 +56,18 @@ public class DriverUIManager {
     private BottomSheetBehavior<LinearLayout> bottomSheetBehavior;
     private LinearLayout mapControls;
 
-    // Firebase References
     private DatabaseReference driverNotificationRef;
     private ChildEventListener driverNotificationListener;
     private ChildEventListener passengerResponseListener;
 
-    // State
     private boolean isDriverOnline = false;
     private Long rideActivationTime;
     private AlertDialog rideRequestDialog;
     
-    // Timer related fields
     private CountDownTimer rideRequestTimer;
     private TextView txtTimer;
     private ProgressBar timerProgress;
 
-    // Callbacks
     private OnDriverStatusChangeListener statusChangeListener;
     private OnRideActionListener rideActionListener;
     private OnMapInteractionListener mapInteractionListener;
@@ -226,7 +221,6 @@ public class DriverUIManager {
         View view = activity.getLayoutInflater().inflate(R.layout.ride_request_dialog, null);
         builder.setView(view);
         
-        // Find all the views
         TextView txtPickupLocation = view.findViewById(R.id.txtPickupLocation);
         TextView txtDropoffLocation = view.findViewById(R.id.txtDropoffLocation);
         TextView txtDistance = view.findViewById(R.id.txtDistance);
@@ -235,11 +229,9 @@ public class DriverUIManager {
         Button btnAccept = view.findViewById(R.id.btnAccept);
         Button btnDecline = view.findViewById(R.id.btnDecline);
         
-        // Timer views
         txtTimer = view.findViewById(R.id.txtTimer);
         timerProgress = view.findViewById(R.id.timerProgress);
 
-        // Populate the enhanced fields
         txtPickupLocation.setText(request.getPickupAddress());
         txtDropoffLocation.setText(request.getDropoffAddress());
         txtDistance.setText(String.format(Locale.getDefault(), "%.1f km", request.getDistance()));
@@ -248,7 +240,6 @@ public class DriverUIManager {
         
         rideRequestDialog = builder.create();
         
-        // Remove dialog padding to eliminate white spaces
         if (rideRequestDialog.getWindow() != null) {
             rideRequestDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
@@ -389,21 +380,18 @@ public class DriverUIManager {
     private void drawRouteForRide(RideRequest rideRequest) {
         if (mapDriver == null) return;
 
-        // Check if coordinates are available
         if (rideRequest.getPickupLatitude() != 0 && rideRequest.getPickupLongitude() != 0 &&
             rideRequest.getDropoffLatitude() != 0 && rideRequest.getDropoffLongitude() != 0) {
             
             GeoPoint pickupPoint = new GeoPoint(rideRequest.getPickupLatitude(), rideRequest.getPickupLongitude());
             GeoPoint dropoffPoint = new GeoPoint(rideRequest.getDropoffLatitude(), rideRequest.getDropoffLongitude());
             
-            // Get driver's current location
             GeoPoint driverLocation = mapDriver.getCurrentLocation();
             if (driverLocation == null) {
                 Toast.makeText(activity, "⚠️ Driver location not available", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Step 1: Draw route from driver to pickup point
             mapDriver.drawDriverRouteToPickup(driverLocation, pickupPoint, new MapDriver.RoutingCallback() {
                 @Override
                 public void onRouteFound(List<GeoPoint> routePoints, double distance, double duration) {
@@ -411,7 +399,6 @@ public class DriverUIManager {
                         String.format("✅ Driver route: %.1f km, %.0f min", distance, duration), 
                         Toast.LENGTH_SHORT).show();
                     
-                    // Step 2: Draw route from pickup to destination
                     mapDriver.drawPickupToDestinationRoute(pickupPoint, dropoffPoint, new MapDriver.RoutingCallback() {
                         @Override
                         public void onRouteFound(List<GeoPoint> routePoints, double distance, double duration) {
