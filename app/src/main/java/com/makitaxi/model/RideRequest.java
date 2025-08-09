@@ -1,6 +1,7 @@
 package com.makitaxi.model;
 
 import com.makitaxi.utils.NotificationStatus;
+import com.makitaxi.config.AppConfig;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -52,19 +53,19 @@ public class RideRequest {
         this.duration = duration;
         this.declinedBy = new HashMap<>();
 
-        // Price calculation remains the same
-        double basePrice = 150; // Base price in RSD
+        // Price calculation using configuration constants
+        double basePrice = AppConfig.BASE_PRICE_RSD;
         double perKmPrice;
         switch (carType) {
-            case "LUXURY":
-                perKmPrice = 120;
+            case AppConfig.CAR_TYPE_LUXURY:
+                perKmPrice = AppConfig.LUXURY_PRICE_PER_KM;
                 break;
-            case "TRANSPORT":
-                perKmPrice = 100;
+            case AppConfig.CAR_TYPE_TRANSPORT:
+                perKmPrice = AppConfig.TRANSPORT_PRICE_PER_KM;
                 break;
-            case "BASIC":
+            case AppConfig.CAR_TYPE_BASIC:
             default:
-                perKmPrice = 80;
+                perKmPrice = AppConfig.BASIC_PRICE_PER_KM;
                 break;
         }
         this.estimatedPrice = basePrice + (distance * perKmPrice);

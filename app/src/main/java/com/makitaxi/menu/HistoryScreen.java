@@ -24,6 +24,9 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.makitaxi.utils.ToastUtils;
+import com.makitaxi.config.AppConfig;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -66,7 +69,7 @@ public class HistoryScreen extends AppCompatActivity {
         setContentView(R.layout.history_screen);
 
         auth = FirebaseAuth.getInstance();
-        database = FirebaseDatabase.getInstance("https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app/");
+        database = FirebaseDatabase.getInstance(AppConfig.FIREBASE_DATABASE_URL);
         currentUser = auth.getCurrentUser();
         pulseAnimation = AnimationUtils.loadAnimation(this, R.anim.pulse);
 
@@ -89,7 +92,7 @@ public class HistoryScreen extends AppCompatActivity {
 
     private void determineUserType() {
         if (currentUser == null) {
-            Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show();
+            ToastUtils.showError(this, "User not authenticated");
             finish();
             return;
         }
@@ -340,11 +343,11 @@ public class HistoryScreen extends AppCompatActivity {
                 return;
             }
             
-            if (comment.length() < 20) {
+            if (comment.length() < AppConfig.MIN_FEEDBACK_CHARACTERS) {
                 // Comment too short - show error message
-                Toast.makeText(HistoryScreen.this, 
-                    String.format("❌ Comment must be at least 20 characters. Current: %d characters", comment.length()), 
-                    Toast.LENGTH_LONG).show();
+                ToastUtils.showError(HistoryScreen.this, 
+                    String.format("Comment must be at least %d characters. Current: %d characters", 
+                            AppConfig.MIN_FEEDBACK_CHARACTERS, comment.length()));
                 etComments.requestFocus();
                 return;
             }
@@ -380,12 +383,12 @@ public class HistoryScreen extends AppCompatActivity {
                     
                     updateUserStatisticsAfterFeedback(feedback, rating);
                     
-                    Toast.makeText(this, "✅ Feedback submitted successfully!", Toast.LENGTH_SHORT).show();
+                    ToastUtils.showSuccess(this, "Feedback submitted successfully!");
                     displayRideHistory(); // Refresh the display
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to submit feedback: " + e.getMessage());
-                    Toast.makeText(this, "❌ Failed to submit feedback: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    ToastUtils.showError(this, "Failed to submit feedback. " + e.getMessage());
                 });
     }
 

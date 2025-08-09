@@ -25,6 +25,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.makitaxi.utils.ToastUtils;
+import com.makitaxi.config.AppConfig;
+
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.makitaxi.R;
 import com.makitaxi.menu.MenuMainScreen;
@@ -348,7 +351,7 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
         String destinationLocation = txtDestination.getText().toString().trim();
 
         if (pickupLocation.isEmpty() || destinationLocation.isEmpty()) {
-            Toast.makeText(this, "❌ Please enter both pickup and destination locations", Toast.LENGTH_SHORT).show();
+            ToastUtils.showError(this, "Please enter both pickup and destination locations");
             return;
         }
         map.clearMarkers();
@@ -381,7 +384,7 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
             if (pickupGeoPoint != null && destinationGeoPoint != null) {
                 drawRoute();
             } else {
-                Toast.makeText(this, "❌ Could not find one or both locations", Toast.LENGTH_SHORT).show();
+                ToastUtils.showError(this, "Could not find one or both locations");
             }
         }
     }
@@ -394,16 +397,15 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
                 lastRouteDuration = durationMinutes;
                 map.clearMarkerTap();
                 runOnUiThread(() -> {
-                    if (distanceKm < 1.0) {
+                    if (distanceKm < AppConfig.MIN_RIDE_DISTANCE_KM) {
                         // For short distances, only show error message - no map operations
-                        Toast.makeText(PassengerScreen.this,
-                                String.format("❌ Minimum ride distance is 1 km. Current distance: %.1f km", distanceKm),
-                                Toast.LENGTH_LONG).show();
+                        ToastUtils.showError(PassengerScreen.this,
+                                String.format("Minimum ride distance is %d km. Current distance: %.1f km", 
+                                        AppConfig.MIN_RIDE_DISTANCE_KM, distanceKm));
                         uiManager.disableRideButton();
                     } else {
-                        Toast.makeText(PassengerScreen.this,
-                                String.format("✅ Route found: %.1f km, %.0f min", distanceKm, durationMinutes),
-                                Toast.LENGTH_LONG).show();
+                        ToastUtils.showSuccess(PassengerScreen.this,
+                                String.format("Route found: %.1f km, %.0f min", distanceKm, durationMinutes));
                         uiManager.enableRideButton();
                     }
                 });
@@ -413,7 +415,7 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
             public void onRoutingError(String error) {
                 map.clearMarkerTap();
                 runOnUiThread(() -> {
-                    Toast.makeText(PassengerScreen.this, "❌ Route calculation failed: " + error, Toast.LENGTH_SHORT).show();
+                    ToastUtils.showError(PassengerScreen.this, "Route calculation failed. " + error);
                     uiManager.disableRideButton();
                 });
             }
@@ -441,10 +443,10 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
             public void onGeocodeError(String error) {
                 runOnUiThread(() -> {
                     if (isPickup) {
-                        Toast.makeText(PassengerScreen.this, "❌ Error finding pickup location: " + error, Toast.LENGTH_SHORT).show();
+                        ToastUtils.showError(PassengerScreen.this, "Error finding pickup location. " + error);
                         pickupGeoPoint = null;
                     } else {
-                        Toast.makeText(PassengerScreen.this, "❌ Error finding destination location: " + error, Toast.LENGTH_SHORT).show();
+                        ToastUtils.showError(PassengerScreen.this, "Error finding destination location. " + error);
                         destinationGeoPoint = null;
                     }
 
@@ -683,10 +685,10 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
 
     private void showCarSelectionBottomSheet() {
         // Double-check minimum distance before showing car selection
-        if (lastRouteDistance < 1.0) {
-            Toast.makeText(this, 
-                    String.format("❌ Minimum ride distance is 1 km. Current distance: %.1f km", lastRouteDistance),
-                    Toast.LENGTH_LONG).show();
+        if (lastRouteDistance < AppConfig.MIN_RIDE_DISTANCE_KM) {
+            ToastUtils.showError(this, 
+                    String.format("Minimum ride distance is %d km. Current distance: %.1f km", 
+                            AppConfig.MIN_RIDE_DISTANCE_KM, lastRouteDistance));
             return;
         }
         
@@ -730,10 +732,10 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
 
     private void createRideRequest(String carType, BottomSheetDialog dialog) {
         // Final validation check before creating ride request
-        if (lastRouteDistance < 1.0) {
-            Toast.makeText(this, 
-                    String.format("❌ Cannot create ride. Minimum distance is 1 km. Current: %.1f km", lastRouteDistance),
-                    Toast.LENGTH_LONG).show();
+        if (lastRouteDistance < AppConfig.MIN_RIDE_DISTANCE_KM) {
+            ToastUtils.showError(this, 
+                    String.format("Cannot create ride. Minimum distance is %d km. Current: %.1f km", 
+                            AppConfig.MIN_RIDE_DISTANCE_KM, lastRouteDistance));
             dialog.dismiss();
             return;
         }

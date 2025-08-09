@@ -535,7 +535,7 @@ public class PassengerUIManager {
                     NotificationStatus.ACCEPTED_BY_PASSENGER
             );
 
-            DatabaseReference requestRef = FirebaseHelper.gerPassengerResponse().push();
+            DatabaseReference requestRef = FirebaseHelper.getPassengerResponseRef().push();
             requestRef.setValue(response)
                     .addOnSuccessListener(aVoid -> {
                         shouldShowBottomSheet = false;
@@ -557,7 +557,7 @@ public class PassengerUIManager {
                     NotificationStatus.REJECTED_BY_PASSENGER
             );
 
-            DatabaseReference requestRef = FirebaseHelper.gerPassengerResponse().push();
+            DatabaseReference requestRef = FirebaseHelper.getPassengerResponseRef().push();
             requestRef.setValue(response)
                     .addOnSuccessListener(aVoid -> {
                         shouldShowBottomSheet = false;

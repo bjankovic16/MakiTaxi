@@ -16,6 +16,7 @@ import com.makitaxi.model.RideRequest;
 import com.makitaxi.model.User;
 import com.makitaxi.utils.FirebaseHelper;
 import com.makitaxi.utils.NotificationStatus;
+import com.makitaxi.config.AppConfig;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -120,8 +121,7 @@ public class DriverRideManager {
     }
 
     private void updateUserRideStatistics(String userId, double distance, double price, boolean isDriver) {
-        FirebaseDatabase.getInstance("https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app/")
-                .getReference("users").child(userId)
+        FirebaseHelper.getUserRequestsRef().child(userId)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -150,8 +150,7 @@ public class DriverRideManager {
                                 }
                                 
                                 // Save updated user
-                                FirebaseDatabase.getInstance("https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app/")
-                                        .getReference("users").child(userId).setValue(user)
+                                FirebaseHelper.getUserRequestsRef().child(userId).setValue(user)
                                         .addOnSuccessListener(aVoid -> 
                                             Log.d(TAG, "Ride completion statistics updated successfully for " + (isDriver ? "driver" : "passenger")))
                                         .addOnFailureListener(e -> 
@@ -186,8 +185,7 @@ public class DriverRideManager {
         );
 
         // Save feedback request to Firebase
-        FirebaseDatabase.getInstance("https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app/")
-                .getReference("feedback_requests").child(feedbackId).setValue(feedbackRequest)
+        FirebaseHelper.getFeedbackRequestsRef().child(feedbackId).setValue(feedbackRequest)
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "Feedback request created successfully");
                 })

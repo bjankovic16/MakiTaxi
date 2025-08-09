@@ -279,7 +279,7 @@ public class DriverUIManager {
     }
 
     public void waitForPassengerConfirmation(RideRequest rideRequest) {
-        DatabaseReference responsesRef = FirebaseHelper.gerPassengerResponse();
+        DatabaseReference responsesRef = FirebaseHelper.getPassengerResponseRef();
 
         if (passengerResponseListener != null) {
             responsesRef.removeEventListener(passengerResponseListener);
@@ -464,7 +464,7 @@ public class DriverUIManager {
             driverNotificationRef.removeEventListener(driverNotificationListener);
         }
         if (passengerResponseListener != null) {
-            FirebaseHelper.gerPassengerResponse().removeEventListener(passengerResponseListener);
+            FirebaseHelper.getPassengerResponseRef().removeEventListener(passengerResponseListener);
         }
         if (rideRequestDialog != null && rideRequestDialog.isShowing()) {
             rideRequestDialog.dismiss();

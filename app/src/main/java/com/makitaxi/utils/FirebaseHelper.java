@@ -2,34 +2,66 @@ package com.makitaxi.utils;
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.makitaxi.config.AppConfig;
 
+/**
+ * Firebase Database helper class
+ * Provides centralized access to Firebase database references
+ */
 public class FirebaseHelper {
 
-    private static final String BASE_URL = "https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app/";
-    private static final DatabaseReference rootRef = FirebaseDatabase.getInstance(BASE_URL).getReference();
+    private static final DatabaseReference rootRef = FirebaseDatabase.getInstance(AppConfig.FIREBASE_DATABASE_URL).getReference();
 
+    private FirebaseHelper() {
+        // Private constructor to prevent instantiation
+    }
+
+    /**
+     * Get reference to ride requests node
+     */
     public static DatabaseReference getRideRequestsRef() {
-        return rootRef.child("ride_requests");
+        return rootRef.child(AppConfig.NODE_RIDE_REQUESTS);
     }
 
+    /**
+     * Get reference to users node
+     */
     public static DatabaseReference getUserRequestsRef() {
-        return rootRef.child("users");
+        return rootRef.child(AppConfig.NODE_USERS);
     }
 
+    /**
+     * Get reference to driver locations node
+     */
     public static DatabaseReference getDriverLocationRef() {
-        return rootRef.child("driver_locations");
+        return rootRef.child(AppConfig.NODE_DRIVER_LOCATIONS);
     }
 
+    /**
+     * Get reference to driver notifications node
+     */
     public static DatabaseReference getDriverNotificationRef() {
-        return rootRef.child("driver_notifications");
+        return rootRef.child(AppConfig.NODE_DRIVER_NOTIFICATIONS);
     }
 
-    public static DatabaseReference gerPassengerResponse() {
-        return rootRef.child("passenger_response");
+    /**
+     * Get reference to passenger response node
+     */
+    public static DatabaseReference getPassengerResponseRef() {
+        return rootRef.child(AppConfig.NODE_PASSENGER_RESPONSE);
     }
 
+    /**
+     * Get reference to feedback requests node
+     */
     public static DatabaseReference getFeedbackRequestsRef() {
-        return rootRef.child("feedback_requests");
+        return rootRef.child(AppConfig.NODE_FEEDBACK_REQUESTS);
     }
 
+    /**
+     * Get reference to root database
+     */
+    public static DatabaseReference getRootRef() {
+        return rootRef;
+    }
 }

@@ -21,6 +21,7 @@ import com.makitaxi.model.RideRequest;
 import com.makitaxi.passenger.PassengerScreen;
 
 import org.osmdroid.util.GeoPoint;
+import com.makitaxi.config.AppConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,10 +29,10 @@ import java.util.List;
 public class DriverPollingService {
 
     private static final String TAG = "DriverPollingService";
-    private static final int MAX_DRIVERS = 10;
-    private static final double INITIAL_RADIUS_KM = 2;
-    private static final double MAX_RADIUS_KM = 10;
-    private static final double RADIUS_INCREMENT_KM = 2;
+    private static final int MAX_DRIVERS = AppConfig.MAX_DRIVERS_TO_NOTIFY;
+    private static final double INITIAL_RADIUS_KM = AppConfig.INITIAL_SEARCH_RADIUS_KM;
+    private static final double MAX_RADIUS_KM = AppConfig.MAX_SEARCH_RADIUS_KM;
+    private static final double RADIUS_INCREMENT_KM = AppConfig.RADIUS_INCREMENT_KM;
     private static final GeoFire geoFire = new GeoFire(FirebaseHelper.getDriverLocationRef());
     private static ValueEventListener driverResponseListener;
     private static int currentDriverIndex = 0;
