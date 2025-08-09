@@ -1,9 +1,16 @@
 package com.makitaxi.menu;
 
+import android.Manifest;
 import android.app.DatePickerDialog;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -11,12 +18,17 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
@@ -29,6 +41,7 @@ import com.makitaxi.R;
 import com.makitaxi.model.User;
 import com.makitaxi.utils.CircularImageView;
 
+import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
@@ -41,9 +54,11 @@ public class MyAccountScreen extends AppCompatActivity {
 
     // UI Components
     private ImageButton btnBack;
+    private ImageButton btnEditPhoto;
     private CircularImageView imgProfilePicture;
     private TextView txtUserName;
     private TextView txtUserEmail;
+    private TextView txtUserRole;
     private EditText editTextName;
     private Spinner spinnerGender;
     private LinearLayout layoutBirthday;
@@ -51,7 +66,8 @@ public class MyAccountScreen extends AppCompatActivity {
     private EditText editTextPhone;
     private Button btnSave;
 
-    // Add these fields to the class variables section
+    // Driver-specific components
+    private LinearLayout driverSection;
     private LinearLayout carTypeContainer;
     private LinearLayout carDetailsContainer;
     private Spinner spinnerCarType;
@@ -63,7 +79,12 @@ public class MyAccountScreen extends AppCompatActivity {
     
     // Data
     private String currentUserId;
+    private String currentUserRole;
     private final Calendar birthdayCalendar = Calendar.getInstance();
+    
+    // Image handling
+    private ActivityResultLauncher<String> imagePickerLauncher;
+    private ActivityResultLauncher<String> permissionLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +97,7 @@ public class MyAccountScreen extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance("https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app/");
 
+        setupImageLaunchers();
         initializeViews();
         setupGenderSpinner();
         setupUIInteractions();
@@ -98,11 +120,39 @@ public class MyAccountScreen extends AppCompatActivity {
         });
     }
 
+    private void setupImageLaunchers() {
+        // Image picker launcher
+        imagePickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    processSelectedImage(uri);
+                } else {
+                    Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show();
+                }
+            }
+        );
+        
+        // Permission request launcher
+        permissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(),
+            isGranted -> {
+                if (isGranted) {
+                    launchImagePicker();
+                } else {
+                    Toast.makeText(this, "Storage permission is required to select images", Toast.LENGTH_LONG).show();
+                }
+            }
+        );
+    }
+
     private void initializeViews() {
         btnBack = findViewById(R.id.btnBack);
+        btnEditPhoto = findViewById(R.id.btnEditPhoto);
         imgProfilePicture = findViewById(R.id.imgProfilePicture);
         txtUserName = findViewById(R.id.txtUserName);
         txtUserEmail = findViewById(R.id.txtUserEmail);
+        txtUserRole = findViewById(R.id.txtUserRole);
         editTextName = findViewById(R.id.editTextName);
         spinnerGender = findViewById(R.id.spinnerGender);
         layoutBirthday = findViewById(R.id.layoutBirthday);
@@ -110,7 +160,8 @@ public class MyAccountScreen extends AppCompatActivity {
         editTextPhone = findViewById(R.id.editTextPhone);
         btnSave = findViewById(R.id.btnSave);
         
-        // Initialize car-related views
+        // Initialize driver-specific views
+        driverSection = findViewById(R.id.driverSection);
         carTypeContainer = findViewById(R.id.carTypeContainer);
         carDetailsContainer = findViewById(R.id.carDetailsContainer);
         spinnerCarType = findViewById(R.id.spinnerCarType);
@@ -133,6 +184,8 @@ public class MyAccountScreen extends AppCompatActivity {
 
     private void setupUIInteractions() {
         btnBack.setOnClickListener(v -> finish());
+
+        btnEditPhoto.setOnClickListener(v -> showImagePickerDialog());
 
         layoutBirthday.setOnClickListener(v -> showDatePicker());
 
@@ -158,6 +211,96 @@ public class MyAccountScreen extends AppCompatActivity {
     private void updateBirthdayDisplay() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
         txtBirthday.setText(dateFormat.format(birthdayCalendar.getTime()));
+    }
+
+    private void showImagePickerDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Profile Picture")
+                .setMessage("Choose an option")
+                .setPositiveButton("Select from Gallery", (dialog, which) -> {
+                    checkStoragePermissionAndLaunchPicker();
+                })
+                .setNeutralButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+    
+    private void checkStoragePermissionAndLaunchPicker() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES)
+                    == PackageManager.PERMISSION_GRANTED) {
+                launchImagePicker();
+            } else {
+                permissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES);
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                launchImagePicker();
+            } else {
+                permissionLauncher.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE);
+            }
+        }
+    }
+    
+    private void launchImagePicker() {
+        try {
+            imagePickerLauncher.launch("image/*");
+        } catch (Exception e) {
+            Toast.makeText(this, "Error opening image picker: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void processSelectedImage(Uri imageUri) {
+        try {
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+            bitmap = resizeBitmap(bitmap, 300, 300);
+            imgProfilePicture.setImageBitmap(bitmap);
+            saveProfileImage(bitmap);
+        } catch (Exception e) {
+            Log.e(TAG, "Error processing selected image", e);
+            Toast.makeText(this, "Error processing image", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private Bitmap resizeBitmap(Bitmap bitmap, int maxWidth, int maxHeight) {
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+
+        float bitmapRatio = (float) width / (float) height;
+        if (bitmapRatio > 1) {
+            width = maxWidth;
+            height = (int) (width / bitmapRatio);
+        } else {
+            height = maxHeight;
+            width = (int) (height * bitmapRatio);
+        }
+
+        return Bitmap.createScaledBitmap(bitmap, width, height, true);
+    }
+
+    private void saveProfileImage(Bitmap bitmap) {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
+            byte[] imageBytes = baos.toByteArray();
+            String encodedImage = "data:image/jpeg;base64," + Base64.encodeToString(imageBytes, Base64.DEFAULT);
+
+            if (currentUserId != null) {
+                database.getReference("users").child(currentUserId)
+                    .child("profilePicture")
+                    .setValue(encodedImage)
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(this, "✅ Profile picture updated", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to save profile picture", e);
+                        Toast.makeText(this, "❌ Failed to update picture", Toast.LENGTH_SHORT).show();
+                    });
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error saving profile image", e);
+            Toast.makeText(this, "❌ Error saving image", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void loadUserInfo() {
@@ -189,6 +332,9 @@ public class MyAccountScreen extends AppCompatActivity {
     }
 
     private void populateUserData(User user) {
+        // Store user role for later use
+        currentUserRole = user.getRole();
+        
         // Header info
         if (user.getFullName() != null && !user.getFullName().isEmpty()) {
             txtUserName.setText(user.getFullName());
@@ -197,6 +343,14 @@ public class MyAccountScreen extends AppCompatActivity {
         
         if (user.getEmail() != null && !user.getEmail().isEmpty()) {
             txtUserEmail.setText(user.getEmail());
+        }
+
+        // User role badge
+        if (currentUserRole != null && !currentUserRole.isEmpty()) {
+            String displayRole = currentUserRole.substring(0, 1).toUpperCase() + currentUserRole.substring(1).toLowerCase();
+            txtUserRole.setText(displayRole);
+        } else {
+            txtUserRole.setText("Passenger");
         }
 
         // Phone
@@ -212,14 +366,16 @@ public class MyAccountScreen extends AppCompatActivity {
         // Birthday
         if (user.getBirthday() != null && !user.getBirthday().isEmpty()) {
             txtBirthday.setText(user.getBirthday());
+        } else {
+            txtBirthday.setText("Select date");
         }
 
         // Profile picture
         loadProfileImage(user.getProfilePicture());
 
-        if ("DRIVER".equals(user.getRole())) {
-            carTypeContainer.setVisibility(View.VISIBLE);
-            carDetailsContainer.setVisibility(View.VISIBLE);
+        // Driver-specific information
+        if ("DRIVER".equals(currentUserRole)) {
+            driverSection.setVisibility(View.VISIBLE);
             
             setupCarTypeSpinner();
             
@@ -237,8 +393,7 @@ public class MyAccountScreen extends AppCompatActivity {
                 editTextCarDetails.setText(carDetails);
             }
         } else {
-            carTypeContainer.setVisibility(View.GONE);
-            carDetailsContainer.setVisibility(View.GONE);
+            driverSection.setVisibility(View.GONE);
         }
     }
 
@@ -301,7 +456,7 @@ public class MyAccountScreen extends AppCompatActivity {
             return;
         }
 
-        if (birthday.equals("Select your birthday")) {
+        if (birthday.equals("Select date")) {
             Toast.makeText(this, "❌ Please select your birthday", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -312,7 +467,7 @@ public class MyAccountScreen extends AppCompatActivity {
         updates.put("gender", gender);
         updates.put("birthday", birthday);
         
-        if (carTypeContainer.getVisibility() == View.VISIBLE) {
+        if (driverSection.getVisibility() == View.VISIBLE) {
             String carType = spinnerCarType.getSelectedItem().toString();
             String carDetailsText = editTextCarDetails.getText().toString().trim();
             
@@ -343,7 +498,7 @@ public class MyAccountScreen extends AppCompatActivity {
             .updateChildren(updates)
             .addOnSuccessListener(aVoid -> {
                 Toast.makeText(MyAccountScreen.this, "✅ Profile updated successfully", Toast.LENGTH_SHORT).show();
-                finish();
+                // Stay on the current screen after saving
             })
             .addOnFailureListener(e -> {
                 Toast.makeText(MyAccountScreen.this, "❌ Failed to update profile", Toast.LENGTH_SHORT).show();
