@@ -99,6 +99,7 @@ public class MenuMainScreen extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         reloadUserName();
+        reloadProfileImage();
     }
 
     private void reloadUserName() {
@@ -111,6 +112,17 @@ public class MenuMainScreen extends AppCompatActivity {
                 txtUserName.setText(currentUser.getDisplayName());
             } else {
                 txtUserName.setText("User");
+            }
+        }
+    }
+
+    private void reloadProfileImage() {
+        User cachedUser = PreferencesManager.getCachedUser(this);
+        if (cachedUser != null && cachedUser.getProfilePicture() != null) {
+            String profileImageUrl = cachedUser.getProfilePicture();
+            if (!profileImageUrl.isEmpty()) {
+                currentProfileImageUrl = profileImageUrl;
+                loadProfileImage(profileImageUrl);
             }
         }
     }
