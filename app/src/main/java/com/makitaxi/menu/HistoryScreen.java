@@ -376,39 +376,101 @@ public class HistoryScreen extends AppCompatActivity {
     }
 
     private void updateUserStatisticsAfterFeedback(FeedbackRequest feedback, int rating) {
-        updateUserStatistics(feedback.getPassengerId(), rating); // Passenger gets ride count
-        updateUserStatistics(feedback.getDriverId(), rating); // Driver gets ride count + estimated distance
+        // Logic: Both passenger and driver traveled the same distance
+        // Only drivers get ratings from passengers
+        
+        if ("passenger".equals(userType)) {
+            // Passenger is giving feedback to driver
+            updatePassengerStatistics(feedback.getPassengerId(), feedback); // Passenger gets ride count + distance
+            updateDriverStatistics(feedback.getDriverId(), rating, feedback); // Driver gets rating + ride count + distance
+        } else {
+            // Driver is giving feedback to passenger  
+            updateDriverStatistics(feedback.getDriverId(), 0, feedback); // Driver gets ride count + distance (no rating from passenger)
+            updatePassengerStatistics(feedback.getPassengerId(), feedback); // Passenger gets ride count + distance
+        }
     }
 
-    private void updateUserStatistics(String userId, int rating) {
-        database.getReference("users").child(userId)
+    private void updatePassengerStatistics(String passengerId, FeedbackRequest feedback) {
+        database.getReference("users").child(passengerId)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
                             User user = dataSnapshot.getValue(User.class);
                             if (user != null) {
-                                // Update statistics based on user role
-                                if (currentUser.getUid().equals(userId)) {
-                                    // If it's the current user (passenger giving feedback)
-                                    user.incrementRideCount();
+                                // Get actual distance from feedback request
+                                double feedbackDistance = feedback.getDistance();
+                                int actualDistance = (int) Math.round(feedbackDistance);
+                                double tripPrice = feedback.getPrice();
+                                
+                                // If distance is 0 or not set, calculate from price as fallback
+                                if (actualDistance <= 0) {
+                                    actualDistance = Math.max(1, (int) (tripPrice / 50)); // Minimum 1 km
+                                    Log.d(TAG, "Distance was 0, calculated from price: " + actualDistance + " km");
                                 }
                                 
-                                database.getReference("users").child(userId).setValue(user)
+                                Log.d(TAG, "Feedback submission - passenger (ride count and distance already updated on completion)");
+                                
+                                database.getReference("users").child(passengerId).setValue(user)
                                         .addOnSuccessListener(aVoid -> 
-                                            Log.d(TAG, "User statistics updated successfully"))
+                                            Log.d(TAG, "Passenger statistics updated successfully"))
                                         .addOnFailureListener(e -> 
-                                            Log.e(TAG, "Failed to update user statistics: " + e.getMessage()));
+                                            Log.e(TAG, "Failed to update passenger statistics: " + e.getMessage()));
                             }
                         }
                     }
                     
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
-                        Log.e(TAG, "Error loading user for statistics update: " + databaseError.getMessage());
+                        Log.e(TAG, "Error loading passenger for statistics update: " + databaseError.getMessage());
                     }
                 });
     }
+
+    private void updateDriverStatistics(String driverId, int rating, FeedbackRequest feedback) {
+        database.getReference("users").child(driverId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            User user = dataSnapshot.getValue(User.class);
+                            if (user != null) {
+                                // Get actual distance from feedback request
+                                double feedbackDistance = feedback.getDistance();
+                                int actualDistance = (int) Math.round(feedbackDistance);
+                                double tripPrice = feedback.getPrice();
+                                
+                                // If distance is 0 or not set, calculate from price as fallback
+                                if (actualDistance <= 0) {
+                                    actualDistance = Math.max(1, (int) (tripPrice / 50)); // Minimum 1 km
+                                    Log.d(TAG, "Distance was 0, calculated from price: " + actualDistance + " km");
+                                }
+                                
+                                Log.d(TAG, "Feedback submission - driver stats, Rating: " + rating);
+                                
+                                // Update driver statistics: only rating (ride count, distance, money already updated on completion)
+                                if (rating > 0) {
+                                    // Driver gets rating from passenger (don't update ride count/distance again)
+                                    user.updateRatingOnly(rating);
+                                }
+                                
+                                database.getReference("users").child(driverId).setValue(user)
+                                        .addOnSuccessListener(aVoid -> 
+                                            Log.d(TAG, "Driver statistics updated successfully"))
+                                        .addOnFailureListener(e -> 
+                                            Log.e(TAG, "Failed to update driver statistics: " + e.getMessage()));
+                            }
+                        }
+                    }
+                    
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e(TAG, "Error loading driver for statistics update: " + databaseError.getMessage());
+                    }
+                });
+    }
+
+
 
     private void openFeedbackDetails(FeedbackRequest feedback) {
         Intent intent = new Intent(this, FeedbackDetailsScreen.class);

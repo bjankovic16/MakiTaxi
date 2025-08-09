@@ -13,6 +13,7 @@ public class FeedbackRequest implements Serializable {
     private String dropoffAddress;
     private double price;
     private String carType;
+    private double distance; // in kilometers
     private long timestamp;
     private boolean isSubmitted;
     private int rating;
@@ -24,7 +25,7 @@ public class FeedbackRequest implements Serializable {
 
     public FeedbackRequest(String feedbackId, String rideRequestId, String passengerId, String driverId,
                           String passengerName, String driverName, String pickupAddress, String dropoffAddress,
-                          double price, String carType, long timestamp) {
+                          double price, String carType, double distance, long timestamp) {
         this.feedbackId = feedbackId;
         this.rideRequestId = rideRequestId;
         this.passengerId = passengerId;
@@ -35,6 +36,7 @@ public class FeedbackRequest implements Serializable {
         this.dropoffAddress = dropoffAddress;
         this.price = price;
         this.carType = carType;
+        this.distance = distance;
         this.timestamp = timestamp;
         this.isSubmitted = false;
         this.rating = 0;
@@ -120,6 +122,14 @@ public class FeedbackRequest implements Serializable {
 
     public void setCarType(String carType) {
         this.carType = carType;
+    }
+
+    public double getDistance() {
+        return distance;
+    }
+
+    public void setDistance(double distance) {
+        this.distance = distance;
     }
 
     public long getTimestamp() {

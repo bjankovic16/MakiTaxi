@@ -60,6 +60,7 @@ public class MenuMainScreen extends AppCompatActivity {
     private TextView txtTotalRides;
     private TextView txtRating;
     private TextView txtTotalDistance;
+    private LinearLayout layoutRating;
     private LinearLayout layoutHistory;
     private LinearLayout layoutMyAccount;
     private LinearLayout layoutLogOut;
@@ -181,6 +182,7 @@ public class MenuMainScreen extends AppCompatActivity {
         txtTotalRides = findViewById(R.id.txtTotalRides);
         txtRating = findViewById(R.id.txtRating);
         txtTotalDistance = findViewById(R.id.txtTotalDistance);
+        layoutRating = findViewById(R.id.layoutRating);
         layoutHistory = findViewById(R.id.layoutHistory);
         layoutMyAccount = findViewById(R.id.layoutMyAccount);
         layoutLogOut = findViewById(R.id.layoutLogOut);
@@ -311,13 +313,20 @@ public class MenuMainScreen extends AppCompatActivity {
                             currentProfileImageUrl = profilePictureUrl;
                             loadProfileImage(profilePictureUrl);
                             
-                            // Set user role
+                            // Set user role and configure UI based on user type
                             String userType = dataSnapshot.child("role").getValue(String.class);
                             Log.d(TAG, "User type: " + userType);
+                            boolean isDriver = "DRIVER".equals(userType);
+                            
                             if (userType != null && !userType.isEmpty()) {
                                 txtUserRole.setText(userType.substring(0, 1).toUpperCase() + userType.substring(1).toLowerCase());
                             } else {
                                 txtUserRole.setText("Passenger"); // Default
+                            }
+                            
+                            // Show/hide rating section based on user type
+                            if (layoutRating != null) {
+                                layoutRating.setVisibility(isDriver ? View.VISIBLE : View.GONE);
                             }
                             
                             // Load user statistics from User object
@@ -339,6 +348,10 @@ public class MenuMainScreen extends AppCompatActivity {
                             txtTotalRides.setText("0");
                             txtRating.setText("0.0");
                             txtTotalDistance.setText("0");
+                            // Hide rating for passengers by default
+                            if (layoutRating != null) {
+                                layoutRating.setVisibility(View.GONE);
+                            }
                         }
                     } else {
                         Log.w(TAG, "User data does not exist in database");
@@ -348,6 +361,10 @@ public class MenuMainScreen extends AppCompatActivity {
                         txtTotalRides.setText("0");
                         txtRating.setText("0.0");
                         txtTotalDistance.setText("0");
+                        // Hide rating for passengers by default
+                        if (layoutRating != null) {
+                            layoutRating.setVisibility(View.GONE);
+                        }
                     }
                 }
 
@@ -361,6 +378,10 @@ public class MenuMainScreen extends AppCompatActivity {
                     txtTotalRides.setText("0");
                     txtRating.setText("0.0");
                     txtTotalDistance.setText("0");
+                    // Hide rating for passengers by default
+                    if (layoutRating != null) {
+                        layoutRating.setVisibility(View.GONE);
+                    }
                 }
             });
         } else {

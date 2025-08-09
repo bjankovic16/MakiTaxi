@@ -22,6 +22,8 @@ public class User {
     private int totalDistance; // in kilometers
     private int ratingCount; // number of ratings received
     private double totalRatingSum; // sum of all ratings for average calculation
+    private double totalMoneySpent; // for passengers - money spent on rides
+    private double totalMoneyEarned; // for drivers - money earned from rides
     private String gender;
     private String birthday;
 
@@ -35,6 +37,8 @@ public class User {
         this.totalDistance = 0;
         this.ratingCount = 0;
         this.totalRatingSum = 0.0;
+        this.totalMoneySpent = 0.0;
+        this.totalMoneyEarned = 0.0;
     }
 
     // Optional: constructor with fields
@@ -220,6 +224,22 @@ public class User {
         this.totalRatingSum = totalRatingSum;
     }
 
+    public double getTotalMoneySpent() {
+        return totalMoneySpent;
+    }
+
+    public void setTotalMoneySpent(double totalMoneySpent) {
+        this.totalMoneySpent = totalMoneySpent;
+    }
+
+    public double getTotalMoneyEarned() {
+        return totalMoneyEarned;
+    }
+
+    public void setTotalMoneyEarned(double totalMoneyEarned) {
+        this.totalMoneyEarned = totalMoneyEarned;
+    }
+
     // Utility methods for updating statistics
     public void updateStatisticsAfterRide(int newRating, int rideDistance) {
         // Increment total rides
@@ -250,5 +270,13 @@ public class User {
 
     public void addDistance(int distance) {
         this.totalDistance += distance;
+    }
+
+    public void addMoneySpent(double amount) {
+        this.totalMoneySpent += amount;
+    }
+
+    public void addMoneyEarned(double amount) {
+        this.totalMoneyEarned += amount;
     }
 }

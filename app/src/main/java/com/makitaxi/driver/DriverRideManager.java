@@ -97,6 +97,9 @@ public class DriverRideManager {
 
         rideRequestRef.updateChildren(updates)
                 .addOnSuccessListener(aVoid -> {
+                    // Update ride statistics for both users immediately
+                    updateRideStatisticsOnCompletion(request);
+                    
                     // Create feedback request for the passenger
                     createFeedbackRequest(request);
                     showToast("Ride finished");
@@ -107,6 +110,60 @@ public class DriverRideManager {
                 .addOnFailureListener(e -> {
                     showToast("Failed to update ride request");
                     Log.e(TAG, "Error updating ride request: " + e.getMessage());
+                });
+    }
+
+    private void updateRideStatisticsOnCompletion(RideRequest request) {
+        // Update statistics for both passenger and driver immediately when ride is completed
+        updateUserRideStatistics(request.getPassengerId(), request.getDistance(), request.getEstimatedPrice(), false); // Passenger
+        updateUserRideStatistics(request.getDriverId(), request.getDistance(), request.getEstimatedPrice(), true); // Driver
+    }
+
+    private void updateUserRideStatistics(String userId, double distance, double price, boolean isDriver) {
+        FirebaseDatabase.getInstance("https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app/")
+                .getReference("users").child(userId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            User user = dataSnapshot.getValue(User.class);
+                            if (user != null) {
+                                int actualDistance = (int) Math.round(distance);
+                                
+                                // Fallback calculation if distance is 0
+                                if (actualDistance <= 0) {
+                                    actualDistance = Math.max(1, (int) (price / 50)); // Minimum 1 km
+                                }
+                                
+                                Log.d(TAG, "Updating ride completion stats for " + (isDriver ? "driver" : "passenger") + 
+                                      " - Distance: " + distance + " -> " + actualDistance + " km, Price: " + price);
+                                
+                                // Update ride count and distance for both users
+                                user.incrementRideCount();
+                                user.addDistance(actualDistance);
+                                
+                                // Update money tracking
+                                if (isDriver) {
+                                    user.addMoneyEarned(price);
+                                } else {
+                                    user.addMoneySpent(price);
+                                }
+                                
+                                // Save updated user
+                                FirebaseDatabase.getInstance("https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app/")
+                                        .getReference("users").child(userId).setValue(user)
+                                        .addOnSuccessListener(aVoid -> 
+                                            Log.d(TAG, "Ride completion statistics updated successfully for " + (isDriver ? "driver" : "passenger")))
+                                        .addOnFailureListener(e -> 
+                                            Log.e(TAG, "Failed to update ride completion statistics: " + e.getMessage()));
+                            }
+                        }
+                    }
+                    
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e(TAG, "Error loading user for ride completion statistics: " + databaseError.getMessage());
+                    }
                 });
     }
 
@@ -124,6 +181,7 @@ public class DriverRideManager {
                 request.getDropoffAddress(),
                 request.getEstimatedPrice(),
                 request.getCarType(),
+                request.getDistance(), // Use actual distance from RideRequest
                 System.currentTimeMillis()
         );
 
