@@ -50,7 +50,7 @@ public class HistoryScreen extends AppCompatActivity {
     private ImageButton btnBack;
     private LinearLayout rideHistoryContainer;
     private LinearLayout emptyStateContainer;
-    private TextView txtDateHeader;
+
 
     private FirebaseAuth auth;
     private FirebaseDatabase database;
@@ -80,7 +80,7 @@ public class HistoryScreen extends AppCompatActivity {
         btnBack = findViewById(R.id.btnBack);
         rideHistoryContainer = findViewById(R.id.rideHistoryContainer);
         emptyStateContainer = findViewById(R.id.emptyStateContainer);
-        //txtDateHeader = findViewById(R.id.txtDateHeader);
+
     }
 
     private void setupUIInteractions() {
@@ -159,6 +159,7 @@ public class HistoryScreen extends AppCompatActivity {
         emptyStateContainer.setVisibility(View.GONE);
         rideHistoryContainer.setVisibility(View.VISIBLE);
 
+
         // Group feedback requests by date
         Map<String, List<FeedbackRequest>> feedbackByDate = new HashMap<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd / MM / yyyy", Locale.getDefault());
@@ -178,15 +179,16 @@ public class HistoryScreen extends AppCompatActivity {
 
             TextView dateHeader = new TextView(this);
             dateHeader.setText(date);
-            dateHeader.setTextColor(getResources().getColor(R.color.background));
-            dateHeader.setTextSize(17);
-            dateHeader.setPadding(0, 8, 0, 18);
+            dateHeader.setTextColor(getResources().getColor(android.R.color.black));
+            dateHeader.setTextSize(16);
+            dateHeader.setTypeface(dateHeader.getTypeface(), android.graphics.Typeface.BOLD);
+            dateHeader.setPadding(4, 0, 0, 12);
 
             LinearLayout.LayoutParams headerParams = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
             );
-            headerParams.setMargins(0, 25, 0, 0);
+            headerParams.setMargins(0, 24, 0, 8);
             dateHeader.setLayoutParams(headerParams);
 
             rideHistoryContainer.addView(dateHeader);
@@ -201,46 +203,64 @@ public class HistoryScreen extends AppCompatActivity {
     private View createFeedbackHistoryItem(FeedbackRequest feedback) {
         View itemView = LayoutInflater.from(this).inflate(R.layout.ride_history_item, null);
 
-        int marginInDp = 12;
-        float scale = getResources().getDisplayMetrics().density;
-        int marginInPx = (int) (marginInDp * scale + 0.5f);
-
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
+        // Add spacing between items (convert dp to pixels)
+        int marginInDp = 16;
+        int marginInPx = (int) (marginInDp * getResources().getDisplayMetrics().density);
         layoutParams.setMargins(0, 0, 0, marginInPx);
         itemView.setLayoutParams(layoutParams);
 
+        // Find all the new views
+        TextView txtTripDate = itemView.findViewById(R.id.txtTripDate);
+        TextView txtTripPrice = itemView.findViewById(R.id.txtTripPrice);
         TextView txtPickupLocation = itemView.findViewById(R.id.txtPickupLocation);
         TextView txtDropoffLocation = itemView.findViewById(R.id.txtDropoffLocation);
         ImageView starSingleItem = itemView.findViewById(R.id.starSingleItem);
         TextView txtRating = itemView.findViewById(R.id.txtRating);
         Button btnAction = itemView.findViewById(R.id.btnAction);
 
+        // Set trip date and time
+        SimpleDateFormat dateTimeFormat = new SimpleDateFormat("MMM dd, h:mm a", Locale.getDefault());
+        String formattedDateTime = dateTimeFormat.format(new Date(feedback.getTimestamp()));
+        txtTripDate.setText(formattedDateTime);
+
+        // Set trip price (you might need to add this field to FeedbackRequest)
+        if (feedback.getPrice() > 0) {
+            txtTripPrice.setText(String.format("%.0f din", feedback.getPrice()));
+        } else {
+            txtTripPrice.setText("N/A");
+        }
+
+        // Set addresses
         txtPickupLocation.setText(feedback.getPickupAddress());
         txtDropoffLocation.setText(feedback.getDropoffAddress());
 
-        // Check user type and feedback status
-        if ("driver".equals(userType)) {
-            if (feedback.isSubmitted()) {
-                txtRating.setText(String.valueOf(feedback.getRating()));
-                btnAction.setText("VIEW FEEDBACK");
-                starSingleItem.setVisibility(View.VISIBLE);
-                btnAction.setOnClickListener(v -> openFeedbackDetails(feedback));
-            } else {
-                btnAction.setText("NO FEEDBACK YET");
-                btnAction.setEnabled(false);
-                btnAction.setAlpha(0.5f);
-            }
+        // Handle rating display and button actions
+        if (feedback.isSubmitted()) {
+            // Show rating for submitted feedback
+            txtRating.setText(String.valueOf(feedback.getRating()));
+            starSingleItem.setVisibility(View.VISIBLE);
+            btnAction.setText("VIEW FEEDBACK");
+            btnAction.setEnabled(true);
+            btnAction.setAlpha(1.0f);
+            btnAction.setOnClickListener(v -> openFeedbackDetails(feedback));
         } else {
-            if (feedback.isSubmitted()) {
-                txtRating.setText(String.valueOf(feedback.getRating()));
-                starSingleItem.setVisibility(View.VISIBLE);
-                btnAction.setText("VIEW FEEDBACK");
-                btnAction.setOnClickListener(v -> openFeedbackDetails(feedback));
+            // Handle unsubmitted feedback
+            if ("driver".equals(userType)) {
+                txtRating.setText("Pending");
+                starSingleItem.setVisibility(View.GONE);
+                btnAction.setText("AWAITING FEEDBACK");
+                btnAction.setEnabled(false);
+                btnAction.setAlpha(0.6f);
             } else {
+                txtRating.setText("Rate");
+                starSingleItem.setVisibility(View.GONE);
                 btnAction.setText("GIVE FEEDBACK");
+                btnAction.setEnabled(true);
+                btnAction.setAlpha(1.0f);
                 btnAction.setOnClickListener(v -> showRatingDialog(feedback));
             }
         }
@@ -344,7 +364,6 @@ public class HistoryScreen extends AppCompatActivity {
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "Feedback submitted successfully");
                     
-                    // Update user statistics
                     updateUserStatisticsAfterFeedback(feedback, rating);
                     
                     Toast.makeText(this, "✅ Feedback submitted successfully!", Toast.LENGTH_SHORT).show();
@@ -357,14 +376,11 @@ public class HistoryScreen extends AppCompatActivity {
     }
 
     private void updateUserStatisticsAfterFeedback(FeedbackRequest feedback, int rating) {
-        String userId = currentUser.getUid();
-        
-        // Update both passenger and driver statistics
-        updateUserStatistics(feedback.getPassengerId(), rating, 0); // Passenger gets ride count
-        updateUserStatistics(feedback.getDriverId(), rating, 15); // Driver gets ride count + estimated distance
+        updateUserStatistics(feedback.getPassengerId(), rating); // Passenger gets ride count
+        updateUserStatistics(feedback.getDriverId(), rating); // Driver gets ride count + estimated distance
     }
 
-    private void updateUserStatistics(String userId, int rating, int distance) {
+    private void updateUserStatistics(String userId, int rating) {
         database.getReference("users").child(userId)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -376,15 +392,8 @@ public class HistoryScreen extends AppCompatActivity {
                                 if (currentUser.getUid().equals(userId)) {
                                     // If it's the current user (passenger giving feedback)
                                     user.incrementRideCount();
-                                    if (distance > 0) {
-                                        user.addDistance(distance);
-                                    }
-                                } else {
-                                    // If it's the driver receiving feedback
-                                    user.updateStatisticsAfterRide(rating, distance);
                                 }
                                 
-                                // Save updated user back to Firebase
                                 database.getReference("users").child(userId).setValue(user)
                                         .addOnSuccessListener(aVoid -> 
                                             Log.d(TAG, "User statistics updated successfully"))

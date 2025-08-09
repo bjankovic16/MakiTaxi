@@ -1,51 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#CFFFFFFF"
-    android:orientation="vertical">
+    android:background="@color/background"
+    android:fillViewport="true">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="90dp"
-        android:padding="20dp"
-        android:layout_marginBottom="-12dp"
-        android:background="@color/background">
-
-        <TextView
-            android:id="@+id/txtTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Ride History"
-            android:textColor="@android:color/white"
-            android:textSize="20sp"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="8dp" />
-
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_alignParentEnd="true"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_close"
-            android:contentDescription="Back" />
-    </RelativeLayout>
-
-
-    <!-- Content -->
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="@drawable/rounded_dialog_background"
-        android:paddingHorizontal="16dp">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:background="@color/background"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp">
+
+            <!-- Title Bar -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Ride history"
+                    android:textColor="@android:color/white"
+                    android:textSize="28sp"/>
+
+                <ImageButton
+                    android:id="@+id/btnBack"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@color/background"
+                    android:src="@drawable/ic_close"
+                    android:contentDescription="Back"
+                    app:tint="@android:color/white" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Content Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/white"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingVertical="24dp"
+            android:minHeight="500dp">
 
             <!-- Ride History Items Container -->
             <LinearLayout
@@ -53,8 +62,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
-
-
+                <!-- Dynamic ride items will be added here -->
             </LinearLayout>
 
             <!-- Empty State -->
@@ -62,17 +70,18 @@
                 android:id="@+id/emptyStateContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="100dp"
+                android:layout_marginTop="80dp"
                 android:gravity="center"
                 android:orientation="vertical"
                 android:visibility="gone">
 
                 <ImageView
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:layout_marginBottom="16dp"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:layout_marginBottom="24dp"
                     android:src="@drawable/ic_history"
-                    app:tint="#666666" />
+                    app:tint="#CCCCCC"
+                    android:alpha="0.7" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -80,21 +89,20 @@
                     android:gravity="center"
                     android:text="No ride history yet"
                     android:textColor="#666666"
-                    android:textSize="18sp" />
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:gravity="center"
                     android:text="Your completed rides will appear here"
                     android:textColor="#999999"
-                    android:textSize="14sp" />
-
+                    android:textSize="16sp"
+                    android:lineSpacingExtra="4dp" />
             </LinearLayout>
-
         </LinearLayout>
 
-    </ScrollView>
-
-</LinearLayout> 
+    </LinearLayout>
+</ScrollView> 
