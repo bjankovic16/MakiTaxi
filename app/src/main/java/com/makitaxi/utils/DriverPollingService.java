@@ -138,7 +138,6 @@ public class DriverPollingService {
 
         String driverId = nearbyDrivers.get(currentDriverIndex);
         
-        // Check if driver's car type matches the requested car type
         FirebaseHelper.getUserRequestsRef().child(driverId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -148,20 +147,15 @@ public class DriverPollingService {
                     
                     Log.d(TAG, "Driver " + driverId + " car type: " + driverCarType + ", requested: " + requestedCarType);
                     
-                    // Check if car types match (case insensitive)
                     if (driverCarType != null && requestedCarType != null && 
                         driverCarType.equalsIgnoreCase(requestedCarType)) {
-                        
-                        // Car types match - proceed with notification
                         sendNotificationToDriver(driverId, request);
                     } else {
-                        // Car types don't match - skip this driver and try next
                         Log.d(TAG, "Skipping driver " + driverId + " - car type mismatch");
                         currentDriverIndex++;
                         startDriverNotification(request);
                     }
                 } else {
-                    // Driver data not found - skip this driver
                     Log.d(TAG, "Driver data not found for " + driverId + " - skipping");
                     currentDriverIndex++;
                     startDriverNotification(request);
@@ -171,7 +165,6 @@ public class DriverPollingService {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Log.e(TAG, "Error checking driver car type: " + error.getMessage());
-                // Skip this driver and continue with next
                 currentDriverIndex++;
                 startDriverNotification(request);
             }
@@ -192,7 +185,6 @@ public class DriverPollingService {
                 waitForRiderResponse(notificationId, driverId);
             }).addOnFailureListener(e -> {
                 Log.e(TAG, "Failed to notify driver " + driverId);
-                // Try next driver on failure
                 currentDriverIndex++;
                 startDriverNotification(request);
             });

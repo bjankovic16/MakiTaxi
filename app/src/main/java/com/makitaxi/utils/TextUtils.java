@@ -4,33 +4,20 @@ import java.text.Normalizer;
 
 public class TextUtils {
     
-    /**
-     * Transforms text to Latin characters by removing diacritics and converting Cyrillic to Latin
-     * @param text Input text that may contain non-Latin characters
-     * @return Text converted to Latin characters
-     */
     public static String transformToLatin(String text) {
         if (text == null || text.trim().isEmpty()) {
             return text;
         }
         
-        // First, convert Cyrillic to Latin (Serbian specific)
         String latinized = cyrillicToLatin(text);
         
-        // Then remove diacritics (accents) to get pure Latin
         String normalized = Normalizer.normalize(latinized, Normalizer.Form.NFD);
         String withoutDiacritics = normalized.replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
         
         return withoutDiacritics;
     }
     
-    /**
-     * Converts Serbian Cyrillic characters to Latin equivalents
-     * @param text Input text in Cyrillic
-     * @return Text converted to Latin
-     */
     private static String cyrillicToLatin(String text) {
-        // Serbian Cyrillic to Latin mapping
         return text
                 .replace("А", "A").replace("а", "a")
                 .replace("Б", "B").replace("б", "b")

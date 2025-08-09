@@ -335,7 +335,6 @@ public class HistoryScreen extends AppCompatActivity {
             String comment = etComments.getText().toString().trim();
             
             if (selectedRating[0] <= 0) {
-                // No rating selected - animate stars
                 for (ImageView star : stars) {
                     star.clearAnimation();
                     star.startAnimation(pulseAnimation);
@@ -344,7 +343,6 @@ public class HistoryScreen extends AppCompatActivity {
             }
             
             if (comment.length() < AppConfig.MIN_FEEDBACK_CHARACTERS) {
-                // Comment too short - show error message
                 ToastUtils.showError(HistoryScreen.this, 
                     String.format("Comment must be at least %d characters. Current: %d characters", 
                             AppConfig.MIN_FEEDBACK_CHARACTERS, comment.length()));
@@ -352,7 +350,6 @@ public class HistoryScreen extends AppCompatActivity {
                 return;
             }
             
-            // All validations passed - submit feedback
             submitFeedback(feedback, selectedRating[0], comment);
             dialog.dismiss();
         });

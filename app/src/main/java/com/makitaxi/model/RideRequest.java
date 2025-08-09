@@ -34,7 +34,6 @@ public class RideRequest {
     private String driverName;
 
     public RideRequest() {
-        // Required empty constructor for Firebase
     }
 
     public RideRequest(String passengerId, double pickupLatitude, double pickupLongitude, double dropoffLatitude, double dropoffLongitude,
@@ -53,7 +52,6 @@ public class RideRequest {
         this.duration = duration;
         this.declinedBy = new HashMap<>();
 
-        // Price calculation using configuration constants
         double basePrice = AppConfig.BASE_PRICE_RSD;
         double perKmPrice;
         switch (carType) {

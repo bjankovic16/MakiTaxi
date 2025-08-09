@@ -1,9 +1,5 @@
 package com.makitaxi.config;
 
-/**
- * Application configuration constants
- * This class contains all configuration values used throughout the app
- */
 public class AppConfig {
     
     // Firebase Database Configuration
@@ -41,6 +37,5 @@ public class AppConfig {
     public static final double TRANSPORT_PRICE_PER_KM = 100.0;
     
     private AppConfig() {
-        // Private constructor to prevent instantiation
     }
 }

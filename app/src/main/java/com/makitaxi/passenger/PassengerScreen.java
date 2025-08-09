@@ -398,7 +398,6 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
                 map.clearMarkerTap();
                 runOnUiThread(() -> {
                     if (distanceKm < AppConfig.MIN_RIDE_DISTANCE_KM) {
-                        // For short distances, only show error message - no map operations
                         ToastUtils.showError(PassengerScreen.this,
                                 String.format("Minimum ride distance is %d km. Current distance: %.1f km", 
                                         AppConfig.MIN_RIDE_DISTANCE_KM, distanceKm));
@@ -684,7 +683,6 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
     }
 
     private void showCarSelectionBottomSheet() {
-        // Double-check minimum distance before showing car selection
         if (lastRouteDistance < AppConfig.MIN_RIDE_DISTANCE_KM) {
             ToastUtils.showError(this, 
                     String.format("Minimum ride distance is %d km. Current distance: %.1f km", 
@@ -731,7 +729,6 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
     }
 
     private void createRideRequest(String carType, BottomSheetDialog dialog) {
-        // Final validation check before creating ride request
         if (lastRouteDistance < AppConfig.MIN_RIDE_DISTANCE_KM) {
             ToastUtils.showError(this, 
                     String.format("Cannot create ride. Minimum distance is %d km. Current: %.1f km", 
