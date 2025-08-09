@@ -1,6 +1,6 @@
 // on pause adjustments on resume on exit screen what is happenning ---- ROLLBACK
-// toast message improvement
-
+// toast message improvement and icons iprovement pickup and dropoff
+// refactoring code
 
 // feedback screen after ride finsih
 // picking dates from to in ride and passanger menu screen
