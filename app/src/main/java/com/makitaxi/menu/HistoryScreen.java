@@ -329,15 +329,29 @@ public class HistoryScreen extends AppCompatActivity {
         }
 
         btnSubmitReview.setOnClickListener(v -> {
-            if (selectedRating[0] > 0) {
-                submitFeedback(feedback, selectedRating[0], etComments.getText().toString());
-                dialog.dismiss();
-            } else {
+            String comment = etComments.getText().toString().trim();
+            
+            if (selectedRating[0] <= 0) {
+                // No rating selected - animate stars
                 for (ImageView star : stars) {
                     star.clearAnimation();
                     star.startAnimation(pulseAnimation);
                 }
+                return;
             }
+            
+            if (comment.length() < 20) {
+                // Comment too short - show error message
+                Toast.makeText(HistoryScreen.this, 
+                    String.format("❌ Comment must be at least 20 characters. Current: %d characters", comment.length()), 
+                    Toast.LENGTH_LONG).show();
+                etComments.requestFocus();
+                return;
+            }
+            
+            // All validations passed - submit feedback
+            submitFeedback(feedback, selectedRating[0], comment);
+            dialog.dismiss();
         });
     }
 

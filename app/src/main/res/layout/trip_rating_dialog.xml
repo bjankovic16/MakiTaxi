@@ -95,7 +95,7 @@
         android:id="@+id/etComments"
         android:layout_width="match_parent"
         android:layout_height="140dp"
-        android:hint="Additional comments..."
+        android:hint="Additional comments (minimum 20 characters)..."
         android:textColorHint="#E9DDDD"
         android:textColor="@color/white"
         android:textSize="14sp"
