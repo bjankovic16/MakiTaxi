@@ -16,12 +16,18 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.makitaxi.R;
 import com.makitaxi.driver.DriverMainScreen;
 import com.makitaxi.passenger.PassengerScreen;
 import com.makitaxi.utils.NavigationClickListener;
 import com.makitaxi.utils.PreferencesManager;
+import com.makitaxi.model.User;
+import com.makitaxi.config.AppConfig;
+
+import androidx.annotation.NonNull;
 
 public class Login extends AppCompatActivity {
     private static final String TAG = "Login";
@@ -157,11 +163,37 @@ public class Login extends AppCompatActivity {
                 
                 PreferencesManager.saveLoginSession(Login.this, email);
                 
-                navigateToPassengerOrDriver(role, verified);
+                String userId = auth.getCurrentUser().getUid();
+                cacheUserDataOnLogin(userId, role, verified);
             } else {
                 Toast.makeText(Login.this, "Login failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    private void cacheUserDataOnLogin(String userId, String role, boolean verified) {
+        FirebaseDatabase.getInstance(AppConfig.FIREBASE_DATABASE_URL)
+            .getReference(AppConfig.NODE_USERS)
+            .child(userId)
+            .addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        User user = snapshot.getValue(User.class);
+                        if (user != null) {
+                            PreferencesManager.cacheUser(Login.this, user);
+                            Log.d(TAG, "User object cached on login");
+                        }
+                    }
+                    navigateToPassengerOrDriver(role, verified);
+                }
+                
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Log.e(TAG, "Failed to cache user data: " + error.getMessage());
+                    navigateToPassengerOrDriver(role, verified);
+                }
+            });
     }
 
     private void signInWithEmail(String email, String password) {

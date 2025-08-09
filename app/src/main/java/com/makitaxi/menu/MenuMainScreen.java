@@ -42,6 +42,7 @@ import com.makitaxi.login.Login;
 import com.makitaxi.utils.CircularImageView;
 import com.makitaxi.utils.ImageUploadHelper;
 import com.makitaxi.utils.PreferencesManager;
+import com.makitaxi.model.User;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -101,32 +102,16 @@ public class MenuMainScreen extends AppCompatActivity {
     }
 
     private void reloadUserName() {
-        FirebaseUser currentUser = auth.getCurrentUser();
-        if (currentUser != null) {
-            String userId = currentUser.getUid();
-            
-            database.getReference("users").child(userId)
-                    .addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.exists()) {
-                        String fullName = dataSnapshot.child("fullName").getValue(String.class);
-                        if (fullName != null && !fullName.isEmpty()) {
-                            txtUserName.setText(fullName);
-                        } else {
-                            String displayName = currentUser.getDisplayName();
-                            if (displayName != null && !displayName.isEmpty()) {
-                                txtUserName.setText(displayName);
-                            }
-                        }
-                    }
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                    Log.e(TAG, "Failed to reload user name", databaseError.toException());
-                }
-            });
+        String cachedName = PreferencesManager.getCachedUserName(this);
+        if (cachedName != null && !cachedName.isEmpty()) {
+            txtUserName.setText(cachedName);
+        } else {
+            FirebaseUser currentUser = auth.getCurrentUser();
+            if (currentUser != null && currentUser.getDisplayName() != null) {
+                txtUserName.setText(currentUser.getDisplayName());
+            } else {
+                txtUserName.setText("User");
+            }
         }
     }
 
@@ -262,6 +247,14 @@ public class MenuMainScreen extends AppCompatActivity {
                     btnEditProfilePicture.setEnabled(true);
                     currentProfileImageUrl = imageUrl;
                     loadProfileImage(imageUrl);
+                    
+                    // Update cached user object with new profile picture
+                    User cachedUser = PreferencesManager.getCachedUser(MenuMainScreen.this);
+                    if (cachedUser != null) {
+                        cachedUser.setProfilePicture(imageUrl);
+                        PreferencesManager.updateCachedUser(MenuMainScreen.this, cachedUser);
+                    }
+                    
                     Toast.makeText(MenuMainScreen.this, "✅ Profile picture updated!", Toast.LENGTH_SHORT).show();
                 });
             }

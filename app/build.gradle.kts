@@ -48,6 +48,9 @@ dependencies {
     // OSMDroid for OpenStreetMap functionality
     implementation(libs.osmdroid.android)
     
+    // Gson for JSON serialization/deserialization
+    implementation(libs.gson)
+    
     // HTTP client for routing API calls
     implementation(libs.okhttp)
     

@@ -16,6 +16,7 @@ import com.makitaxi.model.RideRequest;
 import com.makitaxi.model.User;
 import com.makitaxi.utils.FirebaseHelper;
 import com.makitaxi.utils.NotificationStatus;
+import com.makitaxi.utils.PreferencesManager;
 import com.makitaxi.config.AppConfig;
 
 import java.util.HashMap;
@@ -35,52 +36,25 @@ public class DriverRideManager {
     }
 
     public void acceptRide(RideRequest request) {
-        loadDriverName(request, driverName -> {
-            request.setDriverName(driverName);
-            request.setDriverId(driverId);
-
-            DatabaseReference rideRequestRef = FirebaseHelper.getRideRequestsRef().child(request.getRequestId());
-            Map<String, Object> updates = new HashMap<>();
-            updates.put("driverId", driverId);
-            updates.put("driverName", driverName);
-            
-            rideRequestRef.updateChildren(updates)
-                    .addOnSuccessListener(aVoid -> {
-                        handleRideDecision(request, NotificationStatus.ACCEPTED_BY_DRIVER, "Ride accepted", true);
-                    })
-                    .addOnFailureListener(e -> {
-                        showToast("Failed to update ride request with driver info");
-                        Log.e(TAG, "Error updating ride request: " + e.getMessage());
-                    });
-        });
-    }
-
-    private void loadDriverName(RideRequest request, OnDriverNameLoadedListener listener) {
-        DatabaseReference userReference = FirebaseHelper.getUserRequestsRef();
+        String cachedUserName = PreferencesManager.getCachedUserName(activity);
+        String driverName = (cachedUserName != null && !cachedUserName.isEmpty()) ? cachedUserName : "Driver";
         
-        userReference.child(driverId)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        String driverName = "Driver";
-                        if (dataSnapshot.exists()) {
-                            User driver = dataSnapshot.getValue(User.class);
-                            if (driver != null) {
-                                driverName = driver.getFullName();
-                            }
-                        }
-                        listener.onDriverNameLoaded(driverName);
-                    }
+        request.setDriverName(driverName);
+        request.setDriverId(driverId);
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        listener.onDriverNameLoaded("Driver");
-                    }
+        DatabaseReference rideRequestRef = FirebaseHelper.getRideRequestsRef().child(request.getRequestId());
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("driverId", driverId);
+        updates.put("driverName", driverName);
+        
+        rideRequestRef.updateChildren(updates)
+                .addOnSuccessListener(aVoid -> {
+                    handleRideDecision(request, NotificationStatus.ACCEPTED_BY_DRIVER, "Ride accepted", true);
+                })
+                .addOnFailureListener(e -> {
+                    showToast("Failed to update ride request with driver info");
+                    Log.e(TAG, "Error updating ride request: " + e.getMessage());
                 });
-    }
-
-    private interface OnDriverNameLoadedListener {
-        void onDriverNameLoaded(String driverName);
     }
 
     public void declineRide(RideRequest request) {

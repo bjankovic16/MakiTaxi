@@ -16,6 +16,7 @@ import com.makitaxi.model.User;
 import com.makitaxi.utils.DriverPollingService;
 import com.makitaxi.utils.FirebaseHelper;
 import com.makitaxi.utils.NotificationStatus;
+import com.makitaxi.utils.PreferencesManager;
 
 import org.osmdroid.util.GeoPoint;
 
@@ -50,43 +51,15 @@ public class PassengerRideManager {
                 duration
         );
 
-        loadPassengerName(passengerId, passengerName -> {
-            request.setPassengerName(passengerName);
-            
-            DatabaseReference requestRef = FirebaseHelper.getRideRequestsRef().push();
-            String requestId = requestRef.getKey();
-            request.setRequestId(requestId);
-            
-            createRideRequestWithCallback(request, requestRef);
-        });
-    }
-
-    private void loadPassengerName(String passengerId, OnPassengerNameLoadedListener listener) {
-        DatabaseReference userReference = FirebaseHelper.getUserRequestsRef();
+        String cachedUserName = PreferencesManager.getCachedUserName(activity);
+        String passengerName = (cachedUserName != null && !cachedUserName.isEmpty()) ? cachedUserName : "Passenger";
+        request.setPassengerName(passengerName);
         
-        userReference.child(passengerId)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        String passengerName = "Passenger";
-                        if (dataSnapshot.exists()) {
-                            User passenger = dataSnapshot.getValue(User.class);
-                            if (passenger != null) {
-                                passengerName = passenger.getFullName();
-                            }
-                        }
-                        listener.onPassengerNameLoaded(passengerName);
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        listener.onPassengerNameLoaded("Passenger");
-                    }
-                });
-    }
-
-    private interface OnPassengerNameLoadedListener {
-        void onPassengerNameLoaded(String passengerName);
+        DatabaseReference requestRef = FirebaseHelper.getRideRequestsRef().push();
+        String requestId = requestRef.getKey();
+        request.setRequestId(requestId);
+        
+        createRideRequestWithCallback(request, requestRef);
     }
 
     private void createRideRequestWithCallback(RideRequest request, DatabaseReference requestRef) {

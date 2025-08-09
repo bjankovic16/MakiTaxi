@@ -2,6 +2,11 @@ package com.makitaxi.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.makitaxi.model.User;
 
 public final class PreferencesManager {
 
@@ -12,6 +17,7 @@ public final class PreferencesManager {
     private static final String IS_LOGGED_IN_KEY = "is_logged_in";
     private static final String USER_EMAIL_KEY = "user_email";
     private static final String LOGIN_TIME_KEY = "login_time";
+    private static final String CACHED_USER_OBJECT_KEY = "cached_user_object";
 
     /**
      * Private constructor to prevent instantiation of this utility class.
@@ -78,6 +84,56 @@ public final class PreferencesManager {
         editor.apply();
     }
     
+    // User object caching methods
+    public static void cacheUser(Context context, User user) {
+        if (user == null) {
+            Log.w("PreferencesManager", "Attempted to cache null user");
+            return;
+        }
+        
+        try {
+            Gson gson = new Gson();
+            String userJson = gson.toJson(user);
+            SharedPreferences.Editor editor = getPrefs(context).edit();
+            editor.putString(CACHED_USER_OBJECT_KEY, userJson);
+            editor.apply();
+            Log.d("PreferencesManager", "User cached successfully");
+        } catch (Exception e) {
+            Log.e("PreferencesManager", "Failed to cache user", e);
+        }
+    }
+    
+    public static User getCachedUser(Context context) {
+        try {
+            String userJson = getPrefs(context).getString(CACHED_USER_OBJECT_KEY, null);
+            if (userJson == null || userJson.isEmpty()) {
+                return null;
+            }
+            
+            Gson gson = new Gson();
+            return gson.fromJson(userJson, User.class);
+        } catch (JsonSyntaxException e) {
+            Log.e("PreferencesManager", "Failed to parse cached user", e);
+            clearCachedUser(context);
+            return null;
+        }
+    }
+    
+    public static void updateCachedUser(Context context, User updatedUser) {
+        cacheUser(context, updatedUser);
+    }
+    
+    public static void clearCachedUser(Context context) {
+        SharedPreferences.Editor editor = getPrefs(context).edit();
+        editor.remove(CACHED_USER_OBJECT_KEY);
+        editor.apply();
+    }
+    
+    public static String getCachedUserName(Context context) {
+        User user = getCachedUser(context);
+        return user != null ? user.getFullName() : null;
+    }
+    
     /**
      * Check if user is logged in
      *
@@ -124,6 +180,7 @@ public final class PreferencesManager {
         editor.remove(IS_LOGGED_IN_KEY);
         editor.remove(USER_EMAIL_KEY);
         editor.remove(LOGIN_TIME_KEY);
+        editor.remove(CACHED_USER_OBJECT_KEY);
         editor.apply();
     }
     

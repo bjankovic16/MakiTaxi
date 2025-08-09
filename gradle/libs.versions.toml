@@ -20,6 +20,7 @@ playServicesAuth = "20.7.0"
 playServicesIdentity = "18.1.0"
 firebaseStorage = "20.3.0"
 glide = "4.16.0"
+gson = "2.11.0"
 
 [libraries]
 geofire-android = { module = "com.firebase:geofire-android", version.ref = "geofireAndroid" }
@@ -42,6 +43,7 @@ play-services-identity = { group = "com.google.android.gms", name = "play-servic
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
 glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
 glide-compiler = { group = "com.github.bumptech.glide", name = "compiler", version.ref = "glide" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

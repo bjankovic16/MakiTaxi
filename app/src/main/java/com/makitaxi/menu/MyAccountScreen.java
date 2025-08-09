@@ -26,6 +26,7 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -40,6 +41,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.makitaxi.R;
 import com.makitaxi.model.User;
 import com.makitaxi.utils.CircularImageView;
+import com.makitaxi.utils.PreferencesManager;
 
 import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
@@ -290,6 +292,11 @@ public class MyAccountScreen extends AppCompatActivity {
                     .child("profilePicture")
                     .setValue(encodedImage)
                     .addOnSuccessListener(aVoid -> {
+                        User cachedUser = PreferencesManager.getCachedUser(MyAccountScreen.this);
+                        if (cachedUser != null) {
+                            cachedUser.setProfilePicture(encodedImage);
+                            PreferencesManager.updateCachedUser(MyAccountScreen.this, cachedUser);
+                        }
                         Toast.makeText(this, "✅ Profile picture updated", Toast.LENGTH_SHORT).show();
                     })
                     .addOnFailureListener(e -> {
@@ -498,11 +505,34 @@ public class MyAccountScreen extends AppCompatActivity {
             .updateChildren(updates)
             .addOnSuccessListener(aVoid -> {
                 Toast.makeText(MyAccountScreen.this, "✅ Profile updated successfully", Toast.LENGTH_SHORT).show();
-                // Stay on the current screen after saving
+                refreshUserDataCache();
             })
             .addOnFailureListener(e -> {
                 Toast.makeText(MyAccountScreen.this, "❌ Failed to update profile", Toast.LENGTH_SHORT).show();
                 Log.e(TAG, "Error updating user", e);
             });
+    }
+    
+    private void refreshUserDataCache() {
+        if (currentUserId != null) {
+            database.getReference("users").child(currentUserId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            User user = snapshot.getValue(User.class);
+                            if (user != null) {
+                                PreferencesManager.cacheUser(MyAccountScreen.this, user);
+                                Log.d(TAG, "User object cache refreshed");
+                            }
+                        }
+                    }
+                    
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e(TAG, "Failed to refresh user data cache: " + error.getMessage());
+                    }
+                });
+        }
     }
 } 

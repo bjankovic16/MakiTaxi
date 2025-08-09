@@ -129,6 +129,9 @@ public class GoogleAuth {
                         Log.d(TAG, "Existing user found, saving session");
                         PreferencesManager.saveLoginSession(context, email);
                         
+                        PreferencesManager.cacheUser(context, user);
+                        Log.d(TAG, "User object cached on Google login");
+                        
                         listener.onSuccess(user.getRole(), user.isVerified());
                     } else {
                         String errorMessage = "Failed to parse user data from database.";
@@ -163,6 +166,10 @@ public class GoogleAuth {
         database.getReference("users").child(userId).setValue(user).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 PreferencesManager.saveLoginSession(context, email);
+                
+                PreferencesManager.cacheUser(context, user);
+                Log.d(TAG, "New Google user object cached");
+                
                 listener.onSuccess(user.getRole(), user.isVerified());
             } else {
                 Log.e(TAG, "Failed to create user profile", task.getException());
