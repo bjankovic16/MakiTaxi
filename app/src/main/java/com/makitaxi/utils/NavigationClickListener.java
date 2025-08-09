@@ -59,19 +59,10 @@ public class NavigationClickListener implements View.OnClickListener {
             case NAVIGATE_TO:
                 Intent intent = new Intent(context, destinationActivity);
                 context.startActivity(intent);
-
-                if (context instanceof Activity) {
-                    ((Activity) context).overridePendingTransition(
-                            R.anim.slide_in_right,
-                            R.anim.slide_out_left);
-                }
                 break;
 
             case FINISH_ACTIVITY:
                 ((Activity) context).finish();
-                ((Activity) context).overridePendingTransition(
-                        R.anim.slide_in_left,
-                        R.anim.slide_out_right);
                 break;
 
             case GO_BACK:

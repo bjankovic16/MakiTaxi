@@ -80,6 +80,14 @@
             android:name=".menu.MyAccountScreen"
             android:exported="true">
         </activity>
+        <activity
+            android:name=".menu.HistoryScreen"
+            android:exported="true">
+        </activity>
+        <activity
+            android:name=".menu.FeedbackDetailsScreen"
+            android:exported="true">
+        </activity>
     </application>
 
 </manifest>

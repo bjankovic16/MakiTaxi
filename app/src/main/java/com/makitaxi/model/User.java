@@ -19,6 +19,9 @@ public class User {
     private boolean available;
     private double rating;
     private int totalRides;
+    private int totalDistance; // in kilometers
+    private int ratingCount; // number of ratings received
+    private double totalRatingSum; // sum of all ratings for average calculation
     private String gender;
     private String birthday;
 
@@ -29,6 +32,9 @@ public class User {
         this.available = false;
         this.rating = 0.0;
         this.totalRides = 0;
+        this.totalDistance = 0;
+        this.ratingCount = 0;
+        this.totalRatingSum = 0.0;
     }
 
     // Optional: constructor with fields
@@ -184,5 +190,65 @@ public class User {
 
     public void setCarType(String carType) {
         this.carType = carType;
+    }
+
+    public String getUserType() {
+        return role.equals("DRIVER") ? "driver" : "passenger";
+    }
+
+    public int getTotalDistance() {
+        return totalDistance;
+    }
+
+    public void setTotalDistance(int totalDistance) {
+        this.totalDistance = totalDistance;
+    }
+
+    public int getRatingCount() {
+        return ratingCount;
+    }
+
+    public void setRatingCount(int ratingCount) {
+        this.ratingCount = ratingCount;
+    }
+
+    public double getTotalRatingSum() {
+        return totalRatingSum;
+    }
+
+    public void setTotalRatingSum(double totalRatingSum) {
+        this.totalRatingSum = totalRatingSum;
+    }
+
+    // Utility methods for updating statistics
+    public void updateStatisticsAfterRide(int newRating, int rideDistance) {
+        // Increment total rides
+        this.totalRides++;
+        
+        // Add distance
+        this.totalDistance += rideDistance;
+        
+        // Update rating if provided
+        if (newRating > 0) {
+            this.ratingCount++;
+            this.totalRatingSum += newRating;
+            this.rating = this.totalRatingSum / this.ratingCount;
+        }
+    }
+
+    public void updateRatingOnly(int newRating) {
+        if (newRating > 0) {
+            this.ratingCount++;
+            this.totalRatingSum += newRating;
+            this.rating = this.totalRatingSum / this.ratingCount;
+        }
+    }
+
+    public void incrementRideCount() {
+        this.totalRides++;
+    }
+
+    public void addDistance(int distance) {
+        this.totalDistance += distance;
     }
 }

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:fillAfter="false"
+    android:shareInterpolator="true"
+    android:interpolator="@android:anim/accelerate_decelerate_interpolator">
+
+    <!-- Bounce scale up -->
+    <scale
+        android:duration="200"
+        android:fromXScale="1.0"
+        android:fromYScale="1.0"
+        android:toXScale="1.3"
+        android:toYScale="1.3"
+        android:pivotX="50%"
+        android:pivotY="50%" />
+
+    <!-- Bounce scale down -->
+    <scale
+        android:duration="200"
+        android:startOffset="200"
+        android:fromXScale="1.3"
+        android:fromYScale="1.3"
+        android:toXScale="0.95"
+        android:toYScale="0.95"
+        android:pivotX="50%"
+        android:pivotY="50%" />
+
+    <!-- Return to original scale -->
+    <scale
+        android:duration="150"
+        android:startOffset="400"
+        android:fromXScale="0.95"
+        android:fromYScale="0.95"
+        android:toXScale="1.0"
+        android:toYScale="1.0"
+        android:pivotX="50%"
+        android:pivotY="50%" />
+
+    <!-- Rotation effect -->
+    <rotate
+        android:duration="300"
+        android:fromDegrees="-5"
+        android:toDegrees="5"
+        android:repeatMode="reverse"
+        android:repeatCount="1"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:startOffset="150" />
+
+    <!-- Flicker / Attention grabber -->
+    <alpha
+        android:duration="100"
+        android:fromAlpha="1.0"
+        android:toAlpha="0.4"
+        android:startOffset="0" />
+
+    <alpha
+        android:duration="100"
+        android:fromAlpha="0.4"
+        android:toAlpha="1.0"
+        android:startOffset="100" />
+</set>

@@ -623,7 +623,6 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
     private void openHamburgerMenu() {
         Intent intent = new Intent(this, MenuMainScreen.class);
         startActivity(intent);
-        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
 
     private void showCarSelectionBottomSheet() {

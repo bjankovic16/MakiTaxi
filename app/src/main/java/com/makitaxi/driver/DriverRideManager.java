@@ -3,10 +3,17 @@ package com.makitaxi.driver;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.makitaxi.model.FeedbackRequest;
 import com.makitaxi.model.RideRequest;
+import com.makitaxi.model.User;
 import com.makitaxi.utils.FirebaseHelper;
 import com.makitaxi.utils.NotificationStatus;
 
@@ -27,7 +34,52 @@ public class DriverRideManager {
     }
 
     public void acceptRide(RideRequest request) {
-        handleRideDecision(request, NotificationStatus.ACCEPTED_BY_DRIVER, "Ride accepted", true);
+        loadDriverName(request, driverName -> {
+            request.setDriverName(driverName);
+            request.setDriverId(driverId);
+
+            DatabaseReference rideRequestRef = FirebaseHelper.getRideRequestsRef().child(request.getRequestId());
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("driverId", driverId);
+            updates.put("driverName", driverName);
+            
+            rideRequestRef.updateChildren(updates)
+                    .addOnSuccessListener(aVoid -> {
+                        handleRideDecision(request, NotificationStatus.ACCEPTED_BY_DRIVER, "Ride accepted", true);
+                    })
+                    .addOnFailureListener(e -> {
+                        showToast("Failed to update ride request with driver info");
+                        Log.e(TAG, "Error updating ride request: " + e.getMessage());
+                    });
+        });
+    }
+
+    private void loadDriverName(RideRequest request, OnDriverNameLoadedListener listener) {
+        DatabaseReference userReference = FirebaseHelper.getUserRequestsRef();
+        
+        userReference.child(driverId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        String driverName = "Driver";
+                        if (dataSnapshot.exists()) {
+                            User driver = dataSnapshot.getValue(User.class);
+                            if (driver != null) {
+                                driverName = driver.getFullName();
+                            }
+                        }
+                        listener.onDriverNameLoaded(driverName);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        listener.onDriverNameLoaded("Driver");
+                    }
+                });
+    }
+
+    private interface OnDriverNameLoadedListener {
+        void onDriverNameLoaded(String driverName);
     }
 
     public void declineRide(RideRequest request) {
@@ -45,6 +97,8 @@ public class DriverRideManager {
 
         rideRequestRef.updateChildren(updates)
                 .addOnSuccessListener(aVoid -> {
+                    // Create feedback request for the passenger
+                    createFeedbackRequest(request);
                     showToast("Ride finished");
                     uiManager.hideRideDetailsPanel();
                     uiManager.clearRoute();
@@ -54,8 +108,37 @@ public class DriverRideManager {
                     showToast("Failed to update ride request");
                     Log.e(TAG, "Error updating ride request: " + e.getMessage());
                 });
-
     }
+
+    private void createFeedbackRequest(RideRequest request) {
+        String feedbackId = request.getRequestId() + "_feedback";
+        
+        FeedbackRequest feedbackRequest = new FeedbackRequest(
+                feedbackId,
+                request.getRequestId(),
+                request.getPassengerId(),
+                request.getDriverId(),
+                request.getPassengerName(),
+                request.getDriverName(),
+                request.getPickupAddress(),
+                request.getDropoffAddress(),
+                request.getEstimatedPrice(),
+                request.getCarType(),
+                System.currentTimeMillis()
+        );
+
+        // Save feedback request to Firebase
+        FirebaseDatabase.getInstance("https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app/")
+                .getReference("feedback_requests").child(feedbackId).setValue(feedbackRequest)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "Feedback request created successfully");
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error creating feedback request: " + e.getMessage());
+                });
+    }
+
+
 
     private void handleRideDecision(RideRequest request, NotificationStatus newStatus, String successMessage, boolean waitForPassenger) {
         DatabaseReference rideRequestRef = FirebaseHelper.getRideRequestsRef().child(request.getRequestId());

@@ -28,5 +28,8 @@ public class FirebaseHelper {
         return rootRef.child("passenger_response");
     }
 
+    public static DatabaseReference getFeedbackRequestsRef() {
+        return rootRef.child("feedback_requests");
+    }
 
 }

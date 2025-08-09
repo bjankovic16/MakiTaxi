@@ -28,6 +28,9 @@ public class RideRequest {
     private double distance;
     private double duration;
     private double estimatedPrice;
+    private long timestamp;
+    private String passengerName;
+    private String driverName;
 
     public RideRequest() {
         // Required empty constructor for Firebase
@@ -219,5 +222,29 @@ public class RideRequest {
 
     public void setNotificationId(String notificationId) {
         this.notificationId = notificationId;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public String getPassengerName() {
+        return passengerName;
+    }
+
+    public void setPassengerName(String passengerName) {
+        this.passengerName = passengerName;
+    }
+
+    public String getDriverName() {
+        return driverName;
+    }
+
+    public void setDriverName(String driverName) {
+        this.driverName = driverName;
     }
 }

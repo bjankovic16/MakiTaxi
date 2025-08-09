@@ -56,7 +56,10 @@ public class MenuMainScreen extends AppCompatActivity {
     private ImageButton btnEditProfilePicture;
     private ProgressBar progressBarUpload;
     private TextView txtUserName;
-    private TextView txtUserEmail;
+    private TextView txtUserRole;
+    private TextView txtTotalRides;
+    private TextView txtRating;
+    private TextView txtTotalDistance;
     private LinearLayout layoutHistory;
     private LinearLayout layoutMyAccount;
     private LinearLayout layoutLogOut;
@@ -107,12 +110,6 @@ public class MenuMainScreen extends AppCompatActivity {
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     if (dataSnapshot.exists()) {
                         String fullName = dataSnapshot.child("fullName").getValue(String.class);
-                        String email = dataSnapshot.child("email").getValue(String.class);
-                        
-                        if (email != null) {
-                            txtUserEmail.setText(email);
-                        }
-                        
                         if (fullName != null && !fullName.isEmpty()) {
                             txtUserName.setText(fullName);
                         } else {
@@ -180,7 +177,10 @@ public class MenuMainScreen extends AppCompatActivity {
         btnEditProfilePicture = findViewById(R.id.btnEditProfilePicture);
         progressBarUpload = findViewById(R.id.progressBarUpload);
         txtUserName = findViewById(R.id.txtUserName);
-        txtUserEmail = findViewById(R.id.txtUserEmail);
+        txtUserRole = findViewById(R.id.txtUserRole);
+        txtTotalRides = findViewById(R.id.txtTotalRides);
+        txtRating = findViewById(R.id.txtRating);
+        txtTotalDistance = findViewById(R.id.txtTotalDistance);
         layoutHistory = findViewById(R.id.layoutHistory);
         layoutMyAccount = findViewById(R.id.layoutMyAccount);
         layoutLogOut = findViewById(R.id.layoutLogOut);
@@ -192,7 +192,8 @@ public class MenuMainScreen extends AppCompatActivity {
         btnEditProfilePicture.setOnClickListener(v -> showImagePickerDialog());
 
         layoutHistory.setOnClickListener(v -> {
-            Toast.makeText(this, "📜 History feature coming soon", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, HistoryScreen.class);
+            startActivity(intent);
         });
 
         layoutMyAccount.setOnClickListener(v -> {
@@ -276,47 +277,94 @@ public class MenuMainScreen extends AppCompatActivity {
 
     private void closeMenu() {
         finish();
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
     }
 
     private void loadUserInfo() {
         FirebaseUser currentUser = auth.getCurrentUser();
         if (currentUser != null) {
             String userId = currentUser.getUid();
+            Log.d(TAG, "Loading user info for userId: " + userId);
             
             database.getReference("users").child(userId)
                     .addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Log.d(TAG, "User data snapshot exists: " + dataSnapshot.exists());
                     if (dataSnapshot.exists()) {
-                        String fullName = dataSnapshot.child("fullName").getValue(String.class);
-                        String email = dataSnapshot.child("email").getValue(String.class);
-                        String profilePictureUrl = dataSnapshot.child("profilePicture").getValue(String.class);
-                        
-                        if (email != null) {
-                            txtUserEmail.setText(email);
-                        }
-                        
-                        if (fullName != null && !fullName.isEmpty()) {
-                            txtUserName.setText(fullName);
-                        } else {
-                            String displayName = currentUser.getDisplayName();
-                            if (displayName != null && !displayName.isEmpty()) {
-                                txtUserName.setText(displayName);
+                        try {
+                            String fullName = dataSnapshot.child("fullName").getValue(String.class);
+                            String profilePictureUrl = dataSnapshot.child("profilePicture").getValue(String.class);
+                            
+                            Log.d(TAG, "Full name: " + fullName);
+                            
+                            if (fullName != null && !fullName.isEmpty()) {
+                                txtUserName.setText(fullName);
+                            } else {
+                                String displayName = currentUser.getDisplayName();
+                                if (displayName != null && !displayName.isEmpty()) {
+                                    txtUserName.setText(displayName);
+                                } else {
+                                    txtUserName.setText("User");
+                                }
                             }
+                            
+                            currentProfileImageUrl = profilePictureUrl;
+                            loadProfileImage(profilePictureUrl);
+                            
+                            // Set user role
+                            String userType = dataSnapshot.child("role").getValue(String.class);
+                            Log.d(TAG, "User type: " + userType);
+                            if (userType != null && !userType.isEmpty()) {
+                                txtUserRole.setText(userType.substring(0, 1).toUpperCase() + userType.substring(1).toLowerCase());
+                            } else {
+                                txtUserRole.setText("Passenger"); // Default
+                            }
+                            
+                            // Load user statistics from User object
+                            Integer totalRides = dataSnapshot.child("totalRides").getValue(Integer.class);
+                            Double rating = dataSnapshot.child("rating").getValue(Double.class);
+                            Integer totalDistance = dataSnapshot.child("totalDistance").getValue(Integer.class);
+                            
+                            Log.d(TAG, "Statistics - Rides: " + totalRides + ", Rating: " + rating + ", Distance: " + totalDistance);
+                            
+                            txtTotalRides.setText(String.valueOf(totalRides != null ? totalRides : 0));
+                            txtRating.setText(String.format("%.1f", rating != null ? rating : 0.0));
+                            txtTotalDistance.setText(String.valueOf(totalDistance != null ? totalDistance : 0));
+                            
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error processing user data: " + e.getMessage(), e);
+                            // Set default values
+                            txtUserName.setText("User");
+                            txtUserRole.setText("Passenger");
+                            txtTotalRides.setText("0");
+                            txtRating.setText("0.0");
+                            txtTotalDistance.setText("0");
                         }
-                        
-                        currentProfileImageUrl = profilePictureUrl;
-                        loadProfileImage(profilePictureUrl);
+                    } else {
+                        Log.w(TAG, "User data does not exist in database");
+                        // Set default values
+                        txtUserName.setText("User");
+                        txtUserRole.setText("Passenger");
+                        txtTotalRides.setText("0");
+                        txtRating.setText("0.0");
+                        txtTotalDistance.setText("0");
                     }
                 }
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError databaseError) {
+                    Log.e(TAG, "Failed to load user info: " + databaseError.getMessage());
                     Toast.makeText(MenuMainScreen.this, "❌ Failed to load user info", Toast.LENGTH_SHORT).show();
+                    // Set default values
+                    txtUserName.setText("User");
+                    txtUserRole.setText("Passenger");
+                    txtTotalRides.setText("0");
+                    txtRating.setText("0.0");
+                    txtTotalDistance.setText("0");
                 }
             });
         } else {
+            Log.w(TAG, "No current user found, navigating to login");
             navigateToLogin();
         }
     }
@@ -385,6 +433,8 @@ public class MenuMainScreen extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
+
+
 
     @Override
     public void onBackPressed() {

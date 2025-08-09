@@ -2,11 +2,17 @@ package com.makitaxi.passenger;
 
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.makitaxi.model.RideRequest;
+import com.makitaxi.model.User;
 import com.makitaxi.utils.DriverPollingService;
 import com.makitaxi.utils.FirebaseHelper;
 import com.makitaxi.utils.NotificationStatus;
@@ -44,9 +50,46 @@ public class PassengerRideManager {
                 duration
         );
 
-        DatabaseReference requestRef = FirebaseHelper.getRideRequestsRef().push();
-        String requestId = requestRef.getKey();
-        request.setRequestId(requestId);
+        loadPassengerName(passengerId, passengerName -> {
+            request.setPassengerName(passengerName);
+            
+            DatabaseReference requestRef = FirebaseHelper.getRideRequestsRef().push();
+            String requestId = requestRef.getKey();
+            request.setRequestId(requestId);
+            
+            createRideRequestWithCallback(request, requestRef);
+        });
+    }
+
+    private void loadPassengerName(String passengerId, OnPassengerNameLoadedListener listener) {
+        DatabaseReference userReference = FirebaseHelper.getUserRequestsRef();
+        
+        userReference.child(passengerId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        String passengerName = "Passenger";
+                        if (dataSnapshot.exists()) {
+                            User passenger = dataSnapshot.getValue(User.class);
+                            if (passenger != null) {
+                                passengerName = passenger.getFullName();
+                            }
+                        }
+                        listener.onPassengerNameLoaded(passengerName);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        listener.onPassengerNameLoaded("Passenger");
+                    }
+                });
+    }
+
+    private interface OnPassengerNameLoadedListener {
+        void onPassengerNameLoaded(String passengerName);
+    }
+
+    private void createRideRequestWithCallback(RideRequest request, DatabaseReference requestRef) {
 
         DriverPollingService.MatchingCallback callback = new DriverPollingService.MatchingCallback() {
             @Override
@@ -88,6 +131,7 @@ public class PassengerRideManager {
             }
         };
 
+        String requestId = requestRef.getKey();
         if (requestId != null) {
             requestRef.setValue(request)
                     .addOnSuccessListener(aVoid -> {

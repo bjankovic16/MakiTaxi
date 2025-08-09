@@ -276,7 +276,6 @@ public class DriverUIManager {
 
     private void openHamburgerMenu() {
         activity.startActivity(new Intent(activity, MenuMainScreen.class));
-        activity.overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
 
     public void waitForPassengerConfirmation(RideRequest rideRequest) {

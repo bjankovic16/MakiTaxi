@@ -19,7 +19,7 @@ public class CircularImageView extends AppCompatImageView {
 
     private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private int borderColor = Color.WHITE;
+    private int borderColor = 0x343B71;
     private float borderWidth = 5f;
 
     private BitmapShader shader;

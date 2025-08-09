@@ -324,7 +324,6 @@ public class PassengerUIManager {
     private void openHamburgerMenu() {
         Intent intent = new Intent(activity, MenuMainScreen.class);
         activity.startActivity(intent);
-        activity.overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
 
     private void showPickupSpinner(boolean show) {
