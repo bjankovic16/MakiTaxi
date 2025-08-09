@@ -4,6 +4,8 @@
 // do not let passenger pick ride less then 1 km
 // star adjustment for driver 
 // menu screen view improvement
+// all to latin
+// minimum text to 20 chars on feedback
 
 
 // feedback screen after ride finsih
