@@ -35,7 +35,7 @@
             android:padding="12dp"
             android:text="Offline"
             android:textColor="@android:color/white"
-            android:textSize="16sp"
+            android:textSize="18sp"
             android:layout_centerInParent="true"/>
 
     </RelativeLayout>
@@ -86,8 +86,9 @@
         android:text="Go Online"
         android:textColor="@android:color/white"
         android:background="@drawable/switch_background"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"/>
+        android:layout_marginTop="70dp"
+        android:layout_marginRight="10dp"
+        android:layout_gravity="end"/>
 
     <!-- Include the bottom sheet layout -->
     <include layout="@layout/ride_details_bottom_sheet" />

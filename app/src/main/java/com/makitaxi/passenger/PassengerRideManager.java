@@ -1,6 +1,6 @@
 package com.makitaxi.passenger;
 
-import android.widget.Toast;
+import com.makitaxi.utils.ToastUtils;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -71,7 +71,7 @@ public class PassengerRideManager {
                 updates.put("status", NotificationStatus.NO_AVAILABLE_DRIVERS);
 
                 requestRef.updateChildren(updates).addOnSuccessListener(aVoid -> {
-                    Toast.makeText(activity, "❌ No drivers available", Toast.LENGTH_SHORT).show();
+                    ToastUtils.showError(activity, "No drivers available");
                     uiManager.dismissSearchingDialog();
                 });
             }
@@ -82,7 +82,7 @@ public class PassengerRideManager {
                 updates.put("status", NotificationStatus.ALL_DRIVERS_DECLINED);
 
                 requestRef.updateChildren(updates).addOnSuccessListener(aVoid -> {
-                    Toast.makeText(activity, "❌ No driver has accepted this ride yet", Toast.LENGTH_SHORT).show();
+                    ToastUtils.showError(activity, "No driver has accepted this ride yet");
                     uiManager.dismissSearchingDialog();
                 });
             }
@@ -112,7 +112,7 @@ public class PassengerRideManager {
                         uiManager.showSearchingForDriverDialog(request);
                     })
                     .addOnFailureListener(e -> {
-                        Toast.makeText(activity, "❌ Failed to create ride request", Toast.LENGTH_SHORT).show();
+                        ToastUtils.showError(activity, "Failed to create ride request");
                     });
         }
     }

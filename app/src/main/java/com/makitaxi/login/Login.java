@@ -9,7 +9,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.makitaxi.utils.ToastUtils;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -68,7 +68,7 @@ public class Login extends AppCompatActivity {
 
             @Override
             public void onError(String error) {
-                Toast.makeText(Login.this, error, Toast.LENGTH_SHORT).show();
+                ToastUtils.showError(Login.this, error);
             }
         });
 
@@ -105,7 +105,7 @@ public class Login extends AppCompatActivity {
 
                     @Override
                     public void onError(String error) {
-                        Toast.makeText(Login.this, error, Toast.LENGTH_SHORT).show();
+                        ToastUtils.showError(Login.this, error);
                     }
                 })
             );
@@ -165,9 +165,9 @@ public class Login extends AppCompatActivity {
                 
                 String userId = auth.getCurrentUser().getUid();
                 cacheUserDataOnLogin(userId, role, verified);
-            } else {
-                Toast.makeText(Login.this, "❌ Login failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
-            }
+                            } else {
+                    ToastUtils.showError(Login.this, "Login failed: " + task.getException().getMessage());
+                }
         });
     }
 
@@ -206,10 +206,10 @@ public class Login extends AppCompatActivity {
                 if (email != null) {
                     signIn(email, password, role, verified);
                 } else {
-                    Toast.makeText(Login.this, "Error: User email not found", Toast.LENGTH_LONG).show();
+                    ToastUtils.showError(Login.this, "Error: User email not found");
                 }
             } else {
-                Toast.makeText(Login.this, "Username not found", Toast.LENGTH_LONG).show();
+                ToastUtils.showError(Login.this, "Username not found");
             }
         });
     }
@@ -225,10 +225,10 @@ public class Login extends AppCompatActivity {
                 if (email != null) {
                     signIn(email, password, role, verified);
                 } else {
-                    Toast.makeText(Login.this, "Error: User email not found", Toast.LENGTH_LONG).show();
+                    ToastUtils.showError(Login.this, "Error: User email not found");
                 }
             } else {
-                Toast.makeText(Login.this, "Username not found", Toast.LENGTH_LONG).show();
+                ToastUtils.showError(Login.this, "Username not found");
             }
         });
     }
@@ -239,7 +239,7 @@ public class Login extends AppCompatActivity {
         } else if(role.equals(passenger)){
             navigateTo(PassengerScreen.class);
         } else {
-            Toast.makeText(Login.this, "Driver isn't verified yet", Toast.LENGTH_LONG).show();
+            ToastUtils.showWarning(Login.this, "Driver isn't verified yet");
         }
     }
 

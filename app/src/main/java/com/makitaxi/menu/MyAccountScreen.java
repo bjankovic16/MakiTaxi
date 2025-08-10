@@ -21,7 +21,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.makitaxi.utils.ToastUtils;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
@@ -130,7 +130,7 @@ public class MyAccountScreen extends AppCompatActivity {
                 if (uri != null) {
                     processSelectedImage(uri);
                 } else {
-                    Toast.makeText(this, "❌ No image selected", Toast.LENGTH_SHORT).show();
+                    ToastUtils.showError(this, "No image selected");
                 }
             }
         );
@@ -142,7 +142,7 @@ public class MyAccountScreen extends AppCompatActivity {
                 if (isGranted) {
                     launchImagePicker();
                 } else {
-                    Toast.makeText(this, "❌ Storage permission is required to select images", Toast.LENGTH_LONG).show();
+                    ToastUtils.showError(this, "Storage permission is required to select images");
                 }
             }
         );
@@ -248,7 +248,7 @@ public class MyAccountScreen extends AppCompatActivity {
         try {
             imagePickerLauncher.launch("image/*");
         } catch (Exception e) {
-            Toast.makeText(this, "Error opening image picker: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            ToastUtils.showError(this, "Error opening image picker: " + e.getMessage());
         }
     }
 
@@ -260,7 +260,7 @@ public class MyAccountScreen extends AppCompatActivity {
             saveProfileImage(bitmap);
         } catch (Exception e) {
             Log.e(TAG, "Error processing selected image", e);
-            Toast.makeText(this, "Error processing image", Toast.LENGTH_SHORT).show();
+            ToastUtils.showError(this, "Error processing image");
         }
     }
 
@@ -297,16 +297,16 @@ public class MyAccountScreen extends AppCompatActivity {
                             cachedUser.setProfilePicture(encodedImage);
                             PreferencesManager.updateCachedUser(MyAccountScreen.this, cachedUser);
                         }
-                        Toast.makeText(this, "✅ Profile picture updated", Toast.LENGTH_SHORT).show();
+                        ToastUtils.showSuccess(this, "Profile picture updated");
                     })
                     .addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to save profile picture", e);
-                        Toast.makeText(this, "❌ Failed to update picture", Toast.LENGTH_SHORT).show();
+                        ToastUtils.showError(this, "Failed to update picture");
                     });
             }
         } catch (Exception e) {
             Log.e(TAG, "Error saving profile image", e);
-            Toast.makeText(this, "❌ Error saving image", Toast.LENGTH_SHORT).show();
+            ToastUtils.showError(this, "Error saving image");
         }
     }
 
@@ -330,7 +330,7 @@ public class MyAccountScreen extends AppCompatActivity {
                 @Override
                 public void onCancelled(DatabaseError databaseError) {
                     Log.e(TAG, "Failed to load user info", databaseError.toException());
-                    Toast.makeText(MyAccountScreen.this, "❌ Failed to load user info", Toast.LENGTH_SHORT).show();
+                    ToastUtils.showError(MyAccountScreen.this, "Failed to load user info");
                 }
             });
         } else {
@@ -445,7 +445,7 @@ public class MyAccountScreen extends AppCompatActivity {
 
     private void saveUserInfo() {
         if (currentUserId == null) {
-            Toast.makeText(this, "❌ User not authenticated", Toast.LENGTH_SHORT).show();
+            ToastUtils.showError(this, "User not authenticated");
             return;
         }
 
@@ -464,7 +464,7 @@ public class MyAccountScreen extends AppCompatActivity {
         }
 
         if (birthday.equals("Select date")) {
-            Toast.makeText(this, "❌ Please select your birthday", Toast.LENGTH_SHORT).show();
+            ToastUtils.showError(this, "Please select your birthday");
             return;
         }
 
@@ -504,11 +504,11 @@ public class MyAccountScreen extends AppCompatActivity {
             .child(currentUserId)
             .updateChildren(updates)
             .addOnSuccessListener(aVoid -> {
-                Toast.makeText(MyAccountScreen.this, "✅ Profile updated successfully", Toast.LENGTH_SHORT).show();
+                ToastUtils.showSuccess(MyAccountScreen.this, "Profile updated successfully");
                 refreshUserDataCache();
             })
             .addOnFailureListener(e -> {
-                Toast.makeText(MyAccountScreen.this, "❌ Failed to update profile", Toast.LENGTH_SHORT).show();
+                ToastUtils.showError(MyAccountScreen.this, "Failed to update profile");
                 Log.e(TAG, "Error updating user", e);
             });
     }

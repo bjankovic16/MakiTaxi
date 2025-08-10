@@ -14,7 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.makitaxi.utils.ToastUtils;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
@@ -135,7 +135,7 @@ public class MenuMainScreen extends AppCompatActivity {
                 if (uri != null) {
                     uploadProfileImage(uri);
                 } else {
-                    Toast.makeText(this, "❌ No image selected", Toast.LENGTH_SHORT).show();
+                    ToastUtils.showError(this, "No image selected");
                 }
             }
         );
@@ -147,7 +147,7 @@ public class MenuMainScreen extends AppCompatActivity {
                 if (isGranted) {
                     launchImagePicker();
                 } else {
-                    Toast.makeText(this, "❌ Storage permission is required to select images", Toast.LENGTH_LONG).show();
+                    ToastUtils.showError(this, "Storage permission is required to select images");
                 }
             }
         );
@@ -236,7 +236,7 @@ public class MenuMainScreen extends AppCompatActivity {
         try {
             imagePickerLauncher.launch("image/*");
         } catch (Exception e) {
-            Toast.makeText(this, "❌ Error opening image picker: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            ToastUtils.showError(this, "Error opening image picker: " + e.getMessage());
         }
     }
 
@@ -267,7 +267,7 @@ public class MenuMainScreen extends AppCompatActivity {
                         PreferencesManager.updateCachedUser(MenuMainScreen.this, cachedUser);
                     }
                     
-                    Toast.makeText(MenuMainScreen.this, "✅ Profile picture updated!", Toast.LENGTH_SHORT).show();
+                    ToastUtils.showSuccess(MenuMainScreen.this, "Profile picture updated!");
                 });
             }
 
@@ -276,7 +276,7 @@ public class MenuMainScreen extends AppCompatActivity {
                 runOnUiThread(() -> {
                     progressBarUpload.setVisibility(View.GONE);
                     btnEditProfilePicture.setEnabled(true);
-                    Toast.makeText(MenuMainScreen.this, "❌ Upload failed: " + error, Toast.LENGTH_SHORT).show();
+                    ToastUtils.showError(MenuMainScreen.this, "Upload failed: " + error);
                 });
             }
         });
@@ -376,7 +376,7 @@ public class MenuMainScreen extends AppCompatActivity {
                 @Override
                 public void onCancelled(@NonNull DatabaseError databaseError) {
                     Log.e(TAG, "Failed to load user info: " + databaseError.getMessage());
-                    Toast.makeText(MenuMainScreen.this, "❌ Failed to load user info", Toast.LENGTH_SHORT).show();
+                    ToastUtils.showError(MenuMainScreen.this, "Failed to load user info");
                     // Set default values
                     txtUserName.setText("User");
                     txtUserRole.setText("Passenger");

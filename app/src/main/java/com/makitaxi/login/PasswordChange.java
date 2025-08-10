@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
+import com.makitaxi.utils.ToastUtils;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -53,7 +53,7 @@ public class PasswordChange extends AppCompatActivity {
         String input = editTextInput.getText().toString().trim();
 
         if (input.isEmpty()) {
-            Toast.makeText(this, "Please enter your email or username", Toast.LENGTH_SHORT).show();
+            ToastUtils.showError(this, "Please enter your email or username");
             return;
         }
 
@@ -81,13 +81,13 @@ public class PasswordChange extends AppCompatActivity {
                         }
                     }
                 }
-                Toast.makeText(PasswordChange.this, "❌ No account found with this username", Toast.LENGTH_SHORT).show();
+                ToastUtils.showError(PasswordChange.this, "No account found with this username");
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
                 showLoading(false);
-                Toast.makeText(PasswordChange.this, "❌ Error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                ToastUtils.showError(PasswordChange.this, "Error: " + databaseError.getMessage());
             }
         });
     }
@@ -99,10 +99,10 @@ public class PasswordChange extends AppCompatActivity {
             showLoading(false);
 
             if (task.isSuccessful()) {
-                Toast.makeText(PasswordChange.this, "Password reset instructions have been sent to your email", Toast.LENGTH_LONG).show();
+                ToastUtils.showSuccess(PasswordChange.this, "Password reset instructions have been sent to your email");
                 finish();
             } else {
-                Toast.makeText(PasswordChange.this, "❌ Failed to send reset email: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                ToastUtils.showError(PasswordChange.this, "Failed to send reset email: " + task.getException().getMessage());
             }
         });
     }

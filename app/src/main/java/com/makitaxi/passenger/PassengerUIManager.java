@@ -20,7 +20,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.makitaxi.utils.ToastUtils;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -52,6 +52,7 @@ import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 
 import android.graphics.drawable.Drawable;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
@@ -445,7 +446,7 @@ public class PassengerUIManager {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 bottomSheetDriverDetailsDialog.dismiss();
-                Toast.makeText(activity, "❌ Error loading driver details", Toast.LENGTH_SHORT).show();
+                ToastUtils.showError(activity, "Error loading driver details");
             }
         });
     }
@@ -513,7 +514,7 @@ public class PassengerUIManager {
                 Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + driver.getPhone()));
                 activity.startActivity(intent);
             } else {
-                Toast.makeText(activity, "Driver's phone number is not available.", Toast.LENGTH_SHORT).show();
+                ToastUtils.showWarning(activity, "Driver's phone number is not available");
             }
         });
 
@@ -522,7 +523,7 @@ public class PassengerUIManager {
                 Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:" + driver.getPhone()));
                 activity.startActivity(intent);
             } else {
-                Toast.makeText(activity, "Driver's phone number is not available.", Toast.LENGTH_SHORT).show();
+                ToastUtils.showWarning(activity, "Driver's phone number is not available");
             }
         });
 
@@ -541,10 +542,10 @@ public class PassengerUIManager {
                         shouldShowBottomSheet = false;
                         bottomSheetDriverDetailsDialog.dismiss();
                         startUpdatingRiderPositionOnMap(driverId, rideRequest.getRequestId());
-                        Toast.makeText(activity, "✅ Ride confirmed!", Toast.LENGTH_SHORT).show();
+                        ToastUtils.showSuccess(activity, "Ride confirmed!");
                     })
                     .addOnFailureListener(e -> {
-                        Toast.makeText(activity, "❌ Failed to confirm ride.", Toast.LENGTH_SHORT).show();
+                        ToastUtils.showError(activity, "Failed to confirm ride");
                     });
         });
 
@@ -562,10 +563,10 @@ public class PassengerUIManager {
                     .addOnSuccessListener(aVoid -> {
                         shouldShowBottomSheet = false;
                         bottomSheetDriverDetailsDialog.dismiss();
-                        Toast.makeText(activity, "❌ Ride declined by passenger!", Toast.LENGTH_SHORT).show();
+                        ToastUtils.showError(activity, "Ride declined");
                     })
                     .addOnFailureListener(e -> {
-                        Toast.makeText(activity, "❌ Failed to reject ride.", Toast.LENGTH_SHORT).show();
+                        ToastUtils.showError(activity, "Failed to reject ride");
                     });
         });
     }
@@ -609,7 +610,7 @@ public class PassengerUIManager {
                         if (status == NotificationStatus.FINISHED) {
                             Log.d("PassengerUIManager", "Ride finished with status: " + status + ", stopping tracking");
                             stopUpdatingDriverMarker();
-                            Toast.makeText(activity, "✅ Ride completed!", Toast.LENGTH_SHORT).show();
+                            ToastUtils.showSuccess(activity, "Ride completed!");
                         }
                     }
                 }

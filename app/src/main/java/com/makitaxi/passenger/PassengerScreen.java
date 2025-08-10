@@ -384,7 +384,7 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
             if (pickupGeoPoint != null && destinationGeoPoint != null) {
                 drawRoute();
             } else {
-                ToastUtils.showError(this, "❌ Could not find one or both locations");
+                ToastUtils.showError(this, "Could not find one or both locations");
             }
         }
     }
@@ -414,7 +414,7 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
             public void onRoutingError(String error) {
                 map.clearMarkerTap();
                 runOnUiThread(() -> {
-                    ToastUtils.showError(PassengerScreen.this, "❌ Route calculation failed. " + error);
+                    ToastUtils.showError(PassengerScreen.this, "Route calculation failed. " + error);
                     uiManager.disableRideButton();
                 });
             }
@@ -442,10 +442,10 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
             public void onGeocodeError(String error) {
                 runOnUiThread(() -> {
                     if (isPickup) {
-                        ToastUtils.showError(PassengerScreen.this, "❌ Error finding pickup location. " + error);
+                        ToastUtils.showError(PassengerScreen.this, "Error finding pickup location. " + error);
                         pickupGeoPoint = null;
                     } else {
-                        ToastUtils.showError(PassengerScreen.this, "❌ Error finding destination location. " + error);
+                        ToastUtils.showError(PassengerScreen.this, "Error finding destination location. " + error);
                         destinationGeoPoint = null;
                     }
 

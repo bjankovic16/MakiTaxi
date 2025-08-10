@@ -1,7 +1,7 @@
 package com.makitaxi.driver;
 
 import android.util.Log;
-import android.widget.Toast;
+import com.makitaxi.utils.ToastUtils;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -52,7 +52,7 @@ public class DriverRideManager {
                     handleRideDecision(request, NotificationStatus.ACCEPTED_BY_DRIVER, "Ride accepted", true);
                 })
                 .addOnFailureListener(e -> {
-                    showToast("❌ Failed to update ride request with driver info");
+                    ToastUtils.showError(activity, "Failed to update ride request with driver info");
                     Log.e(TAG, "Error updating ride request: " + e.getMessage());
                 });
     }
@@ -75,13 +75,13 @@ public class DriverRideManager {
                     updateRideStatisticsOnCompletion(request);
                     
                     createFeedbackRequest(request);
-                    showToast("✅ Ride finished");
+                    ToastUtils.showSuccess(activity, "Ride finished");
                     uiManager.hideRideDetailsPanel();
                     uiManager.clearRoute();
                     uiManager.listenForRideRequests();
                 })
                 .addOnFailureListener(e -> {
-                    showToast("❌ Failed to update ride request");
+                    ToastUtils.showError(activity, "Failed to update ride request");
                     Log.e(TAG, "Error updating ride request: " + e.getMessage());
                 });
     }
@@ -156,6 +156,7 @@ public class DriverRideManager {
                     Log.d(TAG, "Feedback request created successfully");
                 })
                 .addOnFailureListener(e -> {
+                    ToastUtils.showError(activity, "Failed to create feedback request");
                     Log.e(TAG, "Error creating feedback request: " + e.getMessage());
                 });
     }
@@ -167,7 +168,7 @@ public class DriverRideManager {
 
         rideRequestRef.get().addOnSuccessListener(snapshot -> {
             if (!snapshot.exists()) {
-                showToast("❌ Ride request not found");
+                ToastUtils.showError(activity, "Ride request not found");
                 Log.w(TAG, "Ride request not found: " + request.getRequestId());
                 updateDriverNotificationWithCancelledByPassenger(request);
                 return;
@@ -175,14 +176,14 @@ public class DriverRideManager {
 
             RideRequest currentRequest = snapshot.getValue(RideRequest.class);
             if (currentRequest == null) {
-                showToast("❌ Failed to read ride request");
+                ToastUtils.showError(activity, "Failed to read ride request");
                 Log.e(TAG, "Failed to parse ride request from database");
                 updateDriverNotificationWithCancelledByPassenger(request);
                 return;
             }
 
             if (currentRequest.getStatus() != NotificationStatus.CREATED) {
-                showToast("❌ Passenger cancelled the ride");
+                ToastUtils.showError(activity, "Passenger cancelled the ride");
                 Log.w(TAG, "Attempted to update ride with status: " + currentRequest.getStatus());
                 updateDriverNotificationWithCancelledByPassenger(request);
                 return;
@@ -199,12 +200,12 @@ public class DriverRideManager {
                         }
                     })
                     .addOnFailureListener(e -> {
-                        showToast("❌ Failed to update ride request");
+                        ToastUtils.showError(activity, "Failed to update ride request");
                         Log.e(TAG, "Error updating ride request: " + e.getMessage());
                     });
 
         }).addOnFailureListener(e -> {
-            showToast("❌ Failed to fetch ride status");
+            ToastUtils.showError(activity, "Failed to fetch ride status");
             Log.e(TAG, "Error fetching ride status: " + e.getMessage());
         });
     }
@@ -213,13 +214,27 @@ public class DriverRideManager {
         if (request.getNotificationId() != null) {
             DatabaseReference driverNotificationRef = FirebaseHelper.getDriverNotificationRef().child(request.getNotificationId());
             driverNotificationRef.updateChildren(updates)
-                    .addOnSuccessListener(aVoid -> showToast(successMessage))
+                    .addOnSuccessListener(aVoid -> {
+                        if (successMessage.contains("accepted")) {
+                            ToastUtils.showSuccess(activity, "Ride accepted");
+                        } else if (successMessage.contains("declined")) {
+                            ToastUtils.showWarning(activity, "Ride declined");
+                        } else {
+                            ToastUtils.showInfo(activity, successMessage);
+                        }
+                    })
                     .addOnFailureListener(e -> {
-                        showToast("❌ Failed to update driver notification");
+                        ToastUtils.showError(activity, "Failed to update driver notification");
                         Log.e(TAG, "Error updating driver notification: " + e.getMessage());
                     });
         } else {
-            showToast(successMessage);
+            if (successMessage.contains("accepted")) {
+                ToastUtils.showSuccess(activity, "Ride accepted");
+            } else if (successMessage.contains("declined")) {
+                ToastUtils.showWarning(activity, "Ride declined");
+            } else {
+                ToastUtils.showInfo(activity, successMessage);
+            }
         }
     }
 
@@ -245,10 +260,6 @@ public class DriverRideManager {
                         Log.e(TAG, "Error updating driver notification status: " + e.getMessage());
                     });
         }
-    }
-
-    private void showToast(String message) {
-        Toast.makeText(activity, message, Toast.LENGTH_SHORT).show();
     }
 
 } 

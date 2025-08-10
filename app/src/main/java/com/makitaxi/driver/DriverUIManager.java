@@ -9,7 +9,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.makitaxi.utils.ToastUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -149,10 +149,10 @@ public class DriverUIManager {
         if (isOnline) {
             rideActivationTime = System.currentTimeMillis();
             listenForRideRequests();
-            Toast.makeText(activity, "✅ You are now online", Toast.LENGTH_SHORT).show();
+                            ToastUtils.showSuccess(activity, "You are now online");
         } else {
             stopListeningForRideRequests();
-            Toast.makeText(activity, "⏸️ You are now offline", Toast.LENGTH_SHORT).show();
+                            ToastUtils.showInfo(activity, "You are now offline");
         }
 
         if (statusChangeListener != null) {
@@ -201,7 +201,7 @@ public class DriverUIManager {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Log.e(TAG, "Error listening for ride requests: " + error.getMessage());
-                Toast.makeText(activity, "❌ Error loading ride requests", Toast.LENGTH_SHORT).show();
+                ToastUtils.showError(activity, "Error loading ride requests");
             }
         };
 
@@ -309,7 +309,7 @@ public class DriverUIManager {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Log.e(TAG, "Error listening for passenger response: " + error.getMessage());
-                Toast.makeText(activity, "❌ Error checking passenger response", Toast.LENGTH_SHORT).show();
+                ToastUtils.showError(activity, "Error checking passenger response");
             }
         };
 
@@ -322,15 +322,14 @@ public class DriverUIManager {
                 updateDriverStatusUI();
                 showRideDetailsPanel(rideRequest);
                 drawRouteForRide(rideRequest);
-                Toast.makeText(activity, "✅ Ride Confirmed!", Toast.LENGTH_SHORT).show();
                 txtStatus.setText("On a ride");
                 break;
 
-            case DECLINED_BY_PASSENGER:_BY_PASSENGER:
+            case DECLINED_BY_PASSENGER:
                 updateDriverStatusUI();
                 hideRideDetailsPanel();
                 clearRoute();
-                Toast.makeText(activity, "Ride was not confirmed by passenger", Toast.LENGTH_SHORT).show();
+                ToastUtils.showWarning(activity, "Ride was not confirmed by passenger");
                 listenForRideRequests();
                 break;
         }
@@ -388,39 +387,33 @@ public class DriverUIManager {
             
             GeoPoint driverLocation = mapDriver.getCurrentLocation();
             if (driverLocation == null) {
-                Toast.makeText(activity, "⚠️ Driver location not available", Toast.LENGTH_SHORT).show();
+                ToastUtils.showWarning(activity, "Driver location not available");
                 return;
             }
 
             mapDriver.drawDriverRouteToPickup(driverLocation, pickupPoint, new MapDriver.RoutingCallback() {
                 @Override
                 public void onRouteFound(List<GeoPoint> routePoints, double distance, double duration) {
-                    Toast.makeText(activity, 
-                        String.format("✅ Driver route: %.1f km, %.0f min", distance, duration), 
-                        Toast.LENGTH_SHORT).show();
-                    
+
                     mapDriver.drawPickupToDestinationRoute(pickupPoint, dropoffPoint, new MapDriver.RoutingCallback() {
                         @Override
                         public void onRouteFound(List<GeoPoint> routePoints, double distance, double duration) {
-                            Toast.makeText(activity, 
-                                String.format("✅ Main route: %.1f km, %.0f min", distance, duration), 
-                                Toast.LENGTH_SHORT).show();
                         }
 
                         @Override
                         public void onRoutingError(String error) {
-                            Toast.makeText(activity, "❌ Failed to draw main route: " + error, Toast.LENGTH_SHORT).show();
+                            ToastUtils.showError(activity, "Failed to draw main route: " + error);
                         }
                     });
                 }
 
                 @Override
                 public void onRoutingError(String error) {
-                    Toast.makeText(activity, "❌ Failed to draw driver route: " + error, Toast.LENGTH_SHORT).show();
+                    ToastUtils.showError(activity, "Failed to draw driver route: " + error);
                 }
             });
         } else {
-            Toast.makeText(activity, "⚠️ Route coordinates not available", Toast.LENGTH_SHORT).show();
+            ToastUtils.showWarning(activity, "Route coordinates not available");
         }
     }
 

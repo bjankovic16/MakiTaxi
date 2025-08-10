@@ -1,7 +1,15 @@
 package com.makitaxi.utils;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
+import android.os.Build;
 
 public class ToastUtils {
     
@@ -12,14 +20,14 @@ public class ToastUtils {
         if (context == null || message == null) return;
         
         String formattedMessage = formatMessage(message);
-        Toast.makeText(context, formattedMessage, Toast.LENGTH_SHORT).show();
+        showCustomToast(context, formattedMessage, Toast.LENGTH_SHORT);
     }
     
     public static void showLong(Context context, String message) {
         if (context == null || message == null) return;
         
         String formattedMessage = formatMessage(message);
-        Toast.makeText(context, formattedMessage, Toast.LENGTH_LONG).show();
+        showCustomToast(context, formattedMessage, Toast.LENGTH_LONG);
     }
     
     public static void showSuccess(Context context, String message) {
@@ -37,7 +45,37 @@ public class ToastUtils {
     public static void showWarning(Context context, String message) {
         showShort(context, "⚠️ " + message);
     }
-    
+
+    private static void showCustomToast(Context context, String message, int duration) {
+        Toast toast = new Toast(context);
+
+        TextView textView = new TextView(context);
+        textView.setText("🚕 " + message);
+        textView.setTextColor(Color.WHITE);
+        textView.setTextSize(16);
+        textView.setTypeface(Typeface.DEFAULT_BOLD);
+        textView.setGravity(Gravity.CENTER);
+        textView.setPadding(40, 24, 40, 24);
+
+        // Solid background color instead of gradient
+        GradientDrawable background = new GradientDrawable();
+        background.setColor(Color.parseColor("#343B71"));
+        background.setCornerRadius(50);
+        background.setStroke(2, Color.parseColor("#DDDDDD"));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            textView.setElevation(10);
+        }
+
+        textView.setBackground(background);
+
+        toast.setView(textView);
+        toast.setDuration(duration);
+        toast.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM, 0, 120);
+        toast.show();
+    }
+
+
     private static String formatMessage(String message) {
         if (message == null || message.trim().isEmpty()) {
             return message;
