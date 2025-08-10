@@ -554,7 +554,7 @@ public class PassengerUIManager {
                     rideRequest.getPassengerId(),
                     rideRequest.getRequestId(),
                     System.currentTimeMillis(),
-                    NotificationStatus.REJECTED_BY_PASSENGER
+                    NotificationStatus.DECLINED_BY_PASSENGER
             );
 
             DatabaseReference requestRef = FirebaseHelper.getPassengerResponseRef().push();
@@ -562,7 +562,7 @@ public class PassengerUIManager {
                     .addOnSuccessListener(aVoid -> {
                         shouldShowBottomSheet = false;
                         bottomSheetDriverDetailsDialog.dismiss();
-                        Toast.makeText(activity, "Ride rejected!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(activity, "❌ Ride declined by passenger!", Toast.LENGTH_SHORT).show();
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(activity, "❌ Failed to reject ride.", Toast.LENGTH_SHORT).show();

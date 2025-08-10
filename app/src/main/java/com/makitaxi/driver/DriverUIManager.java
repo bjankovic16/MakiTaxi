@@ -326,7 +326,7 @@ public class DriverUIManager {
                 txtStatus.setText("On a ride");
                 break;
 
-            case REJECTED_BY_PASSENGER:
+            case DECLINED_BY_PASSENGER:_BY_PASSENGER:
                 updateDriverStatusUI();
                 hideRideDetailsPanel();
                 clearRoute();
