@@ -4,5 +4,4 @@ IMPROVEMENTS:
 // adding filters in ride section for giving feedbacks (not given yet)
 // adding section for money earned and money spent
 // another icon for passenger
-// do not let to much of zoom in and zoom out
 // timeout after he accept ride and wait for passanger response
