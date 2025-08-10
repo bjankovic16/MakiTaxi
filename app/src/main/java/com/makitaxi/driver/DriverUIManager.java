@@ -220,7 +220,7 @@ public class DriverUIManager {
                 .addChildEventListener(driverNotificationListener);
     }
 
-    private void stopListeningForRideRequests() {
+    public void pauseListeningForRideRequests() {
         if (driverNotificationListener != null) {
             driverNotificationRef.removeEventListener(driverNotificationListener);
         }
@@ -261,6 +261,8 @@ public class DriverUIManager {
             if (rideActionListener != null) {
                 rideActionListener.onRideAccepted(request);
             }
+            // Pause listening for new requests while waiting for passenger
+            pauseListeningForRideRequests();
             rideRequestDialog.dismiss();
         });
         
