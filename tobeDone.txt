@@ -1,6 +1,4 @@
 // on pause adjustments on resume on exit screen what is happenning ---- ROLLBACK
-// toast message improvement and icons iprovement pickup and dropoff
-// refactoring code
 
 IMPROVEMENTS:
 // feedback screen after ride finsih
