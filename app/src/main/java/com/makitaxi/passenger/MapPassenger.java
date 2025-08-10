@@ -95,6 +95,12 @@ public class MapPassenger {
         mapView.setMultiTouchControls(true);
         mapView.getZoomController().setVisibility(CustomZoomButtonsController.Visibility.NEVER);
 
+        // Enforce zoom limits similar to driver map
+        try {
+            mapView.setMinZoomLevel(3.0);
+            mapView.setMaxZoomLevel(21.0);
+        } catch (Exception ignored) {}
+
         mapController = mapView.getController();
         mapController.setZoom(15.0);
         GeoPoint belgradeCenter = new GeoPoint(44.7866, 20.4489);
@@ -502,11 +508,19 @@ public class MapPassenger {
 
 
     public void zoomIn() {
-        mapController.zoomIn();
+        double current = mapView.getZoomLevelDouble();
+        double target = Math.min(21.0, current + 1.0);
+        if (target > current) {
+            mapController.setZoom(target);
+        }
     }
 
     public void zoomOut() {
-        mapController.zoomOut();
+        double current = mapView.getZoomLevelDouble();
+        double target = Math.max(3.0, current - 1.0);
+        if (target < current) {
+            mapController.setZoom(target);
+        }
     }
 
     public void centerOnCurrentLocation() {

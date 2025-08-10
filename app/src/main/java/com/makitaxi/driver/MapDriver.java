@@ -79,6 +79,12 @@ public class MapDriver {
         mapView.setMultiTouchControls(true);
         mapView.getZoomController().setVisibility(CustomZoomButtonsController.Visibility.NEVER);
 
+        // Enforce zoom limits
+        try {
+            mapView.setMinZoomLevel(MIN_ZOOM);
+            mapView.setMaxZoomLevel(MAX_ZOOM);
+        } catch (Exception ignored) {}
+
         mapController = mapView.getController();
         mapController.setZoom(DEFAULT_ZOOM);
         mapController.setCenter(BELGRADE_CENTER);
@@ -176,11 +182,19 @@ public class MapDriver {
     }
 
     public void zoomIn() {
-        mapController.zoomIn();
+        double current = mapView.getZoomLevelDouble();
+        double target = Math.min(MAX_ZOOM, current + 1.0);
+        if (target > current) {
+            mapController.setZoom(target);
+        }
     }
 
     public void zoomOut() {
-        mapController.zoomOut();
+        double current = mapView.getZoomLevelDouble();
+        double target = Math.max(MIN_ZOOM, current - 1.0);
+        if (target < current) {
+            mapController.setZoom(target);
+        }
     }
 
     public void centerOnCurrentLocation() {
