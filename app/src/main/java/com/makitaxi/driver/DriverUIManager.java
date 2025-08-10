@@ -160,7 +160,7 @@ public class DriverUIManager {
             listenForRideRequests();
                             ToastUtils.showSuccess(activity, "You are now online");
         } else {
-            stopListeningForRideRequests();
+            pauseListeningForRideRequests();
                             ToastUtils.showInfo(activity, "You are now offline");
         }
 
