@@ -58,6 +58,8 @@ public class PassengerRideManager {
         DatabaseReference requestRef = FirebaseHelper.getRideRequestsRef().push();
         String requestId = requestRef.getKey();
         request.setRequestId(requestId);
+        // Make the request id available to UI for lifecycle handling immediately
+        uiManager.setCurrentRideRequestId(requestId);
         
         createRideRequestWithCallback(request, requestRef);
     }

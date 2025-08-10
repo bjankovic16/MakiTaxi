@@ -26,6 +26,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.makitaxi.utils.ToastUtils;
+import com.makitaxi.utils.NotificationStatus;
 import com.makitaxi.config.AppConfig;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -744,11 +745,46 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        try {
+            if (mapView != null) {
+                mapView.onPause();
+            }
+            if (debounceMap != null && !debounceMap.isEmpty()) {
+                for (Runnable r : debounceMap.values()) {
+                    handler.removeCallbacks(r);
+                }
+                debounceMap.clear();
+            }
+            if (pickupLoadingSpinner != null) {
+                pickupLoadingSpinner.clearAnimation();
+            }
+            if (destinationLoadingSpinner != null) {
+                destinationLoadingSpinner.clearAnimation();
+            }
+            if (locationService != null) {
+                locationService.cancelOngoingRequests();
+            }
+            // Mirror driver logic: if there is a current ride (searching/details/tracking), mark exit
+            if (uiManager != null) {
+                if (uiManager.isSearchingDialogShowing() || uiManager.isDriverDetailsShowing() || uiManager.isTrackingActive() || uiManager.hasCurrentRide()) {
+                    uiManager.updateRideStatus(NotificationStatus.PASSENGER_EXITED_APP);
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         if (uiManager != null) {
+            if (uiManager.isSearchingDialogShowing() || uiManager.isDriverDetailsShowing() || uiManager.isTrackingActive()) {
+                uiManager.updateRideStatus(NotificationStatus.PASSENGER_EXITED_APP);
+            }
             uiManager.cleanup();
         }
+
         if (locationService != null) {
             locationService.shutdown();
         }

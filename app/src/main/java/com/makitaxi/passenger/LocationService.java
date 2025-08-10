@@ -278,4 +278,12 @@ public class LocationService {
     public void shutdown() {
         executorService.shutdown();
     }
+
+    public void cancelOngoingRequests() {
+        try {
+            if (activePhotonCall != null && !activePhotonCall.isCanceled()) {
+                activePhotonCall.cancel();
+            }
+        } catch (Exception ignored) {}
+    }
 }

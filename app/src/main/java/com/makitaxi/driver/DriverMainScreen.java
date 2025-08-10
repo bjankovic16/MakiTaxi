@@ -10,6 +10,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.makitaxi.R;
 import com.makitaxi.model.RideRequest;
 import com.makitaxi.utils.FirebaseHelper;
+import com.makitaxi.utils.NotificationStatus;
 
 import org.osmdroid.views.MapView;
 
@@ -143,27 +144,33 @@ public class DriverMainScreen extends AppCompatActivity {
         if (mapView != null) {
             mapView.onPause();
         }
+
+
+        if (uiManager != null) {
+            uiManager.toggleDriverStatus(false);
+            if (uiManager.hasActiveRide()) {
+                if (uiManager.getRideAcceptedByPassenger()) {
+                    uiManager.resetPassengerAcceptance();
+                    uiManager.updateRideStatus(NotificationStatus.FINISHED);
+                } else {
+                    uiManager.updateRideStatus(NotificationStatus.DRIVER_EXITED_APP);
+                }
+            }
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
 
-        if (rideRequestsRef != null) {
-            // Cleanup handled by managers
-        }
-
-        // Clean up map
         if (mapView != null) {
             mapView.onDetach();
         }
 
-        // Clean up managers
         if (uiManager != null) {
             uiManager.cleanup();
         }
 
-        // Stop services
         if (locationUpdateService != null) {
             locationUpdateService.stopUpdates();
         }

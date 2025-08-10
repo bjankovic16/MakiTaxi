@@ -91,6 +91,8 @@ public class PassengerUIManager {
 
     private ValueEventListener driverLocationListener;
 
+    private String currentRideRequestId;
+
     DatabaseReference driverLocationRef = FirebaseHelper.getDriverLocationRef();
     DatabaseReference rideRequestRef = FirebaseHelper.getRideRequestsRef();
 
@@ -397,6 +399,9 @@ public class PassengerUIManager {
     }
 
     public void showSearchingForDriverDialog(RideRequest request) {
+        if (request != null) {
+            currentRideRequestId = request.getRequestId();
+        }
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         View dialogView = activity.getLayoutInflater().inflate(R.layout.searching_driver_dialog, null);
         builder.setView(dialogView);
@@ -528,51 +533,112 @@ public class PassengerUIManager {
         });
 
         btnProceed.setOnClickListener(v -> {
-            PassengerResponse response = new PassengerResponse(
-                    driverId,
-                    rideRequest.getPassengerId(),
-                    rideRequest.getRequestId(),
-                    System.currentTimeMillis(),
-                    NotificationStatus.ACCEPTED_BY_PASSENGER
-            );
+            if (currentRideRequestId == null || currentRideRequestId.isEmpty()) {
+                ToastUtils.showError(activity, "Ride not available");
+                return;
+            }
+            v.setEnabled(false);
+            DatabaseReference statusRef = FirebaseHelper.getRideRequestsRef().child(currentRideRequestId).child("status");
+            statusRef.get().addOnSuccessListener(snapshot -> {
+                boolean blocked = false;
+                try {
+                    if (snapshot.exists()) {
+                        String raw = String.valueOf(snapshot.getValue());
+                        NotificationStatus status = NotificationStatus.valueOf(raw);
+                        blocked = (status == NotificationStatus.DRIVER_EXITED_APP || status == NotificationStatus.PASSENGER_EXITED_APP);
+                    }
+                } catch (Exception ignored) {}
 
-            DatabaseReference requestRef = FirebaseHelper.getPassengerResponseRef().push();
-            requestRef.setValue(response)
-                    .addOnSuccessListener(aVoid -> {
-                        shouldShowBottomSheet = false;
-                        bottomSheetDriverDetailsDialog.dismiss();
-                        startUpdatingRiderPositionOnMap(driverId, rideRequest.getRequestId());
-                        ToastUtils.showSuccess(activity, "Ride confirmed!");
-                    })
-                    .addOnFailureListener(e -> {
-                        ToastUtils.showError(activity, "Failed to confirm ride");
-                    });
+                if (blocked) {
+                    ToastUtils.showWarning(activity, "Action not available. One participant exited.");
+                    v.setEnabled(true);
+                    shouldShowBottomSheet = false;
+                    bottomSheetDriverDetailsDialog.dismiss();
+                    return;
+                }
+
+                PassengerResponse response = new PassengerResponse(
+                        driverId,
+                        rideRequest.getPassengerId(),
+                        rideRequest.getRequestId(),
+                        System.currentTimeMillis(),
+                        NotificationStatus.ACCEPTED_BY_PASSENGER
+                );
+
+                DatabaseReference requestRef = FirebaseHelper.getPassengerResponseRef().push();
+                requestRef.setValue(response)
+                        .addOnSuccessListener(aVoid -> {
+                            shouldShowBottomSheet = false;
+                            bottomSheetDriverDetailsDialog.dismiss();
+                            startUpdatingRiderPositionOnMap(driverId, rideRequest.getRequestId());
+                            ToastUtils.showSuccess(activity, "Ride confirmed!");
+                        })
+                        .addOnFailureListener(e -> {
+                            ToastUtils.showError(activity, "Failed to confirm ride");
+                            v.setEnabled(true);
+                        });
+            }).addOnFailureListener(e -> {
+                ToastUtils.showError(activity, "Failed to check ride status");
+                v.setEnabled(true);
+            });
         });
 
         btnDecline.setOnClickListener(v -> {
-            PassengerResponse response = new PassengerResponse(
-                    driverId,
-                    rideRequest.getPassengerId(),
-                    rideRequest.getRequestId(),
-                    System.currentTimeMillis(),
-                    NotificationStatus.DECLINED_BY_PASSENGER
-            );
+            if (currentRideRequestId == null || currentRideRequestId.isEmpty()) {
+                ToastUtils.showError(activity, "Ride not available");
+                return;
+            }
+            v.setEnabled(false);
+            DatabaseReference statusRef = FirebaseHelper.getRideRequestsRef().child(currentRideRequestId).child("status");
+            statusRef.get().addOnSuccessListener(snapshot -> {
+                boolean blocked = false;
+                try {
+                    if (snapshot.exists()) {
+                        String raw = String.valueOf(snapshot.getValue());
+                        NotificationStatus status = NotificationStatus.valueOf(raw);
+                        blocked = (status == NotificationStatus.DRIVER_EXITED_APP || status == NotificationStatus.PASSENGER_EXITED_APP);
+                    }
+                } catch (Exception ignored) {}
 
-            DatabaseReference requestRef = FirebaseHelper.getPassengerResponseRef().push();
-            requestRef.setValue(response)
-                    .addOnSuccessListener(aVoid -> {
-                        shouldShowBottomSheet = false;
-                        bottomSheetDriverDetailsDialog.dismiss();
-                        ToastUtils.showError(activity, "Ride declined");
-                    })
-                    .addOnFailureListener(e -> {
-                        ToastUtils.showError(activity, "Failed to reject ride");
-                    });
+                if (blocked) {
+                    ToastUtils.showWarning(activity, "Action not available. One participant exited.");
+                    v.setEnabled(true);
+                    shouldShowBottomSheet = false;
+                    bottomSheetDriverDetailsDialog.dismiss();
+                    return;
+                }
+
+                PassengerResponse response = new PassengerResponse(
+                        driverId,
+                        rideRequest.getPassengerId(),
+                        rideRequest.getRequestId(),
+                        System.currentTimeMillis(),
+                        NotificationStatus.DECLINED_BY_PASSENGER
+                );
+
+                DatabaseReference requestRef = FirebaseHelper.getPassengerResponseRef().push();
+                requestRef.setValue(response)
+                        .addOnSuccessListener(aVoid -> {
+                            shouldShowBottomSheet = false;
+                            bottomSheetDriverDetailsDialog.dismiss();
+                            ToastUtils.showError(activity, "Ride declined");
+                        })
+                        .addOnFailureListener(e -> {
+                            ToastUtils.showError(activity, "Failed to reject ride");
+                            v.setEnabled(true);
+                        });
+            }).addOnFailureListener(e -> {
+                ToastUtils.showError(activity, "Failed to check ride status");
+                v.setEnabled(true);
+            });
         });
     }
 
+    // removed broken sync check; using explicit async gating in click handlers
+
     private void startUpdatingRiderPositionOnMap(String driverId, String rideRequestId) {
         driverLocationRef = FirebaseHelper.getDriverLocationRef().child(driverId);
+        currentRideRequestId = rideRequestId;
         rideRequestRef = FirebaseHelper.getRideRequestsRef().child(rideRequestId);
 
         driverLocationListener = new ValueEventListener() {
@@ -650,5 +716,35 @@ public class PassengerUIManager {
         if (waitForDriverDialog != null) {
             waitForDriverDialog.dismiss();
         }
+    }
+    public boolean isSearchingDialogShowing() {
+        return waitForDriverDialog != null && waitForDriverDialog.isShowing();
+    }
+
+    public boolean isDriverDetailsShowing() {
+        return bottomSheetDriverDetailsDialog != null && bottomSheetDriverDetailsDialog.isShowing();
+    }
+
+    public boolean isTrackingActive() {
+        return rideRequestListener != null || driverLocationListener != null;
+    }
+
+    public void updateRideStatus(NotificationStatus status) {
+        try {
+            if (currentRideRequestId == null || currentRideRequestId.isEmpty()) return;
+            DatabaseReference ref = FirebaseHelper.getRideRequestsRef().child(currentRideRequestId);
+            java.util.Map<String, Object> updates = new java.util.HashMap<>();
+            updates.put("status", status);
+            ref.updateChildren(updates);
+        } catch (Exception ignored) {}
+    }
+
+    // Track current ride id early (e.g., right after push key is generated)
+    public void setCurrentRideRequestId(String requestId) {
+        this.currentRideRequestId = requestId;
+    }
+
+    public boolean hasCurrentRide() {
+        return currentRideRequestId != null && !currentRideRequestId.isEmpty();
     }
 }

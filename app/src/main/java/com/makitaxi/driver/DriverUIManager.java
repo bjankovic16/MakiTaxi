@@ -34,10 +34,8 @@ import com.makitaxi.utils.NotificationStatus;
 import org.osmdroid.views.MapView;
 import org.osmdroid.util.GeoPoint;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 public class DriverUIManager {
     private static final String TAG = "DriverUIManager";
@@ -72,6 +70,9 @@ public class DriverUIManager {
     private OnRideActionListener rideActionListener;
     private OnMapInteractionListener mapInteractionListener;
     private MapDriver mapDriver;
+    private String activeRideRequestId;
+
+    private boolean rideAcceptedByPassenger = false;
 
     public interface OnDriverStatusChangeListener {
         void onDriverStatusChanged(boolean isOnline);
@@ -142,7 +143,15 @@ public class DriverUIManager {
         });
     }
 
-    private void toggleDriverStatus(boolean isOnline) {
+    public boolean getRideAcceptedByPassenger() {
+        return rideAcceptedByPassenger;
+    }
+
+    public void resetPassengerAcceptance() {
+        rideAcceptedByPassenger = false;
+    }
+
+    public void toggleDriverStatus(boolean isOnline) {
         isDriverOnline = isOnline;
         updateDriverStatusUI();
 
@@ -166,6 +175,7 @@ public class DriverUIManager {
     }
 
     public void listenForRideRequests() {
+        rideAcceptedByPassenger = false;
         if (driverNotificationListener != null) {
             driverNotificationRef.removeEventListener(driverNotificationListener);
         }
@@ -271,6 +281,7 @@ public class DriverUIManager {
 
     public void waitForPassengerConfirmation(RideRequest rideRequest) {
         DatabaseReference responsesRef = FirebaseHelper.getPassengerResponseRef();
+        activeRideRequestId = rideRequest.getRequestId();
 
         if (passengerResponseListener != null) {
             responsesRef.removeEventListener(passengerResponseListener);
@@ -319,6 +330,7 @@ public class DriverUIManager {
     private void handlePassengerResponse(PassengerResponse response, RideRequest rideRequest) {
         switch (response.getStatus()) {
             case ACCEPTED_BY_PASSENGER:
+                rideAcceptedByPassenger = true;
                 updateDriverStatusUI();
                 showRideDetailsPanel(rideRequest);
                 drawRouteForRide(rideRequest);
@@ -331,11 +343,13 @@ public class DriverUIManager {
                 clearRoute();
                 ToastUtils.showWarning(activity, "Ride was not confirmed by passenger");
                 listenForRideRequests();
+                activeRideRequestId = null;
                 break;
         }
     }
 
     private void showRideDetailsPanel(RideRequest ride) {
+        activeRideRequestId = ride.getRequestId();
         TextView txtPickup = rideDetailsBottomSheet.findViewById(R.id.txtPickup);
         TextView txtDestination = rideDetailsBottomSheet.findViewById(R.id.txtDestination);
         TextView txtDistance = rideDetailsBottomSheet.findViewById(R.id.txtDistance);
@@ -367,6 +381,8 @@ public class DriverUIManager {
         isDriverOnline = true;
         updateDriverStatusUI();
         listenForRideRequests();
+        activeRideRequestId = null;
+        rideAcceptedByPassenger = false;
     }
 
     private void adjustMapControls(boolean isPanelVisible) {
@@ -450,6 +466,21 @@ public class DriverUIManager {
             rideRequestDialog.dismiss();
         }
         stopRideRequestTimer();
+    }
+
+    public boolean hasActiveRide() {
+        return activeRideRequestId != null && !activeRideRequestId.isEmpty();
+    }
+
+    public void updateRideStatus(NotificationStatus status) {
+        try {
+            String requestId = activeRideRequestId;
+            if (requestId == null || requestId.isEmpty()) return;
+            DatabaseReference ref = FirebaseHelper.getRideRequestsRef().child(requestId);
+            java.util.Map<String, Object> updates = new java.util.HashMap<>();
+            updates.put("status", status);
+            ref.updateChildren(updates);
+        } catch (Exception ignored) {}
     }
 
     private void startRideRequestTimer(RideRequest request) {
