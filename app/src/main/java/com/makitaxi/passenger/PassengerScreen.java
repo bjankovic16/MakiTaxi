@@ -384,7 +384,7 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
             if (pickupGeoPoint != null && destinationGeoPoint != null) {
                 drawRoute();
             } else {
-                ToastUtils.showError(this, "Could not find one or both locations");
+                ToastUtils.showError(this, "❌ Could not find one or both locations");
             }
         }
     }
@@ -399,12 +399,12 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
                 runOnUiThread(() -> {
                     if (distanceKm < AppConfig.MIN_RIDE_DISTANCE_KM) {
                         ToastUtils.showError(PassengerScreen.this,
-                                String.format("Minimum ride distance is %d km. Current distance: %.1f km", 
+                                String.format("Minimum ride distance is %d km. Current distance: %.1f km",
                                         AppConfig.MIN_RIDE_DISTANCE_KM, distanceKm));
                         uiManager.disableRideButton();
                     } else {
                         ToastUtils.showSuccess(PassengerScreen.this,
-                                String.format("Route found: %.1f km, %.0f min", distanceKm, durationMinutes));
+                                String.format("Route found: %.1f km", distanceKm));
                         uiManager.enableRideButton();
                     }
                 });
@@ -414,7 +414,7 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
             public void onRoutingError(String error) {
                 map.clearMarkerTap();
                 runOnUiThread(() -> {
-                    ToastUtils.showError(PassengerScreen.this, "Route calculation failed. " + error);
+                    ToastUtils.showError(PassengerScreen.this, "❌ Route calculation failed. " + error);
                     uiManager.disableRideButton();
                 });
             }
@@ -442,10 +442,10 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
             public void onGeocodeError(String error) {
                 runOnUiThread(() -> {
                     if (isPickup) {
-                        ToastUtils.showError(PassengerScreen.this, "Error finding pickup location. " + error);
+                        ToastUtils.showError(PassengerScreen.this, "❌ Error finding pickup location. " + error);
                         pickupGeoPoint = null;
                     } else {
-                        ToastUtils.showError(PassengerScreen.this, "Error finding destination location. " + error);
+                        ToastUtils.showError(PassengerScreen.this, "❌ Error finding destination location. " + error);
                         destinationGeoPoint = null;
                     }
 

@@ -135,7 +135,7 @@ public class MenuMainScreen extends AppCompatActivity {
                 if (uri != null) {
                     uploadProfileImage(uri);
                 } else {
-                    Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "❌ No image selected", Toast.LENGTH_SHORT).show();
                 }
             }
         );
@@ -147,7 +147,7 @@ public class MenuMainScreen extends AppCompatActivity {
                 if (isGranted) {
                     launchImagePicker();
                 } else {
-                    Toast.makeText(this, "Storage permission is required to select images", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "❌ Storage permission is required to select images", Toast.LENGTH_LONG).show();
                 }
             }
         );
@@ -236,7 +236,7 @@ public class MenuMainScreen extends AppCompatActivity {
         try {
             imagePickerLauncher.launch("image/*");
         } catch (Exception e) {
-            Toast.makeText(this, "Error opening image picker: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "❌ Error opening image picker: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 

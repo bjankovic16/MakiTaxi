@@ -92,7 +92,7 @@ public class HistoryScreen extends AppCompatActivity {
 
     private void determineUserType() {
         if (currentUser == null) {
-            ToastUtils.showError(this, "User not authenticated");
+            ToastUtils.showError(this, "❌ User not authenticated");
             finish();
             return;
         }
@@ -344,7 +344,7 @@ public class HistoryScreen extends AppCompatActivity {
             
             if (comment.length() < AppConfig.MIN_FEEDBACK_CHARACTERS) {
                 ToastUtils.showError(HistoryScreen.this, 
-                    String.format("Comment must be at least %d characters. Current: %d characters", 
+                    String.format("❌ Comment must be at least %d characters. Current: %d characters",
                             AppConfig.MIN_FEEDBACK_CHARACTERS, comment.length()));
                 etComments.requestFocus();
                 return;
@@ -384,7 +384,7 @@ public class HistoryScreen extends AppCompatActivity {
                     displayRideHistory(); // Refresh the display
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Failed to submit feedback: " + e.getMessage());
+                    Log.e(TAG, "❌ Failed to submit feedback: " + e.getMessage());
                     ToastUtils.showError(this, "Failed to submit feedback. " + e.getMessage());
                 });
     }

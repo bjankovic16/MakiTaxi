@@ -107,14 +107,14 @@ public class Register extends AppCompatActivity {
         }
 
         if (!password.equals(confirmPassword)) {
-            Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "❌ Passwords do not match", Toast.LENGTH_SHORT).show();
             return;
         }
 
         firebaseReference.orderByChild("username").equalTo(username).get().addOnCompleteListener(usernameTask -> {
             if (usernameTask.isSuccessful()) {
                 if (usernameTask.getResult().exists()) {
-                    Toast.makeText(this, "Username is already taken", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "❌ Username is already taken", Toast.LENGTH_SHORT).show();
                     editTextUsername.setError("Username is already taken");
                     editTextUsername.requestFocus();
                     return;
@@ -123,7 +123,7 @@ public class Register extends AppCompatActivity {
                 firebaseReference.orderByChild("email").equalTo(email).get().addOnCompleteListener(emailTask -> {
                     if (emailTask.isSuccessful()) {
                         if (emailTask.getResult().exists()) {
-                            Toast.makeText(this, "Email is already registered", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "❌ Email is already registered", Toast.LENGTH_SHORT).show();
                             editTextEmail.setError("Email is already registered");
                             editTextEmail.requestFocus();
                             return;
@@ -132,12 +132,12 @@ public class Register extends AppCompatActivity {
                         createUserAccount(email, password, name, username, phone);
                     } else {
                         Log.e(TAG, "Error checking email: " + emailTask.getException().getMessage());
-                        Toast.makeText(this, "Error checking email availability", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "❌ Error checking email availability", Toast.LENGTH_SHORT).show();
                     }
                 });
             } else {
                 Log.e(TAG, "Error checking username: " + usernameTask.getException().getMessage());
-                Toast.makeText(this, "Error checking username availability", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "❌ Error checking username availability", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -160,7 +160,7 @@ public class Register extends AppCompatActivity {
                     }
 
                     firebaseReference.child(uid).setValue(user).addOnSuccessListener(aVoid -> {
-                        Toast.makeText(this, "User registered successfully", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "✅ User registered successfully", Toast.LENGTH_SHORT).show();
                         // Navigate to Login, which will handle routing
                         Intent intent = new Intent(Register.this, Login.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

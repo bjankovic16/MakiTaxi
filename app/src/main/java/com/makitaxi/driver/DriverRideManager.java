@@ -52,7 +52,7 @@ public class DriverRideManager {
                     handleRideDecision(request, NotificationStatus.ACCEPTED_BY_DRIVER, "Ride accepted", true);
                 })
                 .addOnFailureListener(e -> {
-                    showToast("Failed to update ride request with driver info");
+                    showToast("❌ Failed to update ride request with driver info");
                     Log.e(TAG, "Error updating ride request: " + e.getMessage());
                 });
     }
@@ -75,13 +75,13 @@ public class DriverRideManager {
                     updateRideStatisticsOnCompletion(request);
                     
                     createFeedbackRequest(request);
-                    showToast("Ride finished");
+                    showToast("✅ Ride finished");
                     uiManager.hideRideDetailsPanel();
                     uiManager.clearRoute();
                     uiManager.listenForRideRequests();
                 })
                 .addOnFailureListener(e -> {
-                    showToast("Failed to update ride request");
+                    showToast("❌ Failed to update ride request");
                     Log.e(TAG, "Error updating ride request: " + e.getMessage());
                 });
     }
@@ -167,7 +167,7 @@ public class DriverRideManager {
 
         rideRequestRef.get().addOnSuccessListener(snapshot -> {
             if (!snapshot.exists()) {
-                showToast("Ride request not found");
+                showToast("❌ Ride request not found");
                 Log.w(TAG, "Ride request not found: " + request.getRequestId());
                 updateDriverNotificationWithCancelledByPassenger(request);
                 return;
@@ -175,14 +175,14 @@ public class DriverRideManager {
 
             RideRequest currentRequest = snapshot.getValue(RideRequest.class);
             if (currentRequest == null) {
-                showToast("Failed to read ride request");
+                showToast("❌ Failed to read ride request");
                 Log.e(TAG, "Failed to parse ride request from database");
                 updateDriverNotificationWithCancelledByPassenger(request);
                 return;
             }
 
             if (currentRequest.getStatus() != NotificationStatus.CREATED) {
-                showToast("Passenger cancelled the ride");
+                showToast("❌ Passenger cancelled the ride");
                 Log.w(TAG, "Attempted to update ride with status: " + currentRequest.getStatus());
                 updateDriverNotificationWithCancelledByPassenger(request);
                 return;
@@ -199,12 +199,12 @@ public class DriverRideManager {
                         }
                     })
                     .addOnFailureListener(e -> {
-                        showToast("Failed to update ride request");
+                        showToast("❌ Failed to update ride request");
                         Log.e(TAG, "Error updating ride request: " + e.getMessage());
                     });
 
         }).addOnFailureListener(e -> {
-            showToast("Failed to fetch ride status");
+            showToast("❌ Failed to fetch ride status");
             Log.e(TAG, "Error fetching ride status: " + e.getMessage());
         });
     }
@@ -215,7 +215,7 @@ public class DriverRideManager {
             driverNotificationRef.updateChildren(updates)
                     .addOnSuccessListener(aVoid -> showToast(successMessage))
                     .addOnFailureListener(e -> {
-                        showToast("Failed to update driver notification");
+                        showToast("❌ Failed to update driver notification");
                         Log.e(TAG, "Error updating driver notification: " + e.getMessage());
                     });
         } else {

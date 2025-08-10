@@ -82,7 +82,7 @@ public class PassengerRideManager {
                 updates.put("status", NotificationStatus.ALL_DRIVERS_DECLINED);
 
                 requestRef.updateChildren(updates).addOnSuccessListener(aVoid -> {
-                    Toast.makeText(activity, "❌ There is no driver who accepted this ride", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(activity, "❌ No driver has accepted this ride yet", Toast.LENGTH_SHORT).show();
                     uiManager.dismissSearchingDialog();
                 });
             }

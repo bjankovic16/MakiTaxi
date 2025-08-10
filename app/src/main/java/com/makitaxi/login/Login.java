@@ -166,7 +166,7 @@ public class Login extends AppCompatActivity {
                 String userId = auth.getCurrentUser().getUid();
                 cacheUserDataOnLogin(userId, role, verified);
             } else {
-                Toast.makeText(Login.this, "Login failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(Login.this, "❌ Login failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }

@@ -201,7 +201,7 @@ public class DriverUIManager {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Log.e(TAG, "Error listening for ride requests: " + error.getMessage());
-                Toast.makeText(activity, "Error loading ride requests", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, "❌ Error loading ride requests", Toast.LENGTH_SHORT).show();
             }
         };
 
@@ -309,7 +309,7 @@ public class DriverUIManager {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Log.e(TAG, "Error listening for passenger response: " + error.getMessage());
-                Toast.makeText(activity, "Error checking passenger response", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, "❌ Error checking passenger response", Toast.LENGTH_SHORT).show();
             }
         };
 

@@ -81,13 +81,13 @@ public class PasswordChange extends AppCompatActivity {
                         }
                     }
                 }
-                Toast.makeText(PasswordChange.this, "No account found with this username", Toast.LENGTH_SHORT).show();
+                Toast.makeText(PasswordChange.this, "❌ No account found with this username", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
                 showLoading(false);
-                Toast.makeText(PasswordChange.this, "Error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(PasswordChange.this, "❌ Error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -102,7 +102,7 @@ public class PasswordChange extends AppCompatActivity {
                 Toast.makeText(PasswordChange.this, "Password reset instructions have been sent to your email", Toast.LENGTH_LONG).show();
                 finish();
             } else {
-                Toast.makeText(PasswordChange.this, "Failed to send reset email: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(PasswordChange.this, "❌ Failed to send reset email: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
