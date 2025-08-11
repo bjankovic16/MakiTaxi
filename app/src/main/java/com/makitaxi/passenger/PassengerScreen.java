@@ -745,6 +745,16 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        try {
+            if (mapView != null) {
+                mapView.onResume();
+            }
+        } catch (Exception ignored) {}
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
         try {

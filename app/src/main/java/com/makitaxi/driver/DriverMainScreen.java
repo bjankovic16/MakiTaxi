@@ -136,6 +136,10 @@ public class DriverMainScreen extends AppCompatActivity {
         if (mapView != null) {
             mapView.onResume();
         }
+        if (uiManager != null && !uiManager.isDriverOnline()) {
+            // Keep location updates consistent when returning from menu
+            uiManager.toggleDriverStatus(true);
+        }
     }
 
     @Override
