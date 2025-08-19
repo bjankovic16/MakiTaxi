@@ -56,6 +56,195 @@
             android:paddingVertical="24dp"
             android:minHeight="500dp">
 
+            <!-- Filter Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/rounded_dialog_background_gray"
+                android:padding="16dp"
+                android:layout_marginBottom="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Filters"
+                    android:textColor="@android:color/black"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp"/>
+
+                <!-- Date Filter -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Date:"
+                        android:textColor="@android:color/black"
+                        android:textSize="14sp"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginEnd="8dp"/>
+
+                    <Button
+                        android:id="@+id/btnDateFrom"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="From"
+                        android:textSize="12sp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/input_field_background"
+                        android:textColor="@android:color/black"/>
+
+                    <Button
+                        android:id="@+id/btnDateTo"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="To"
+                        android:textSize="12sp"
+                        android:layout_marginStart="4dp"
+                        android:background="@drawable/input_field_background"
+                        android:textColor="@android:color/black"/>
+                </LinearLayout>
+
+                <!-- User Filter -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="12dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="4dp">
+
+                        <TextView
+                            android:id="@+id/txtUserLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="User:"
+                            android:textColor="@android:color/black"
+                            android:textSize="14sp"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="8dp"/>
+
+                        <Spinner
+                            android:id="@+id/spinnerUserFilter"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/spinner_background"
+                            android:popupBackground="@android:color/white"/>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/txtUserInfo"
+                        android:layout_marginTop="3dp"
+                        android:layout_marginBottom="3dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#666666"
+                        android:textSize="12sp"
+                        android:layout_marginStart="4dp"/>
+                </LinearLayout>
+
+                <!-- Apply Filter Button -->
+                <Button
+                    android:id="@+id/btnApplyFilter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Apply Filter"
+                    android:background="@drawable/primary_button_background"
+                    android:textColor="@android:color/white"
+                    android:layout_marginBottom="8dp"/>
+
+                <!-- Clear Filter Button -->
+                <Button
+                    android:id="@+id/btnClearFilter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Clear Filter"
+                    android:background="@drawable/secondary_button_background"
+                    android:textColor="@android:color/black"/>
+            </LinearLayout>
+
+            <!-- Statistics Section -->
+            <LinearLayout
+                android:id="@+id/statisticsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="20dp"
+                android:visibility="gone">
+
+                <!-- Total Earnings -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:background="@drawable/rounded_dialog_background_gray"
+                    android:padding="12dp"
+                    android:layout_marginEnd="6dp"
+                    android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/txtEarningsLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Total Earnings"
+                        android:textColor="@android:color/black"
+                        android:textSize="12sp"
+                        android:layout_marginBottom="4dp"/>
+
+                    <TextView
+                        android:id="@+id/txtTotalEarnings"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 din"
+                        android:textColor="@android:color/black"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+                </LinearLayout>
+
+                <!-- Total Distance -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:background="@drawable/rounded_dialog_background_gray"
+                    android:padding="12dp"
+                    android:layout_marginStart="6dp"
+                    android:gravity="center">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Total Distance"
+                        android:textColor="@android:color/black"
+                        android:textSize="12sp"
+                        android:layout_marginBottom="4dp"/>
+
+                    <TextView
+                        android:id="@+id/txtTotalDistance"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 km"
+                        android:textColor="@android:color/black"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+                </LinearLayout>
+            </LinearLayout>
+
             <!-- Ride History Items Container -->
             <LinearLayout
                 android:id="@+id/rideHistoryContainer"
