@@ -52,13 +52,15 @@ public class LocationUpdateService {
     }
 
     private void updateDriverLocation(GeoPoint location) {
-        geoFire.setLocation(driverId, 
+        geoFire.setLocation(driverId,
                 new GeoLocation(location.getLatitude(), location.getLongitude()),
                 (key, error) -> {
                     if (error != null) {
                         Log.e(TAG, "Error updating location: " + error.getMessage());
                     }
                 });
+        
+        mapDriver.updateDriverLocation(location);
     }
 
     public void startUpdates() {

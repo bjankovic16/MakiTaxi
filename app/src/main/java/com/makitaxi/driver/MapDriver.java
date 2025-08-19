@@ -93,17 +93,17 @@ public class MapDriver {
     }
 
     private void setupLocationOverlay() {
-        // Create and configure the location overlay
         GpsMyLocationProvider locationProvider = new GpsMyLocationProvider(context);
-        locationProvider.setLocationUpdateMinDistance(10); // Update if moved by 10 meters
-        locationProvider.setLocationUpdateMinTime(2000); // Update every 2 seconds
+        locationProvider.setLocationUpdateMinDistance(10);
+        locationProvider.setLocationUpdateMinTime(2000);
 
         myLocationOverlay = new MyLocationNewOverlay(locationProvider, mapView);
         myLocationOverlay.enableMyLocation();
         myLocationOverlay.enableFollowLocation();
         myLocationOverlay.setDrawAccuracyEnabled(true);
         
-        // Set initial taxi icon
+        myLocationOverlay.setPersonHotspot(0.5f, 0.5f);
+        
         updateTaxiIconSize();
         
         // Add zoom listener to update icon size
@@ -140,26 +140,31 @@ public class MapDriver {
         
         double zoomLevel = mapView.getZoomLevelDouble();
         
-        // Calculate icon size based on zoom level - SIMPLIFIED AND VISIBLE
         int iconSize;
         if (zoomLevel >= 18) {
-            iconSize = 100; // Large icon for close zoom
+            iconSize = 200;
         } else if (zoomLevel >= 15) {
-            iconSize = 84; // Medium-large icon for medium zoom
+            iconSize = 180;
         } else if (zoomLevel >= 12) {
-            iconSize = 68; // Medium icon for far zoom
+            iconSize = 160;
         } else {
-            iconSize = 52; // Small but visible icon for very far zoom
+            iconSize = 140;
         }
         
-        // Create scaled taxi icon - SIMPLE APPROACH
         Drawable taxiIcon = ContextCompat.getDrawable(context, R.drawable.taxi);
         if (taxiIcon != null) {
             Bitmap taxiBitmap = drawableToBitmap(taxiIcon);
             Bitmap scaledBitmap = Bitmap.createScaledBitmap(taxiBitmap, iconSize, iconSize, true);
             
-            myLocationOverlay.setDirectionArrow(scaledBitmap, scaledBitmap);
             myLocationOverlay.setPersonIcon(scaledBitmap);
+            
+            int arrowSize = Math.max(40, iconSize / 2);
+            Bitmap arrowBitmap = Bitmap.createScaledBitmap(taxiBitmap, arrowSize, arrowSize, true);
+            myLocationOverlay.setDirectionArrow(arrowBitmap, arrowBitmap);
+            
+            myLocationOverlay.setPersonHotspot(0.5f, 0.5f);
+            
+            mapView.invalidate();
         }
     }
 
@@ -368,6 +373,19 @@ public class MapDriver {
         clearRoute();
         clearMarkers();
         mapView.invalidate();
+    }
+
+    public void updateDriverLocation(GeoPoint location) {
+        if (myLocationOverlay != null) {
+            android.location.Location androidLocation = new android.location.Location("driver");
+            androidLocation.setLatitude(location.getLatitude());
+            androidLocation.setLongitude(location.getLongitude());
+            myLocationOverlay.onLocationChanged(androidLocation, null);
+            
+            myLocationOverlay.setPersonHotspot(0.5f, 0.5f);
+            
+            mapView.invalidate();
+        }
     }
 
     public void drawDriverRouteToPickup(GeoPoint driverLocation, GeoPoint pickupPoint, RoutingCallback callback) {
