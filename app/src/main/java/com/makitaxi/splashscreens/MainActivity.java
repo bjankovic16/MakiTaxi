@@ -20,6 +20,8 @@ import com.makitaxi.passenger.PassengerScreen;
 import com.makitaxi.utils.NavigationClickListener;
 import com.makitaxi.utils.PreferencesManager;
 
+import org.osmdroid.config.Configuration;
+
 public class MainActivity extends AppCompatActivity {
     
     private static final String TAG = "MainActivity";
@@ -31,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         handleSystemBars();
+        initializeOSMDroid();
         
         Log.d(TAG, "MainActivity started - checking session");
         
@@ -106,6 +109,17 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, "Failed to get user role", e);
                 navigateToLogin();
             });
+    }
+
+    private void initializeOSMDroid() {
+        try {
+            Configuration.getInstance().setUserAgentValue(getPackageName());
+            Configuration.getInstance().setOsmdroidBasePath(getCacheDir());
+            Configuration.getInstance().setOsmdroidTileCache(getCacheDir());
+            Log.d(TAG, "OSMDroid initialized successfully");
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing OSMDroid", e);
+        }
     }
 
     private void handleSystemBars() {
