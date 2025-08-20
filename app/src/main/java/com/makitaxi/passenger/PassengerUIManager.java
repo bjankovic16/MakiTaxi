@@ -71,7 +71,7 @@ public class PassengerUIManager {
     private Button btnClearRoute;
     private Button btnZoomIn;
     private Button btnZoomOut;
-    private TextView btnRide;
+    private ImageView btnRide;
     private TextView iconCloseOverlay;
     private FrameLayout frameMapButton;
     private ImageButton btnMyLocation;

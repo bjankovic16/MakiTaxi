@@ -60,17 +60,17 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:background="@drawable/input_field_background"
-        android:elevation="4dp"
-        android:orientation="horizontal"
-        android:padding="12dp"
         android:clickable="true"
-        android:focusable="true"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         android:completionThreshold="3"
         android:dropDownWidth="match_parent"
         android:dropDownHeight="wrap_content"
         android:dropDownVerticalOffset="4dp"
+        android:elevation="4dp"
+        android:focusable="true"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/headerLayout">
 
         <ImageView
@@ -99,9 +99,9 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_gravity="center_vertical"
+            android:contentDescription="Loading pickup suggestions"
             android:src="@drawable/ic_loading_spinner"
-            android:visibility="gone"
-            android:contentDescription="Loading pickup suggestions" />
+            android:visibility="gone" />
     </LinearLayout>
 
     <!-- Destination Location Input -->
@@ -113,11 +113,11 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:background="@drawable/input_field_background"
+        android:clickable="true"
         android:elevation="4dp"
+        android:focusable="true"
         android:orientation="horizontal"
         android:padding="12dp"
-        android:clickable="true"
-        android:focusable="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/pickupLocationContainer">
@@ -137,20 +137,20 @@
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:hint="Where to go?"
+            android:inputType="text"
+            android:maxLines="1"
             android:textColor="#333333"
             android:textColorHint="#999999"
-            android:textSize="16sp"
-            android:inputType="text"
-            android:maxLines="1"/>
+            android:textSize="16sp" />
 
         <ImageView
             android:id="@+id/destinationLoadingSpinner"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_gravity="center_vertical"
+            android:contentDescription="Loading destination suggestions"
             android:src="@drawable/ic_loading_spinner"
-            android:visibility="gone"
-            android:contentDescription="Loading destination suggestions" />
+            android:visibility="gone" />
     </LinearLayout>
 
     <!-- Show Route Button -->
@@ -166,13 +166,13 @@
         <Button
             android:id="@+id/btnChoseCurrentLocation"
             android:layout_width="48dp"
-            android:visibility="gone"
             android:layout_height="48dp"
             android:layout_marginBottom="8dp"
             android:background="@drawable/primary_button_background"
             android:elevation="4dp"
             android:text="📍"
-            android:textColor="#FFFFFF" />
+            android:textColor="#FFFFFF"
+            android:visibility="gone" />
 
         <FrameLayout
             android:id="@+id/frameMapButton"
@@ -187,8 +187,8 @@
                 android:background="@drawable/primary_button_background"
                 android:elevation="4dp"
                 android:text="🗺️"
-                android:visibility="gone"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/iconCloseOverlay"
@@ -196,12 +196,12 @@
                 android:layout_height="20dp"
                 android:layout_gravity="center"
                 android:elevation="8dp"
-                android:visibility="gone"
+                android:gravity="center"
+                android:padding="2dp"
                 android:text="❌"
                 android:textColor="#FFFFFF"
                 android:textSize="10sp"
-                android:gravity="center"
-                android:padding="2dp" />
+                android:visibility="gone" />
         </FrameLayout>
 
 
@@ -243,26 +243,20 @@
 
     </LinearLayout>
 
-    <TextView
+    <ImageView
         android:id="@+id/btnRide"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_margin="16dp"
-        android:layout_marginBottom="12dp"
+        android:alpha="0.5"
         android:background="@drawable/circle_button_background"
         android:clickable="true"
-        android:focusable="true"
-        android:enabled="false"
-        android:alpha="0.5"
-        android:text="🚕"
-        android:textSize="30sp"
-        android:textColor="#FFFFFF"
-        android:gravity="center"
-        android:textAlignment="center"
-        android:includeFontPadding="false"
-        android:lineSpacingExtra="0dp"
-        android:lineHeight="60dp"
         android:contentDescription="Start Ride"
+        android:enabled="false"
+        android:focusable="true"
+        android:src="@drawable/taxi_icon"
+        android:scaleType="centerInside"
+        android:padding="6dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -275,9 +269,9 @@
         android:layout_marginBottom="8dp"
         android:background="@drawable/circle_button_background"
         android:text="+"
+        android:textColor="#FFFFFF"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="#FFFFFF"
         app:layout_constraintBottom_toTopOf="@id/btnZoomOut"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -290,9 +284,9 @@
         android:layout_marginBottom="8dp"
         android:background="@drawable/circle_button_background"
         android:text="−"
+        android:textColor="#FFFFFF"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="#FFFFFF"
         app:layout_constraintBottom_toTopOf="@id/btnMyLocation"
         app:layout_constraintEnd_toEndOf="parent" />
 

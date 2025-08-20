@@ -55,7 +55,7 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
     private Button btnClearRoute;
     private Button btnZoomIn;
     private Button btnZoomOut;
-    private TextView btnRide;
+    private ImageView btnRide;
 
     private TextView iconCloseOverlay;
 
