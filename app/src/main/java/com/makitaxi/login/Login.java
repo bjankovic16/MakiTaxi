@@ -9,6 +9,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+
+import com.makitaxi.utils.FirebaseHelper;
 import com.makitaxi.utils.ToastUtils;
 
 import androidx.activity.EdgeToEdge;
@@ -54,11 +56,10 @@ public class Login extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.login);
 
-        // Handle system bars (status bar and navigation bar)
         handleSystemBars();
 
         auth = FirebaseAuth.getInstance();
-        firebaseDatabase = FirebaseDatabase.getInstance("https://makitaxi-e4108-default-rtdb.europe-west1.firebasedatabase.app/");
+        firebaseDatabase = FirebaseDatabase.getInstance(AppConfig.FIREBASE_DATABASE_URL);
         googleAuth = GoogleAuth.getInstance(this);
         googleAuth.initializeSignInLauncher(this, new GoogleAuth.OnSignInResultListener() {
             @Override

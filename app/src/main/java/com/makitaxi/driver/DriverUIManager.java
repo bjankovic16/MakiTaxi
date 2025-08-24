@@ -158,10 +158,8 @@ public class DriverUIManager {
         if (isOnline) {
             rideActivationTime = System.currentTimeMillis();
             listenForRideRequests();
-                            ToastUtils.showSuccess(activity, "You are now online");
         } else {
             pauseListeningForRideRequests();
-                            ToastUtils.showInfo(activity, "You are now offline");
         }
 
         if (statusChangeListener != null) {
