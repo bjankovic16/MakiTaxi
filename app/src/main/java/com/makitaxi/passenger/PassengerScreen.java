@@ -778,7 +778,7 @@ public class PassengerScreen extends AppCompatActivity implements MapPassenger.C
             }
             // Mirror driver logic: if there is a current ride (searching/details/tracking), mark exit
             if (uiManager != null) {
-                if (uiManager.isSearchingDialogShowing() || uiManager.isDriverDetailsShowing() || uiManager.isTrackingActive() || uiManager.hasCurrentRide()) {
+                if (uiManager.isSearchingDialogShowing() || uiManager.isTrackingActive()) {
                     uiManager.updateRideStatus(NotificationStatus.PASSENGER_EXITED_APP);
                 }
             }

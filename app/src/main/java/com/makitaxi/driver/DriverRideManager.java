@@ -171,6 +171,7 @@ public class DriverRideManager {
                 ToastUtils.showError(activity, "Ride request not found");
                 Log.w(TAG, "Ride request not found: " + request.getRequestId());
                 updateDriverNotificationWithCancelledByPassenger(request);
+                uiManager.listenForRideRequests();
                 return;
             }
 
@@ -179,6 +180,7 @@ public class DriverRideManager {
                 ToastUtils.showError(activity, "Failed to read ride request");
                 Log.e(TAG, "Failed to parse ride request from database");
                 updateDriverNotificationWithCancelledByPassenger(request);
+                uiManager.listenForRideRequests();
                 return;
             }
 
@@ -186,6 +188,7 @@ public class DriverRideManager {
                 ToastUtils.showError(activity, "Passenger cancelled the ride");
                 Log.w(TAG, "Attempted to update ride with status: " + currentRequest.getStatus());
                 updateDriverNotificationWithCancelledByPassenger(request);
+                uiManager.listenForRideRequests();
                 return;
             }
 
