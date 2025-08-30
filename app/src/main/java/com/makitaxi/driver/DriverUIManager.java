@@ -348,6 +348,7 @@ public class DriverUIManager {
                 ToastUtils.showWarning(activity, "Ride was not confirmed by passenger");
                 listenForRideRequests();
                 activeRideRequestId = null;
+                FirebaseHelper.getUserRequestsRef().child(driverId).child("activeRide").setValue(false);
                 break;
         }
     }

@@ -145,6 +145,7 @@ public class DriverMainScreen extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        FirebaseHelper.getUserRequestsRef().child(driverId).child("activeRide").setValue(false);
         if (mapView != null) {
             mapView.onPause();
         }

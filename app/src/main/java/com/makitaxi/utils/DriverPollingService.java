@@ -132,9 +132,17 @@ public class DriverPollingService {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     String driverCarType = snapshot.child("carType").getValue(String.class);
+                    Boolean driverActiveRide = snapshot.child("activeRide").getValue(Boolean.class);
                     String requestedCarType = request.getCarType();
                     
-                    Log.d(TAG, "Driver " + driverId + " car type: " + driverCarType + ", requested: " + requestedCarType);
+                    Log.d(TAG, "Driver " + driverId + " car type: " + driverCarType + ", activeRide: " + driverActiveRide + ", requested: " + requestedCarType);
+                    
+                    if (driverActiveRide != null && driverActiveRide) {
+                        Log.d(TAG, "Skipping driver " + driverId + " - driver has active ride");
+                        currentDriverIndex++;
+                        startDriverNotification(request);
+                        return;
+                    }
                     
                     if (driverCarType != null && requestedCarType != null && 
                         driverCarType.equalsIgnoreCase(requestedCarType)) {
@@ -171,6 +179,7 @@ public class DriverPollingService {
         if (notificationId != null) {
             requestRef.setValue(driverNotification).addOnSuccessListener(aVoid -> {
                 Log.d(TAG, "Successfully notified driver " + driverId + " with matching car type");
+                FirebaseHelper.getUserRequestsRef().child(driverId).child("activeRide").setValue(true);
                 waitForRiderResponse(notificationId, driverId);
             }).addOnFailureListener(e -> {
                 Log.e(TAG, "Failed to notify driver " + driverId);
@@ -188,6 +197,7 @@ public class DriverPollingService {
                 if (request != null) {
                     if (NotificationStatus.CANCELLED_BY_DRIVER.equals(request.getStatus()) ||
                             NotificationStatus.TIMEOUT.equals(request.getStatus())) {
+                        FirebaseHelper.getUserRequestsRef().child(driverId).child("activeRide").setValue(false);
                         currentDriverIndex++;
                         startDriverNotification(request.getRideRequest());
                     } else if (NotificationStatus.ACCEPTED_BY_DRIVER.equals(request.getStatus())) {

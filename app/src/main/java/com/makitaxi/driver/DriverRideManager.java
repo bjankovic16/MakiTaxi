@@ -58,10 +58,12 @@ public class DriverRideManager {
     }
 
     public void declineRide(RideRequest request) {
+        FirebaseHelper.getUserRequestsRef().child(driverId).child("activeRide").setValue(false);
         handleRideDecision(request, NotificationStatus.CANCELLED_BY_DRIVER, "Ride declined", false);
     }
 
     public void timeoutRide(RideRequest request) {
+        FirebaseHelper.getUserRequestsRef().child(driverId).child("activeRide").setValue(false);
         handleRideDecision(request, NotificationStatus.TIMEOUT, "Ride timeout", false);
     }
 
@@ -76,6 +78,7 @@ public class DriverRideManager {
                     
                     createFeedbackRequest(request);
                     ToastUtils.showSuccess(activity, "Ride finished");
+                    FirebaseHelper.getUserRequestsRef().child(driverId).child("activeRide").setValue(false);
                     uiManager.hideRideDetailsPanel();
                     uiManager.clearRoute();
                     uiManager.listenForRideRequests();
@@ -187,6 +190,7 @@ public class DriverRideManager {
             if (currentRequest.getStatus() != NotificationStatus.CREATED) {
                 ToastUtils.showError(activity, "Passenger cancelled the ride");
                 Log.w(TAG, "Attempted to update ride with status: " + currentRequest.getStatus());
+                FirebaseHelper.getUserRequestsRef().child(driverId).child("activeRide").setValue(false);
                 updateDriverNotificationWithCancelledByPassenger(request);
                 uiManager.listenForRideRequests();
                 return;

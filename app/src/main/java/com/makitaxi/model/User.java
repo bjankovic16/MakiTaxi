@@ -25,6 +25,7 @@ public class User {
     private double totalMoneyEarned; // for drivers - money earned from rides
     private String gender;
     private String birthday;
+    private boolean activeRide;
 
     public User() {
         this.role = "PASSENGER"; // Default role
@@ -37,6 +38,7 @@ public class User {
         this.totalRatingSum = 0.0;
         this.totalMoneySpent = 0.0;
         this.totalMoneyEarned = 0.0;
+        this.activeRide = false;
     }
 
     public User(String fullName, String email, String phone, String username) {
@@ -269,5 +271,13 @@ public class User {
 
     public void addMoneyEarned(double amount) {
         this.totalMoneyEarned += amount;
+    }
+
+    public boolean isActiveRide() {
+        return activeRide;
+    }
+
+    public void setActiveRide(boolean activeRide) {
+        this.activeRide = activeRide;
     }
 }
