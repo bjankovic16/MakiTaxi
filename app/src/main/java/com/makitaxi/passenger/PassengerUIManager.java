@@ -438,7 +438,48 @@ public class PassengerUIManager {
         bottomSheetDriverDetailsView = activity.getLayoutInflater().inflate(R.layout.driver_details_bottom_sheet, null);
         bottomSheetDriverDetailsDialog = new BottomSheetDialog(activity);
         bottomSheetDriverDetailsDialog.setContentView(bottomSheetDriverDetailsView);
-        bottomSheetDriverDetailsDialog.setCancelable(false);
+        bottomSheetDriverDetailsDialog.setCancelable(true);
+
+        // Add dismiss listener to update status when panel is dismissed
+        bottomSheetDriverDetailsDialog.setOnDismissListener(dialog -> {
+            shouldShowBottomSheet = false;
+            if (currentRideRequestId == null || currentRideRequestId.isEmpty()) {
+                return;
+            }
+            
+            DatabaseReference statusRef = FirebaseHelper.getRideRequestsRef().child(currentRideRequestId).child("status");
+            statusRef.get().addOnSuccessListener(snapshot -> {
+                boolean blocked = false;
+                try {
+                    if (snapshot.exists()) {
+                        String raw = String.valueOf(snapshot.getValue());
+                        NotificationStatus status = NotificationStatus.valueOf(raw);
+                        blocked = (status == NotificationStatus.DRIVER_EXITED_APP || status == NotificationStatus.PASSENGER_EXITED_APP);
+                    }
+                } catch (Exception ignored) {}
+
+                if (blocked) {
+                    return;
+                }
+
+                PassengerResponse response = new PassengerResponse(
+                        driverId,
+                        rideRequest.getPassengerId(),
+                        rideRequest.getRequestId(),
+                        System.currentTimeMillis(),
+                        NotificationStatus.DECLINED_BY_PASSENGER
+                );
+
+                DatabaseReference requestRef = FirebaseHelper.getPassengerResponseRef().push();
+                requestRef.setValue(response)
+                        .addOnSuccessListener(aVoid -> {
+                            ToastUtils.showError(activity, "Ride declined");
+                        })
+                        .addOnFailureListener(e -> {
+                            ToastUtils.showError(activity, "Failed to reject ride");
+                        });
+            });
+        });
 
         DatabaseReference driverRef = FirebaseHelper.getUserRequestsRef().child(driverId);
         driverRef.addListenerForSingleValueEvent(new ValueEventListener() {
