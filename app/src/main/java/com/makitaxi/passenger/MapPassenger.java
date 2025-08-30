@@ -128,7 +128,7 @@ public class MapPassenger {
         });
     }
 
-    private void getRouteFromOSRM(GeoPoint start, GeoPoint end, RoutingCallback callback) {
+    public void getRouteFromOSRM(GeoPoint start, GeoPoint end, RoutingCallback callback) {
         if (start == null || end == null) {
             return;
         }

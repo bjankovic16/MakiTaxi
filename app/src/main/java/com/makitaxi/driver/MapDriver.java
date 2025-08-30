@@ -214,7 +214,7 @@ public class MapDriver {
         return myLocationOverlay.getMyLocation();
     }
 
-    private void getRouteFromOSRM(GeoPoint start, GeoPoint end, RoutingCallback callback) {
+    public void getRouteFromOSRM(GeoPoint start, GeoPoint end, RoutingCallback callback) {
         if(start == null || end == null) {
             callback.onRoutingError("Invalid coordinates");
             return;

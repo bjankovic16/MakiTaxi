@@ -44,6 +44,7 @@ import com.makitaxi.utils.NotificationStatus;
 import org.osmdroid.util.GeoPoint;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.bumptech.glide.load.DataSource;
@@ -465,6 +466,7 @@ public class PassengerUIManager {
         TextView txtRidePrice = bottomSheetDriverDetailsView.findViewById(R.id.txtRidePrice);
         TextView txtDriverArrival = bottomSheetDriverDetailsView.findViewById(R.id.txtDriverArrival);
         TextView txtRideDuration = bottomSheetDriverDetailsView.findViewById(R.id.txtRideDuration);
+        TextView txtDistance = bottomSheetDriverDetailsView.findViewById(R.id.txtDistance);
         Button btnProceed = bottomSheetDriverDetailsView.findViewById(R.id.btnProceed);
         Button btnDecline = bottomSheetDriverDetailsView.findViewById(R.id.btnDecline);
         ImageButton btnCallDriver = bottomSheetDriverDetailsView.findViewById(R.id.btnCallDriver);
@@ -475,15 +477,60 @@ public class PassengerUIManager {
         txtCarType.setText(rideRequest.getCarType());
         txtRidePrice.setText(String.format("%.0f din", rideRequest.getEstimatedPrice()));
         
-        // Calculate driver arrival time (assuming average speed of 30 km/h in city)
-        double driverDistance = rideRequest.getDistance(); // Distance from driver to pickup
-        int arrivalTimeMinutes = (int) Math.ceil((driverDistance / 30.0) * 60); // Convert to minutes
-        txtDriverArrival.setText(String.format("Arrives in: %d min", arrivalTimeMinutes));
-        
-        // Calculate total trip duration (driver to pickup + pickup to destination)
-        double totalTripDistance = driverDistance + rideRequest.getDistance();
-        int totalTripDuration = (int) Math.ceil((totalTripDistance / 30.0) * 60); // Convert to minutes
-        txtRideDuration.setText(String.format("Trip: %d min", totalTripDuration));
+        DatabaseReference driverLocationRef = FirebaseHelper.getDriverLocationRef();
+        driverLocationRef.child(driverId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    Double driverLat = snapshot.child("l").child("0").getValue(Double.class);
+                    Double driverLng = snapshot.child("l").child("1").getValue(Double.class);
+                    
+                    if (driverLat != null && driverLng != null) {
+                        GeoPoint driverLocation = new GeoPoint(driverLat, driverLng);
+                        GeoPoint destinationPoint = new GeoPoint(rideRequest.getDropoffLatitude(), rideRequest.getDropoffLongitude());
+                        
+                        if (mapPassenger != null) {
+                            mapPassenger.getRouteFromOSRM(driverLocation, destinationPoint, new MapPassenger.RoutingCallback() {
+                                @Override
+                                public void onRouteFound(List<GeoPoint> routePoints, double distance, double duration) {
+                                    int arrivalTimeMinutes = (int) Math.ceil(duration);
+                                    txtDriverArrival.setText(String.format("Arrives in: %d min", arrivalTimeMinutes));
+                                    txtRideDuration.setText(String.format("Trip: %d min", rideRequest.getDuration()));
+                                    txtDistance.setText(String.format("%.2f km", rideRequest.getDistance()));
+                                }
+
+                                @Override
+                                public void onRoutingError(String error) {
+                                    double directDistance = calculateDirectDistance(driverLat, driverLng,
+                                        rideRequest.getDropoffLatitude(), rideRequest.getDropoffLongitude());
+                                    int arrivalTimeMinutes = (int) Math.ceil((directDistance / 30.0) * 60);
+                                    txtDriverArrival.setText(String.format("Arrives in: %d min", arrivalTimeMinutes));
+                                    txtRideDuration.setText(String.format("Trip: %d min", arrivalTimeMinutes));
+                                }
+                            });
+                        } else {
+                            double directDistance = calculateDirectDistance(driverLat, driverLng,
+                                rideRequest.getDropoffLatitude(), rideRequest.getDropoffLongitude());
+                            int arrivalTimeMinutes = (int) Math.ceil((directDistance / 30.0) * 60);
+                            txtDriverArrival.setText(String.format("Arrives in: %d min", arrivalTimeMinutes));
+                            txtRideDuration.setText(String.format("Trip: %d min", arrivalTimeMinutes));
+                        }
+                    } else {
+                        txtDriverArrival.setText("Arrival time unavailable");
+                        txtRideDuration.setText("Trip duration unavailable");
+                    }
+                } else {
+                    txtDriverArrival.setText("Arrival time unavailable");
+                    txtRideDuration.setText("Trip duration unavailable");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                txtDriverArrival.setText("Arrival time unavailable");
+                txtRideDuration.setText("Trip duration unavailable");
+            }
+        });
 
         String carType = rideRequest.getCarType();
         switch (carType) {
@@ -737,6 +784,20 @@ public class PassengerUIManager {
 
     public boolean isTrackingActive() {
         return rideRequestListener != null || driverLocationListener != null;
+    }
+
+    private double calculateDirectDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371;
+
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double distance = R * c;
+
+        return distance;
     }
 
     public void updateRideStatus(NotificationStatus status) {
