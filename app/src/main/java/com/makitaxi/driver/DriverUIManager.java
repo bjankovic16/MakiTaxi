@@ -2,6 +2,8 @@ package com.makitaxi.driver;
 
 import android.content.Intent;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -359,9 +361,44 @@ public class DriverUIManager {
         
         txtPickup.setText(ride.getPickupAddress());
         txtDestination.setText(ride.getDropoffAddress());
-        txtDistance.setText(String.format(Locale.getDefault(), "%.1f Km", ride.getDistance()));
-        txtDuration.setText(String.format(Locale.getDefault(), "%.0f min", ride.getDuration()));
         txtPrice.setText(String.format(Locale.getDefault(), "%.0f Din", ride.getEstimatedPrice()));
+        
+        GeoPoint driverLocation = mapDriver != null ? mapDriver.getCurrentLocation() : null;
+        
+        if (driverLocation != null && ride.getPickupLatitude() != 0 && ride.getPickupLongitude() != 0) {
+            GeoPoint pickupPoint = new GeoPoint(ride.getPickupLatitude(), ride.getPickupLongitude());
+            
+            mapDriver.getRouteFromOSRM(driverLocation, pickupPoint, new MapDriver.RoutingCallback() {
+                @Override
+                public void onRouteFound(List<GeoPoint> routePoints, double distance, double duration) {
+                    // Update UI on main thread
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        double totalDistance = distance + ride.getDistance();
+                        double totalDuration = duration + ride.getDuration();
+                        
+                        txtDistance.setText(String.format(Locale.getDefault(), "%.1f Km", totalDistance));
+                        txtDuration.setText(String.format(Locale.getDefault(), "%.1f min", totalDuration));
+                        
+                        showPanelWithData();
+                    });
+                }
+
+                @Override
+                public void onRoutingError(String error) {
+                    // Update UI on main thread
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        txtDistance.setText(String.format(Locale.getDefault(), "%.1f Km", ride.getDistance()));
+                        txtDuration.setText(String.format(Locale.getDefault(), "%.1f min", ride.getDuration()));
+                        
+                        showPanelWithData();
+                    });
+                }
+            });
+        } else {
+            txtDistance.setText(String.format(Locale.getDefault(), "%.1f Km", ride.getDistance()));
+            txtDuration.setText(String.format(Locale.getDefault(), "%.1f min", ride.getDuration()));
+            showPanelWithData();
+        }
         
         btnFinishRide.setOnClickListener(v -> {
             if (rideActionListener != null) {
@@ -369,7 +406,9 @@ public class DriverUIManager {
                 hideRideDetailsPanel();
             }
         });
-        
+    }
+    
+    private void showPanelWithData() {
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         adjustMapControls(true);
     }

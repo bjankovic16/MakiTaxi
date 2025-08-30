@@ -466,7 +466,7 @@ public class PassengerUIManager {
         TextView txtRidePrice = bottomSheetDriverDetailsView.findViewById(R.id.txtRidePrice);
         TextView txtDriverArrival = bottomSheetDriverDetailsView.findViewById(R.id.txtDriverArrival);
         TextView txtRideDuration = bottomSheetDriverDetailsView.findViewById(R.id.txtRideDuration);
-        TextView txtDistance = bottomSheetDriverDetailsView.findViewById(R.id.txtDistance);
+        TextView txtDistance = bottomSheetDriverDetailsView.findViewById(R.id.txtDistanceBottomSheet);
         Button btnProceed = bottomSheetDriverDetailsView.findViewById(R.id.btnProceed);
         Button btnDecline = bottomSheetDriverDetailsView.findViewById(R.id.btnDecline);
         ImageButton btnCallDriver = bottomSheetDriverDetailsView.findViewById(R.id.btnCallDriver);

@@ -184,10 +184,10 @@
                 android:textStyle="bold"/>
 
             <TextView
-                android:id="@+id/txtDistance"
+                android:id="@+id/txtDistanceBottomSheet"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="2.3 km"
+                android:text=""
                 android:textColor="#B3FFFFFF"
                 android:textSize="14sp"/>
         </LinearLayout>
