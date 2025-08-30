@@ -446,13 +446,17 @@ public class PassengerUIManager {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 User driver = snapshot.getValue(User.class);
                 assert driver != null;
-                populateDriverView(driver, rideRequest, driverId);
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    populateDriverView(driver, rideRequest, driverId);
+                });
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                bottomSheetDriverDetailsDialog.dismiss();
-                ToastUtils.showError(activity, "Error loading driver details");
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    bottomSheetDriverDetailsDialog.dismiss();
+                    ToastUtils.showError(activity, "Error loading driver details");
+                });
             }
         });
     }
@@ -476,61 +480,10 @@ public class PassengerUIManager {
         txtDriverRating.setText(String.format("%.1f", driver.getRating()));
         txtCarType.setText(rideRequest.getCarType());
         txtRidePrice.setText(String.format("%.0f din", rideRequest.getEstimatedPrice()));
+        txtDistance.setText(String.format("%.1f km", rideRequest.getDistance()));
         
-        DatabaseReference driverLocationRef = FirebaseHelper.getDriverLocationRef();
-        driverLocationRef.child(driverId).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    Double driverLat = snapshot.child("l").child("0").getValue(Double.class);
-                    Double driverLng = snapshot.child("l").child("1").getValue(Double.class);
-                    
-                    if (driverLat != null && driverLng != null) {
-                        GeoPoint driverLocation = new GeoPoint(driverLat, driverLng);
-                        GeoPoint destinationPoint = new GeoPoint(rideRequest.getDropoffLatitude(), rideRequest.getDropoffLongitude());
-                        
-                        if (mapPassenger != null) {
-                            mapPassenger.getRouteFromOSRM(driverLocation, destinationPoint, new MapPassenger.RoutingCallback() {
-                                @Override
-                                public void onRouteFound(List<GeoPoint> routePoints, double distance, double duration) {
-                                    int arrivalTimeMinutes = (int) Math.ceil(duration);
-                                    txtDriverArrival.setText(String.format("Arrives in: %d min", arrivalTimeMinutes));
-                                    txtRideDuration.setText(String.format("Trip: %d min", rideRequest.getDuration()));
-                                    txtDistance.setText(String.format("%.2f km", rideRequest.getDistance()));
-                                }
-
-                                @Override
-                                public void onRoutingError(String error) {
-                                    double directDistance = calculateDirectDistance(driverLat, driverLng,
-                                        rideRequest.getDropoffLatitude(), rideRequest.getDropoffLongitude());
-                                    int arrivalTimeMinutes = (int) Math.ceil((directDistance / 30.0) * 60);
-                                    txtDriverArrival.setText(String.format("Arrives in: %d min", arrivalTimeMinutes));
-                                    txtRideDuration.setText(String.format("Trip: %d min", arrivalTimeMinutes));
-                                }
-                            });
-                        } else {
-                            double directDistance = calculateDirectDistance(driverLat, driverLng,
-                                rideRequest.getDropoffLatitude(), rideRequest.getDropoffLongitude());
-                            int arrivalTimeMinutes = (int) Math.ceil((directDistance / 30.0) * 60);
-                            txtDriverArrival.setText(String.format("Arrives in: %d min", arrivalTimeMinutes));
-                            txtRideDuration.setText(String.format("Trip: %d min", arrivalTimeMinutes));
-                        }
-                    } else {
-                        txtDriverArrival.setText("Arrival time unavailable");
-                        txtRideDuration.setText("Trip duration unavailable");
-                    }
-                } else {
-                    txtDriverArrival.setText("Arrival time unavailable");
-                    txtRideDuration.setText("Trip duration unavailable");
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                txtDriverArrival.setText("Arrival time unavailable");
-                txtRideDuration.setText("Trip duration unavailable");
-            }
-        });
+        // Wait for all data to load before showing panel
+        loadDriverDataAndShowPanel(driverId, rideRequest, txtDriverArrival, txtRideDuration, txtDistance);
 
         String carType = rideRequest.getCarType();
         switch (carType) {
@@ -555,17 +508,11 @@ public class PassengerUIManager {
                 .listener(new RequestListener<Drawable>() {
                     @Override
                     public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-                        if (shouldShowBottomSheet) {
-                            bottomSheetDriverDetailsDialog.show();
-                        }
                         return false;
                     }
 
                     @Override
                     public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                        if (shouldShowBottomSheet) {
-                            bottomSheetDriverDetailsDialog.show();
-                        }
                         return false;
                     }
                 })
@@ -817,5 +764,103 @@ public class PassengerUIManager {
 
     public boolean hasCurrentRide() {
         return currentRideRequestId != null && !currentRideRequestId.isEmpty();
+    }
+
+    private void loadDriverDataAndShowPanel(String driverId, RideRequest rideRequest, TextView txtDriverArrival, TextView txtRideDuration, TextView txtDistance) {
+        DatabaseReference driverLocationRef = FirebaseHelper.getDriverLocationRef();
+        driverLocationRef.child(driverId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    Double driverLat = snapshot.child("l").child("0").getValue(Double.class);
+                    Double driverLng = snapshot.child("l").child("1").getValue(Double.class);
+                    
+                    if (driverLat != null && driverLng != null) {
+                        GeoPoint driverLocation = new GeoPoint(driverLat, driverLng);
+                        GeoPoint pickupPoint = new GeoPoint(rideRequest.getPickupLatitude(), rideRequest.getPickupLongitude());
+                        
+                        if (mapPassenger != null) {
+                            mapPassenger.getRouteFromOSRM(driverLocation, pickupPoint, new MapPassenger.RoutingCallback() {
+                                @Override
+                                public void onRouteFound(List<GeoPoint> routePoints, double distance, double duration) {
+                                    new Handler(Looper.getMainLooper()).post(() -> {
+                                        int arrivalTimeMinutes = (int) Math.ceil(duration);
+                                        txtDriverArrival.setText(String.format("Arrives in: %d min", arrivalTimeMinutes));
+                                        txtRideDuration.setText(String.format("Trip: %.0f min", rideRequest.getDuration()));
+                                        txtDistance.setText(String.format("%.2f km", rideRequest.getDistance()));
+                                        
+                                        // Show panel after all data is loaded
+                                        showDriverDetailsPanel();
+                                    });
+                                }
+
+                                @Override
+                                public void onRoutingError(String error) {
+                                    new Handler(Looper.getMainLooper()).post(() -> {
+                                        double directDistance = calculateDirectDistance(driverLat, driverLng,
+                                            rideRequest.getDropoffLatitude(), rideRequest.getDropoffLongitude());
+                                        int arrivalTimeMinutes = (int) Math.ceil((directDistance / 30.0) * 60);
+                                        txtDriverArrival.setText(String.format("Arrives in: %d min", arrivalTimeMinutes));
+                                        txtRideDuration.setText(String.format("Trip: %d min", arrivalTimeMinutes));
+                                        txtDistance.setText(String.format("%.2f km", rideRequest.getDistance()));
+                                        
+                                        // Show panel after all data is loaded
+                                        showDriverDetailsPanel();
+                                    });
+                                }
+                            });
+                        } else {
+                            new Handler(Looper.getMainLooper()).post(() -> {
+                                double directDistance = calculateDirectDistance(driverLat, driverLng,
+                                    rideRequest.getDropoffLatitude(), rideRequest.getDropoffLongitude());
+                                int arrivalTimeMinutes = (int) Math.ceil((directDistance / 30.0) * 60);
+                                txtDriverArrival.setText(String.format("Arrives in: %d min", arrivalTimeMinutes));
+                                txtRideDuration.setText(String.format("Trip: %d min", arrivalTimeMinutes));
+                                txtDistance.setText(String.format("%.2f km", rideRequest.getDistance()));
+                                
+                                // Show panel after all data is loaded
+                                showDriverDetailsPanel();
+                            });
+                        }
+                    } else {
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            txtDriverArrival.setText("Arrival time unavailable");
+                            txtRideDuration.setText("Trip duration unavailable");
+                            txtDistance.setText(String.format("%.2f km", rideRequest.getDistance()));
+                            
+                            // Show panel after all data is loaded
+                            showDriverDetailsPanel();
+                        });
+                    }
+                } else {
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        txtDriverArrival.setText("Arrival time unavailable");
+                        txtRideDuration.setText("Trip duration unavailable");
+                        txtDistance.setText(String.format("%.2f km", rideRequest.getDistance()));
+                        
+                        // Show panel after all data is loaded
+                        showDriverDetailsPanel();
+                    });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    txtDriverArrival.setText("Arrival time unavailable");
+                    txtRideDuration.setText("Trip duration unavailable");
+                    txtDistance.setText(String.format("%.2f km", rideRequest.getDistance()));
+                    
+                    // Show panel after all data is loaded
+                    showDriverDetailsPanel();
+                });
+            }
+        });
+    }
+    
+    private void showDriverDetailsPanel() {
+        if (shouldShowBottomSheet) {
+            bottomSheetDriverDetailsDialog.show();
+        }
     }
 }
