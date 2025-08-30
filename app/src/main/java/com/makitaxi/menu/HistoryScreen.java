@@ -5,8 +5,12 @@ import static com.google.android.material.internal.ViewUtils.dpToPx;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -42,6 +46,9 @@ import com.makitaxi.model.FeedbackRequest;
 import com.makitaxi.model.User;
 import com.makitaxi.utils.FirebaseHelper;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -53,9 +60,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import android.graphics.pdf.PdfDocument;
+import android.graphics.Paint;
+import android.graphics.Color;
+import android.graphics.Typeface;
+
 public class HistoryScreen extends AppCompatActivity {
 
     private static final String TAG = "HistoryScreen";
+    private static final int PERMISSION_REQUEST_CODE = 1001;
 
     private ImageButton btnBack;
     private LinearLayout rideHistoryContainer;
@@ -72,6 +85,7 @@ public class HistoryScreen extends AppCompatActivity {
     private Button btnApplyFilter;
     private Button btnClearFilter;
     private Button btnShowMap;
+    private Button btnGeneratePDF;
 
     private FirebaseAuth auth;
     private FirebaseDatabase database;
@@ -122,7 +136,9 @@ public class HistoryScreen extends AppCompatActivity {
         btnApplyFilter = findViewById(R.id.btnApplyFilter);
         btnClearFilter = findViewById(R.id.btnClearFilter);
         btnShowMap = findViewById(R.id.btnShowMap);
+        btnGeneratePDF = findViewById(R.id.btnGeneratePDF);
         btnShowMap.setVisibility(View.GONE);
+        btnGeneratePDF.setVisibility(View.GONE);
     }
 
     private void setupUIInteractions() {
@@ -136,6 +152,7 @@ public class HistoryScreen extends AppCompatActivity {
         });
         btnClearFilter.setOnClickListener(v -> clearFilters());
         btnShowMap.setOnClickListener(v -> showRideHistoryMap());
+        btnGeneratePDF.setOnClickListener(v -> generatePDFReport());
     }
 
     private void showDatePicker(boolean isFromDate) {
@@ -481,12 +498,14 @@ public class HistoryScreen extends AppCompatActivity {
             rideHistoryContainer.setVisibility(View.GONE);
             statisticsContainer.setVisibility(View.GONE);
             btnShowMap.setVisibility(View.GONE);
+            btnGeneratePDF.setVisibility(View.GONE);
             return;
         }
 
         emptyStateContainer.setVisibility(View.GONE);
         rideHistoryContainer.setVisibility(View.VISIBLE);
         btnShowMap.setVisibility(View.VISIBLE);
+        btnGeneratePDF.setVisibility(View.VISIBLE);
         
         updateStatistics();
 
@@ -807,5 +826,203 @@ public class HistoryScreen extends AppCompatActivity {
         Intent intent = new Intent(this, RideHistoryMapActivity.class);
         intent.putExtra("rideHistory", new ArrayList<>(displayList));
         startActivity(intent);
+    }
+
+    private void generatePDFReport() {
+        List<FeedbackRequest> displayList = isFilterActive ? filteredHistory : feedbackHistory;
+        
+        if (displayList.isEmpty()) {
+            ToastUtils.showInfo(this, "No rides to generate report for");
+            return;
+        }
+
+        if (checkPermissions()) {
+            try {
+                File pdfFile = createPDFReport(displayList);
+                sharePDFReport(pdfFile);
+            } catch (Exception e) {
+                Log.e(TAG, "Error generating PDF report", e);
+                ToastUtils.showError(this, "Error generating PDF report: " + e.getMessage());
+            }
+        } else {
+            requestPermissions();
+        }
+    }
+
+    private boolean checkPermissions() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+               ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestPermissions() {
+        ActivityCompat.requestPermissions(this, 
+            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, 
+            PERMISSION_REQUEST_CODE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                generatePDFReport();
+            } else {
+                ToastUtils.showError(this, "Storage permission is required to generate PDF reports");
+            }
+        }
+    }
+
+    private File createPDFReport(List<FeedbackRequest> rides) throws IOException {
+        String fileName = "MakiTaxi_RideReport_" + System.currentTimeMillis() + ".pdf";
+        File pdfFile = new File(getExternalFilesDir(null), fileName);
+
+        PdfDocument pdfDocument = new PdfDocument();
+        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(842, 595, 1).create();
+        PdfDocument.Page page = pdfDocument.startPage(pageInfo);
+
+        android.graphics.Canvas canvas = page.getCanvas();
+        Paint paint = new Paint();
+        Paint titlePaint = new Paint();
+        Paint headerPaint = new Paint();
+        Paint textPaint = new Paint();
+
+        // Configure title paint
+        titlePaint.setColor(Color.BLACK);
+        titlePaint.setTextSize(24);
+        titlePaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        titlePaint.setTextAlign(Paint.Align.CENTER);
+
+        // Configure header paint
+        headerPaint.setColor(Color.BLACK);
+        headerPaint.setTextSize(16);
+        headerPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        headerPaint.setTextAlign(Paint.Align.LEFT);
+
+        // Configure text paint
+        textPaint.setColor(Color.BLACK);
+        textPaint.setTextSize(12);
+        textPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.NORMAL));
+        textPaint.setTextAlign(Paint.Align.LEFT);
+
+        int y = 50;
+        int leftMargin = 50;
+        int rightMargin = 792;
+
+        // Draw title
+        canvas.drawText("MakiTaxi - Ride History Report", 421, y, titlePaint);
+        y += 40;
+
+        // Draw report info
+        String reportInfo = "Generated on: " + new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date()) + "\n" +
+                "Total rides: " + rides.size();
+        
+        String[] infoLines = reportInfo.split("\n");
+        for (String line : infoLines) {
+            canvas.drawText(line, leftMargin, y, textPaint);
+            y += 20;
+        }
+        y += 20;
+
+        // Calculate statistics
+        double totalEarnings = 0;
+        double totalDistance = 0;
+        int totalRides = rides.size();
+
+        for (FeedbackRequest ride : rides) {
+            totalEarnings += ride.getPrice();
+            totalDistance += ride.getDistance();
+        }
+
+        // Draw statistics section
+        canvas.drawText("Summary Statistics", leftMargin, y, headerPaint);
+        y += 25;
+
+        String[][] stats = {
+            {"Total Rides", String.valueOf(totalRides)},
+            {"Total Distance", String.format("%.1f km", totalDistance)},
+            {userType != null && userType.equals("driver") ? "Total Earnings" : "Total Spent", String.format("%.0f din", totalEarnings)}
+        };
+
+        for (String[] stat : stats) {
+            canvas.drawText(stat[0] + ": " + stat[1], leftMargin, y, textPaint);
+            y += 20;
+        }
+        y += 20;
+
+        // Draw rides table header
+        canvas.drawText("Ride Details", leftMargin, y, headerPaint);
+        y += 25;
+
+        String[] headers = {"Date", "Pickup", "Destination", "Price", "Distance"};
+        int[] columnWidths = {120, 250, 250, 80, 80};
+        int currentX = leftMargin;
+
+        // Draw table headers
+        for (int i = 0; i < headers.length; i++) {
+            canvas.drawText(headers[i], currentX, y, headerPaint);
+            currentX += columnWidths[i];
+        }
+        y += 20;
+
+        // Draw table data
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+        for (FeedbackRequest ride : rides) {
+            if (y > 500) { // Start new page if needed (landscape)
+                pdfDocument.finishPage(page);
+                pageInfo = new PdfDocument.PageInfo.Builder(842, 595, pdfDocument.getPages().size() + 1).create();
+                page = pdfDocument.startPage(pageInfo);
+                canvas = page.getCanvas();
+                y = 50;
+            }
+
+            currentX = leftMargin;
+            canvas.drawText(dateFormat.format(new Date(ride.getTimestamp())), currentX, y, textPaint);
+            currentX += columnWidths[0];
+            
+            canvas.drawText(ride.getPickupAddress(), currentX, y, textPaint);
+            currentX += columnWidths[1];
+            
+            canvas.drawText(ride.getDropoffAddress(), currentX, y, textPaint);
+            currentX += columnWidths[2];
+            
+            canvas.drawText(String.format("%.0f din", ride.getPrice()), currentX, y, textPaint);
+            currentX += columnWidths[3];
+            
+            canvas.drawText(String.format("%.1f km", ride.getDistance()), currentX, y, textPaint);
+            y += 20;
+        }
+
+        // Draw footer
+        y = 570;
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        canvas.drawText("Generated by MakiTaxi App", 421, y, textPaint);
+
+        pdfDocument.finishPage(page);
+        pdfDocument.writeTo(new FileOutputStream(pdfFile));
+        pdfDocument.close();
+
+        return pdfFile;
+    }
+
+    private void sharePDFReport(File pdfFile) {
+        try {
+            android.net.Uri fileUri = androidx.core.content.FileProvider.getUriForFile(
+                this, 
+                getPackageName() + ".fileprovider", 
+                pdfFile
+            );
+
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("application/pdf");
+            shareIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "MakiTaxi Ride Report");
+            shareIntent.putExtra(Intent.EXTRA_TEXT, "Here is my ride history report from MakiTaxi.");
+            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+            startActivity(Intent.createChooser(shareIntent, "Share PDF Report"));
+        } catch (Exception e) {
+            Log.e(TAG, "Error sharing PDF report", e);
+            ToastUtils.showError(this, "Error sharing PDF report: " + e.getMessage());
+        }
     }
 } 
