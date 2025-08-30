@@ -66,17 +66,6 @@ public class DriverPollingService {
         currentRadius = INITIAL_RADIUS_KM;
     }
 
-    public static void continueWithDriverNotification(RideRequest rideRequest) {
-        currentDriverIndex++;
-        startDriverNotification(rideRequest);
-    }
-
-    public static void stopNotifyingDrivers() {
-        if (geoQuery != null) {
-            geoQuery.removeAllListeners();
-        }
-    }
-
     private static void startGeoQuery(GeoPoint location, RideRequest request) {
         if (geoQuery != null) {
             geoQuery.removeAllListeners();

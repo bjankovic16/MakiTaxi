@@ -463,7 +463,8 @@ public class PassengerUIManager {
         TextView txtCarType = bottomSheetDriverDetailsView.findViewById(R.id.txtCarType);
         ImageView imgCarIcon = bottomSheetDriverDetailsView.findViewById(R.id.imgCarIcon);
         TextView txtRidePrice = bottomSheetDriverDetailsView.findViewById(R.id.txtRidePrice);
-        TextView txtRideTime = bottomSheetDriverDetailsView.findViewById(R.id.txtRideTime);
+        TextView txtDriverArrival = bottomSheetDriverDetailsView.findViewById(R.id.txtDriverArrival);
+        TextView txtRideDuration = bottomSheetDriverDetailsView.findViewById(R.id.txtRideDuration);
         Button btnProceed = bottomSheetDriverDetailsView.findViewById(R.id.btnProceed);
         Button btnDecline = bottomSheetDriverDetailsView.findViewById(R.id.btnDecline);
         ImageButton btnCallDriver = bottomSheetDriverDetailsView.findViewById(R.id.btnCallDriver);
@@ -473,7 +474,16 @@ public class PassengerUIManager {
         txtDriverRating.setText(String.format("%.1f", driver.getRating()));
         txtCarType.setText(rideRequest.getCarType());
         txtRidePrice.setText(String.format("%.0f din", rideRequest.getEstimatedPrice()));
-        txtRideTime.setText(String.format("%.0f min", rideRequest.getDuration()));
+        
+        // Calculate driver arrival time (assuming average speed of 30 km/h in city)
+        double driverDistance = rideRequest.getDistance(); // Distance from driver to pickup
+        int arrivalTimeMinutes = (int) Math.ceil((driverDistance / 30.0) * 60); // Convert to minutes
+        txtDriverArrival.setText(String.format("Arrives in: %d min", arrivalTimeMinutes));
+        
+        // Calculate total trip duration (driver to pickup + pickup to destination)
+        double totalTripDistance = driverDistance + rideRequest.getDistance();
+        int totalTripDuration = (int) Math.ceil((totalTripDistance / 30.0) * 60); // Convert to minutes
+        txtRideDuration.setText(String.format("Trip: %d min", totalTripDuration));
 
         String carType = rideRequest.getCarType();
         switch (carType) {

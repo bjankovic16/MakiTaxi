@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@color/background"
-    android:padding="16dp">
+    android:padding="20dp">
 
     <!-- Driver Info Section -->
     <RelativeLayout
@@ -14,11 +14,12 @@
 
         <com.makitaxi.utils.CircularImageView
             android:id="@+id/imgDriverProfile"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
             android:src="@drawable/taxi_logo"
             android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"/>
+            android:layout_centerVertical="true"
+            android:elevation="4dp"/>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -34,23 +35,23 @@
                 android:layout_height="wrap_content"
                 android:text="Miki Manojlović"
                 android:textColor="@android:color/white"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="6dp"
                 android:background="@drawable/rating_background"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
                 android:gravity="center_vertical">
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
                     android:src="@android:drawable/btn_star_big_on"
                     app:tint="#FFC107" />
 
@@ -60,7 +61,9 @@
                     android:layout_height="wrap_content"
                     android:text="4.4"
                     android:textColor="@android:color/white"
-                    android:layout_marginStart="4dp"/>
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="6dp"/>
             </LinearLayout>
         </LinearLayout>
 
@@ -73,18 +76,18 @@
 
             <ImageButton
                 android:id="@+id/btnCallDriver"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/circle_button_background"
                 android:src="@android:drawable/stat_sys_phone_call"
                 app:tint="@android:color/white" />
 
             <ImageButton
                 android:id="@+id/btnMessageDriver"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="8dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/circle_button_background"
                 android:src="@android:drawable/ic_dialog_email"
                 app:tint="@android:color/white" />
         </LinearLayout>
@@ -94,8 +97,8 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="#4DFFFFFF"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"/>
 
     <!-- Car & Price Info Section -->
     <RelativeLayout
@@ -104,8 +107,8 @@
 
         <ImageView
             android:id="@+id/imgCarIcon"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:src="@drawable/ic_car_luxury"
             app:tint="@android:color/white"
             android:layout_alignParentStart="true"
@@ -125,14 +128,41 @@
                 android:layout_height="wrap_content"
                 android:text="Luxury"
                 android:textColor="@android:color/white"
-                android:textSize="16sp"/>
+                android:textSize="18sp"
+                android:textStyle="bold"/>
 
-            <TextView
-                android:id="@+id/txtDriverDistance"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="2.3 km"
-                android:textColor="#B3FFFFFF"/>
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp">
+
+                <TextView
+                    android:id="@+id/txtDriverArrival"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Arrives in: 5 min"
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" • "
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="14sp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"/>
+
+                <TextView
+                    android:id="@+id/txtRideDuration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Trip: 25 min"
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="14sp"/>
+
+            </LinearLayout>
         </LinearLayout>
 
 
@@ -150,15 +180,16 @@
                 android:layout_height="wrap_content"
                 android:text="1500 din"
                 android:textColor="@android:color/white"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 android:textStyle="bold"/>
 
             <TextView
-                android:id="@+id/txtRideTime"
+                android:id="@+id/txtDriverDistance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="10 min"
-                android:textColor="#B3FFFFFF"/>
+                android:text="2.3 km"
+                android:textColor="#B3FFFFFF"
+                android:textSize="14sp"/>
         </LinearLayout>
     </RelativeLayout>
 
@@ -167,30 +198,32 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="24dp"
-        android:layout_marginBottom="7dp">
+        android:layout_marginTop="28dp"
+        android:layout_marginBottom="8dp">
 
         <Button
             android:id="@+id/btnDecline"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="56dp"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
             android:background="@drawable/secondary_button_background"
             android:text="DECLINE"
             android:textColor="@color/background"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/btnProceed"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="56dp"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
             android:background="@drawable/circle_button_background"
             android:text="PROCEED"
             android:textColor="@color/white"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
 </LinearLayout> 
