@@ -173,7 +173,17 @@
                     android:layout_height="wrap_content"
                     android:text="Clear Filter"
                     android:background="@drawable/secondary_button_background"
-                    android:textColor="@android:color/black"/>
+                    android:textColor="@android:color/black"
+                    android:layout_marginBottom="8dp"/>
+
+                <!-- Show Map Button -->
+                <Button
+                    android:id="@+id/btnShowMap"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🗺️ Show Routes on Map"
+                    android:background="@drawable/primary_button_background"
+                    android:textColor="@android:color/white"/>
             </LinearLayout>
 
             <!-- Statistics Section -->

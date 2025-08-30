@@ -108,6 +108,10 @@
             android:name=".menu.FeedbackDetailsScreen"
             android:exported="true">
         </activity>
+        <activity
+            android:name=".menu.RideHistoryMapActivity"
+            android:exported="true">
+        </activity>
     </application>
 
 </manifest>

@@ -71,6 +71,7 @@ public class HistoryScreen extends AppCompatActivity {
     private Spinner spinnerUserFilter;
     private Button btnApplyFilter;
     private Button btnClearFilter;
+    private Button btnShowMap;
 
     private FirebaseAuth auth;
     private FirebaseDatabase database;
@@ -120,6 +121,8 @@ public class HistoryScreen extends AppCompatActivity {
         spinnerUserFilter = findViewById(R.id.spinnerUserFilter);
         btnApplyFilter = findViewById(R.id.btnApplyFilter);
         btnClearFilter = findViewById(R.id.btnClearFilter);
+        btnShowMap = findViewById(R.id.btnShowMap);
+        btnShowMap.setVisibility(View.GONE);
     }
 
     private void setupUIInteractions() {
@@ -132,6 +135,7 @@ public class HistoryScreen extends AppCompatActivity {
             refreshUserList();
         });
         btnClearFilter.setOnClickListener(v -> clearFilters());
+        btnShowMap.setOnClickListener(v -> showRideHistoryMap());
     }
 
     private void showDatePicker(boolean isFromDate) {
@@ -476,11 +480,13 @@ public class HistoryScreen extends AppCompatActivity {
             emptyStateContainer.setVisibility(View.VISIBLE);
             rideHistoryContainer.setVisibility(View.GONE);
             statisticsContainer.setVisibility(View.GONE);
+            btnShowMap.setVisibility(View.GONE);
             return;
         }
 
         emptyStateContainer.setVisibility(View.GONE);
         rideHistoryContainer.setVisibility(View.VISIBLE);
+        btnShowMap.setVisibility(View.VISIBLE);
         
         updateStatistics();
 
@@ -787,6 +793,19 @@ public class HistoryScreen extends AppCompatActivity {
         Intent intent = new Intent(this, FeedbackDetailsScreen.class);
         intent.putExtra("feedback", feedback);
         intent.putExtra("userType", userType);
+        startActivity(intent);
+    }
+
+    private void showRideHistoryMap() {
+        List<FeedbackRequest> displayList = isFilterActive ? filteredHistory : feedbackHistory;
+        
+        if (displayList.isEmpty()) {
+            ToastUtils.showInfo(this, "No rides to display on map");
+            return;
+        }
+
+        Intent intent = new Intent(this, RideHistoryMapActivity.class);
+        intent.putExtra("rideHistory", new ArrayList<>(displayList));
         startActivity(intent);
     }
 } 
