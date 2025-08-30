@@ -188,7 +188,9 @@ public class DriverUIManager {
                 if (request != null) {
                     if (request.getNotificationTimestamp() > rideActivationTime && 
                         NotificationStatus.CREATED.equals(request.getStatus())) {
-                        showRideRequestDialog(request.getRideRequest());
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            showRideRequestDialog(request.getRideRequest());
+                        });
                     }
                 }
             }
