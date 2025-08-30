@@ -598,6 +598,8 @@ public class PassengerUIManager {
                     ToastUtils.showWarning(activity, "Action not available. One participant exited.");
                     v.setEnabled(true);
                     shouldShowBottomSheet = false;
+                    // Remove dismiss listener before dismissing to avoid duplicate actions
+                    bottomSheetDriverDetailsDialog.setOnDismissListener(null);
                     bottomSheetDriverDetailsDialog.dismiss();
                     return;
                 }
@@ -614,6 +616,8 @@ public class PassengerUIManager {
                 requestRef.setValue(response)
                         .addOnSuccessListener(aVoid -> {
                             shouldShowBottomSheet = false;
+                            // Remove dismiss listener before dismissing to avoid duplicate actions
+                            bottomSheetDriverDetailsDialog.setOnDismissListener(null);
                             bottomSheetDriverDetailsDialog.dismiss();
                             startUpdatingRiderPositionOnMap(driverId, rideRequest.getRequestId());
                             ToastUtils.showSuccess(activity, "Ride confirmed!");
@@ -649,6 +653,8 @@ public class PassengerUIManager {
                     ToastUtils.showWarning(activity, "Action not available. One participant exited.");
                     v.setEnabled(true);
                     shouldShowBottomSheet = false;
+                    // Remove dismiss listener before dismissing to avoid duplicate actions
+                    bottomSheetDriverDetailsDialog.setOnDismissListener(null);
                     bottomSheetDriverDetailsDialog.dismiss();
                     return;
                 }
@@ -665,6 +671,8 @@ public class PassengerUIManager {
                 requestRef.setValue(response)
                         .addOnSuccessListener(aVoid -> {
                             shouldShowBottomSheet = false;
+                            // Remove dismiss listener before dismissing to avoid duplicate actions
+                            bottomSheetDriverDetailsDialog.setOnDismissListener(null);
                             bottomSheetDriverDetailsDialog.dismiss();
                             ToastUtils.showError(activity, "Ride declined");
                         })
