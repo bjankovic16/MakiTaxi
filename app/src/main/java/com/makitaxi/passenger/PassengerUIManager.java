@@ -470,7 +470,7 @@ public class PassengerUIManager {
         ImageButton btnMessageDriver = bottomSheetDriverDetailsView.findViewById(R.id.btnMessageDriver);
 
         txtDriverName.setText(driver.getFullName());
-        txtDriverRating.setText(String.valueOf(driver.getRating()));
+        txtDriverRating.setText(String.format("%.1f", driver.getRating()));
         txtCarType.setText(rideRequest.getCarType());
         txtRidePrice.setText(String.format("%.0f din", rideRequest.getEstimatedPrice()));
         txtRideTime.setText(String.format("%.0f min", rideRequest.getDuration()));
