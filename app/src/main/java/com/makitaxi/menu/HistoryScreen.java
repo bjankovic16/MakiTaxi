@@ -654,7 +654,7 @@ public class HistoryScreen extends AppCompatActivity {
             
             if (comment.length() < AppConfig.MIN_FEEDBACK_CHARACTERS) {
                 ToastUtils.showError(HistoryScreen.this, 
-                    String.format("❌ Comment must be at least %d characters. Current: %d characters",
+                    String.format("Comment must be at least %d characters. Current: %d characters",
                             AppConfig.MIN_FEEDBACK_CHARACTERS, comment.length()));
                 etComments.requestFocus();
                 return;
