@@ -458,7 +458,7 @@ public class PassengerUIManager {
                     if (snapshot.exists()) {
                         String raw = String.valueOf(snapshot.getValue());
                         NotificationStatus status = NotificationStatus.valueOf(raw);
-                        blocked = (status == NotificationStatus.DRIVER_EXITED_APP || status == NotificationStatus.PASSENGER_EXITED_APP);
+                        blocked = (status == NotificationStatus.DRIVER_EXITED_APP || status == NotificationStatus.PASSENGER_EXITED_APP || status == NotificationStatus.CANCELLED_BY_DRIVER_WHILE_WAITING);
                     }
                 } catch (Exception ignored) {}
 
@@ -594,7 +594,7 @@ public class PassengerUIManager {
                     if (snapshot.exists()) {
                         String raw = String.valueOf(snapshot.getValue());
                         NotificationStatus status = NotificationStatus.valueOf(raw);
-                        blocked = (status == NotificationStatus.DRIVER_EXITED_APP || status == NotificationStatus.PASSENGER_EXITED_APP);
+                        blocked = (status == NotificationStatus.DRIVER_EXITED_APP || status == NotificationStatus.PASSENGER_EXITED_APP || status == NotificationStatus.CANCELLED_BY_DRIVER_WHILE_WAITING);
                     }
                 } catch (Exception ignored) {}
 
@@ -649,7 +649,7 @@ public class PassengerUIManager {
                     if (snapshot.exists()) {
                         String raw = String.valueOf(snapshot.getValue());
                         NotificationStatus status = NotificationStatus.valueOf(raw);
-                        blocked = (status == NotificationStatus.DRIVER_EXITED_APP || status == NotificationStatus.PASSENGER_EXITED_APP);
+                        blocked = (status == NotificationStatus.DRIVER_EXITED_APP || status == NotificationStatus.PASSENGER_EXITED_APP || status == NotificationStatus.CANCELLED_BY_DRIVER_WHILE_WAITING);
                     }
                 } catch (Exception ignored) {}
 
@@ -734,6 +734,14 @@ public class PassengerUIManager {
                             Log.d("PassengerUIManager", "Driver accepted ride with status: " + status + ", showing ride controls");
                             rideAcceptedByDriver = true;
                             showRideControls();
+                        }
+                        // Check if driver cancelled while waiting
+                        else if (status == NotificationStatus.CANCELLED_BY_DRIVER_WHILE_WAITING) {
+                            Log.d("PassengerUIManager", "Driver cancelled ride while waiting with status: " + status);
+                            stopUpdatingDriverMarker();
+                            rideAcceptedByDriver = false;
+                            hideRideControls();
+                            ToastUtils.showWarning(activity, "Driver cancelled the ride");
                         }
                         // Check if ride is finished
                         else if (status == NotificationStatus.FINISHED) {

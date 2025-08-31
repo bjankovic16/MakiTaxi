@@ -287,7 +287,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center">
+            android:gravity="center"
+            android:layout_marginBottom="12dp">
 
             <Button
                 android:id="@+id/btnDecline"
@@ -313,5 +314,17 @@
                 android:background="@drawable/circle_button_background"
                 android:textColor="#FFFFFFFF" />
         </LinearLayout>
+
+        <!-- Decline Ride Button (shown after accepting) -->
+        <Button
+            android:id="@+id/btnDeclineRide"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="DECLINE RIDE"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:background="@drawable/secondary_button_background"
+            android:textColor="@color/background"
+            android:visibility="gone" />
     </LinearLayout>
 </RelativeLayout>

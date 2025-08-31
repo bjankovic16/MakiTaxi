@@ -240,6 +240,7 @@ public class DriverUIManager {
         TextView txtPrice = view.findViewById(R.id.txtPrice);
         Button btnAccept = view.findViewById(R.id.btnAccept);
         Button btnDecline = view.findViewById(R.id.btnDecline);
+        Button btnDeclineRide = view.findViewById(R.id.btnDeclineRide);
         
         txtTimer = view.findViewById(R.id.txtTimer);
         timerProgress = view.findViewById(R.id.timerProgress);
@@ -263,9 +264,17 @@ public class DriverUIManager {
             if (rideActionListener != null) {
                 rideActionListener.onRideAccepted(request);
             }
-            // Pause listening for new requests while waiting for passenger
             pauseListeningForRideRequests();
-            rideRequestDialog.dismiss();
+            
+            btnAccept.setVisibility(View.GONE);
+            btnDecline.setVisibility(View.GONE);
+            btnDeclineRide.setVisibility(View.VISIBLE);
+
+            TextView txtRideRequestTitle = view.findViewById(R.id.txtRideRequestTitle);
+            txtRideRequestTitle.setText("Waiting for Passenger");
+
+            View timerContainer = view.findViewById(R.id.timerContainer);
+            timerContainer.setVisibility(View.GONE);
         });
         
         btnDecline.setOnClickListener(v -> {
@@ -274,6 +283,21 @@ public class DriverUIManager {
                 rideActionListener.onRideDeclined(request);
             }
             rideRequestDialog.dismiss();
+        });
+        
+        btnDeclineRide.setOnClickListener(v -> {
+            DatabaseReference rideRef = FirebaseHelper.getRideRequestsRef().child(request.getRequestId());
+            rideRef.child("status").setValue(NotificationStatus.CANCELLED_BY_DRIVER_WHILE_WAITING)
+                    .addOnSuccessListener(aVoid -> {
+                        FirebaseHelper.getUserRequestsRef().child(driverId).child("activeRide").setValue(false);
+                        ToastUtils.showWarning(activity, "Ride cancelled");
+                        rideRequestDialog.dismiss();
+                        listenForRideRequests();
+                        activeRideRequestId = null;
+                    })
+                    .addOnFailureListener(e -> {
+                        ToastUtils.showError(activity, "Failed to cancel ride");
+                    });
         });
         
         rideRequestDialog.show();
@@ -332,6 +356,11 @@ public class DriverUIManager {
     }
 
     private void handlePassengerResponse(PassengerResponse response, RideRequest rideRequest) {
+        // Close the ride request dialog when passenger responds
+        if (rideRequestDialog != null && rideRequestDialog.isShowing()) {
+            rideRequestDialog.dismiss();
+        }
+        
         switch (response.getStatus()) {
             case ACCEPTED_BY_PASSENGER:
                 rideAcceptedByPassenger = true;
