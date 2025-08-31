@@ -304,4 +304,19 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:tint="#FFFFFF" />
 
+    <Button
+        android:id="@+id/btnCallDriver"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/circle_button_background"
+        android:text="📞"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/btnRide"
+        app:layout_constraintStart_toStartOf="parent"
+        app:tint="#FFFFFF"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout> 

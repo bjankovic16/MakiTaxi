@@ -70,6 +70,7 @@ public class PassengerUIManager {
     private Button btnChoseCurrentLocation;
     private Button btnShowRoute;
     private Button btnClearRoute;
+    private Button btnCallDriver;
     private Button btnZoomIn;
     private Button btnZoomOut;
     private ImageView btnRide;
@@ -93,6 +94,8 @@ public class PassengerUIManager {
     private ValueEventListener driverLocationListener;
 
     private String currentRideRequestId;
+
+    private boolean rideAcceptedByDriver = false;
 
     DatabaseReference driverLocationRef = FirebaseHelper.getDriverLocationRef();
     DatabaseReference rideRequestRef = FirebaseHelper.getRideRequestsRef();
@@ -140,6 +143,7 @@ public class PassengerUIManager {
         btnChoseCurrentLocation = activity.findViewById(R.id.btnChoseCurrentLocation);
         btnShowRoute = activity.findViewById(R.id.btnShowRoute);
         btnClearRoute = activity.findViewById(R.id.btnClearRoute);
+        btnCallDriver = activity.findViewById(R.id.btnCallDriver);
         btnZoomIn = activity.findViewById(R.id.btnZoomIn);
         btnZoomOut = activity.findViewById(R.id.btnZoomOut);
         btnRide = activity.findViewById(R.id.btnRide);
@@ -725,10 +729,18 @@ public class PassengerUIManager {
                         NotificationStatus status = rideRequest.getStatus();
                         Log.d("PassengerUIManager", "Ride status: " + status);
 
+                        // Check if driver accepted the ride
+                        if (status == NotificationStatus.ACCEPTED_BY_DRIVER) {
+                            Log.d("PassengerUIManager", "Driver accepted ride with status: " + status + ", showing ride controls");
+                            rideAcceptedByDriver = true;
+                            showRideControls();
+                        }
                         // Check if ride is finished
-                        if (status == NotificationStatus.FINISHED) {
+                        else if (status == NotificationStatus.FINISHED) {
                             Log.d("PassengerUIManager", "Ride finished with status: " + status + ", stopping tracking");
                             stopUpdatingDriverMarker();
+                            rideAcceptedByDriver = false;
+                            hideRideControls();
                             ToastUtils.showSuccess(activity, "Ride completed!");
                         }
                     }
@@ -813,6 +825,56 @@ public class PassengerUIManager {
 
     public boolean hasCurrentRide() {
         return currentRideRequestId != null && !currentRideRequestId.isEmpty();
+    }
+
+    private void showRideControls() {
+        controlsVisible = true;
+        toggleControls();
+        btnCallDriver.setVisibility(View.VISIBLE);
+        setupRideControlListeners();
+    }
+
+    private void hideRideControls() {
+        btnCallDriver.setVisibility(View.GONE);
+    }
+
+    private void setupRideControlListeners() {
+        btnCallDriver.setOnClickListener(v -> {
+            if (currentRideRequestId != null && !currentRideRequestId.isEmpty()) {
+                FirebaseHelper.getRideRequestsRef().child(currentRideRequestId).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            RideRequest rideRequest = snapshot.getValue(RideRequest.class);
+                            if (rideRequest != null && rideRequest.getDriverId() != null) {
+                                FirebaseHelper.getUserRequestsRef().child(rideRequest.getDriverId()).addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot driverSnapshot) {
+                                        if (driverSnapshot.exists()) {
+                                            User driver = driverSnapshot.getValue(User.class);
+                                            if (driver != null && driver.getPhone() != null && !driver.getPhone().isEmpty()) {
+                                                Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + driver.getPhone()));
+                                                activity.startActivity(intent);
+                                            } else {
+                                                ToastUtils.showWarning(activity, "Driver's phone number is not available");
+                                            }
+                                        }
+                                    }
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError error) {
+                                        ToastUtils.showError(activity, "Failed to get driver information");
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        ToastUtils.showError(activity, "Failed to get ride information");
+                    }
+                });
+            }
+        });
     }
 
     private void loadDriverDataAndShowPanel(String driverId, RideRequest rideRequest, TextView txtDriverArrival, TextView txtRideDuration, TextView txtDistance) {
