@@ -390,6 +390,7 @@ public class DriverUIManager {
         TextView txtDuration = rideDetailsBottomSheet.findViewById(R.id.txtDuration);
         TextView txtPrice = rideDetailsBottomSheet.findViewById(R.id.txtPrice);
         Button btnFinishRide = rideDetailsBottomSheet.findViewById(R.id.btnFinishRide);
+        Button btnCancelRide = rideDetailsBottomSheet.findViewById(R.id.btnCancelRide);
         
         txtPickup.setText(ride.getPickupAddress());
         txtDestination.setText(ride.getDropoffAddress());
@@ -437,6 +438,19 @@ public class DriverUIManager {
                 rideActionListener.onRideFinished(ride);
                 hideRideDetailsPanel();
             }
+        });
+        
+        btnCancelRide.setOnClickListener(v -> {
+            DatabaseReference rideRef = FirebaseHelper.getRideRequestsRef().child(ride.getRequestId());
+            rideRef.child("status").setValue(NotificationStatus.CANCELLED_BY_DRIVER_DURING_RIDE)
+                    .addOnSuccessListener(aVoid -> {
+                        FirebaseHelper.getUserRequestsRef().child(driverId).child("activeRide").setValue(false);
+                        ToastUtils.showWarning(activity, "Ride cancelled");
+                        hideRideDetailsPanel();
+                    })
+                    .addOnFailureListener(e -> {
+                        ToastUtils.showError(activity, "Failed to cancel ride");
+                    });
         });
     }
     
