@@ -197,6 +197,8 @@ MakiTaxi/
 
 ## 🔄 Workflow
 
+<img width="961" height="585" alt="Screenshot 2025-08-31 at 13 30 05" src="https://github.com/user-attachments/assets/be118d58-f423-42a5-82fd-1445091bb36f" />
+
 ### Passenger Journey
 1. **Registration/Login** → Create account or sign in
 2. **Location Selection** → Choose pickup and destination
