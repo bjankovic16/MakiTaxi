@@ -21,6 +21,15 @@ playServicesIdentity = "18.1.0"
 firebaseStorage = "20.3.0"
 glide = "4.16.0"
 gson = "2.11.0"
+mockito = "5.7.0"
+robolectric = "4.11.1"
+androidxTestCore = "1.5.0"
+espressoContrib = "3.5.1"
+espressoIntents = "3.5.1"
+androidxTestRules = "1.5.0"
+androidxTestRunner = "1.5.2"
+performanceTesting = "1.0.1"
+benchmark = "1.2.2"
 
 [libraries]
 geofire-android = { module = "com.firebase:geofire-android", version.ref = "geofireAndroid" }
@@ -45,7 +54,20 @@ glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "gl
 glide-compiler = { group = "com.github.bumptech.glide", name = "compiler", version.ref = "glide" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 
+# Testing dependencies
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
+mockito-android = { group = "org.mockito", name = "mockito-android", version.ref = "mockito" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
+espresso-contrib = { group = "androidx.test.espresso", name = "espresso-contrib", version.ref = "espressoContrib" }
+espresso-intents = { group = "androidx.test.espresso", name = "espresso-intents", version.ref = "espressoIntents" }
+androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "androidxTestRules" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidxTestRunner" }
+firebase-database-testing = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
+firebase-auth-testing = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
+performance-testing = { group = "androidx.test", name = "performance-testing", version.ref = "performanceTesting" }
+benchmark = { group = "androidx.benchmark", name = "benchmark-junit4", version.ref = "benchmark" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
-

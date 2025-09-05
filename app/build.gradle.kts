@@ -30,6 +30,19 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all {
+                it.maxHeapSize = "2048m"
+                it.maxParallelForks = Runtime.getRuntime().availableProcessors()
+                it.forkEvery = 100
+                it.reports.html.required.set(true)
+                it.reports.junitXml.required.set(true)
+            }
+        }
+    }
 }
 
 dependencies {
@@ -45,27 +58,28 @@ dependencies {
     implementation(libs.play.services.auth)
     implementation(libs.play.services.identity)
     
-    // OSMDroid for OpenStreetMap functionality
     implementation(libs.osmdroid.android)
-    
-    // Gson for JSON serialization/deserialization
     implementation(libs.gson)
-    
-    // HTTP client for routing API calls
     implementation(libs.okhttp)
-    
-    // JSON parsing for route data
     implementation(libs.json)
-    
-    // Image loading library
     implementation(libs.glide)
     annotationProcessor(libs.glide.compiler)
-    
     implementation(libs.geofire.android)
     
-
-    
+    // Testing dependencies
     testImplementation(libs.junit)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.android)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.firebase.database.testing)
+    testImplementation(libs.firebase.auth.testing)
+    
+    // Android Testing
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(libs.espresso.contrib)
+    androidTestImplementation(libs.espresso.intents)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.test.runner)
 }

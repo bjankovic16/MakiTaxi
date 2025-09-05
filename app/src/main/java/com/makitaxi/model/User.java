@@ -154,7 +154,10 @@ public class User {
     }
 
     public double getRating() {
-        return rating;
+        if (ratingCount > 0) {
+            return totalRatingSum / ratingCount;
+        }
+        return 0.0;
     }
 
     public void setRating(double rating) {
@@ -211,6 +214,7 @@ public class User {
 
     public void setRatingCount(int ratingCount) {
         this.ratingCount = ratingCount;
+        updateRating();
     }
 
     public double getTotalRatingSum() {
@@ -219,6 +223,15 @@ public class User {
 
     public void setTotalRatingSum(double totalRatingSum) {
         this.totalRatingSum = totalRatingSum;
+        updateRating();
+    }
+
+    private void updateRating() {
+        if (ratingCount > 0) {
+            this.rating = totalRatingSum / ratingCount;
+        } else {
+            this.rating = 0.0;
+        }
     }
 
     public double getTotalMoneySpent() {
@@ -239,13 +252,12 @@ public class User {
 
     public void updateStatisticsAfterRide(int newRating, int rideDistance) {
         this.totalRides++;
-        
         this.totalDistance += rideDistance;
         
         if (newRating > 0) {
             this.ratingCount++;
             this.totalRatingSum += newRating;
-            this.rating = this.totalRatingSum / this.ratingCount;
+            updateRating();
         }
     }
 
@@ -253,7 +265,7 @@ public class User {
         if (newRating > 0) {
             this.ratingCount++;
             this.totalRatingSum += newRating;
-            this.rating = this.totalRatingSum / this.ratingCount;
+            updateRating();
         }
     }
 
